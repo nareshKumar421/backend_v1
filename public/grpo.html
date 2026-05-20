@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRPO — Goods Receipt PO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ef;--surface:#fff;--surface2:#f9f8f5;
+  --border:#e2ddd5;--border2:#ccc7bb;
+  --accent:#1a1a1a;--accent2:#c8793a;--accent3:#2d6a4f;
+  --text:#1a1a1a;--text-muted:#7a746c;--text-label:#4a4540;
+  --danger:#c0392b;--success:#2d6a4f;--warning:#c8793a;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.14);
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;font-size:13px;}
+
+.topbar{background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:50px;position:sticky;top:0;z-index:300;}
+.tb-brand{display:flex;align-items:center;gap:10px;}
+.tb-mark{width:28px;height:28px;background:var(--accent2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;}
+.tb-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+.tb-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.4);margin-top:1px;}
+.tb-actions{display:flex;gap:6px;align-items:center;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.btn-primary{background:var(--accent2);color:#fff;}.btn-primary:hover{background:#b5692d;}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);}.btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.5);}
+.btn-outline{background:transparent;color:var(--text-label);border:1px solid var(--border2);}.btn-outline:hover{border-color:var(--accent2);color:var(--accent2);}
+.btn-sm{padding:4px 10px;font-size:10px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.badge{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.07em;text-transform:uppercase;}
+.badge-draft{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15);}
+.badge-open{background:#edf7f1;color:var(--success);border:1px solid #a8d5bc;}
+
+.main{max-width:100%;padding:14px 18px 80px;}
+
+.hcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;position:relative;z-index:10;}
+
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);}
+.req{color:var(--accent2);}
+input,select,textarea{background:var(--surface);border:1.5px solid var(--border);border-radius:5px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;width:100%;outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(200,121,58,.1);}
+input[readonly]{background:var(--surface2);color:var(--text-muted);cursor:default;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a746c'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;padding-right:22px;cursor:pointer;appearance:none;}
+textarea{resize:vertical;min-height:60px;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+.g5{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;}
+.s2{grid-column:span 2;}.s3{grid-column:span 3;}.s4{grid-column:span 4;}
+
+.meta-strip{display:grid;grid-template-columns:repeat(5,auto);gap:6px 18px;text-align:right;align-items:start;}
+.mi label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:2px;}
+.mi span{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--accent2);}
+
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:visible;}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2);}
+.tab{padding:8px 16px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .12s;user-select:none;}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab-pane{display:none;padding:12px 14px;}
+.tab-pane.active{display:block;}
+
+.lines-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.stitle{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-label);}
+.lines-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:5px;position:relative;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead tr{background:var(--surface2);}
+th{padding:6px 6px;text-align:left;font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;background:var(--surface2);}
+td{padding:0;border-bottom:1px solid var(--border);vertical-align:middle;position:relative;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#fdfaf6;}
+td input,td select{background:transparent;border:none;border-radius:0;padding:5px 6px;font-size:11px;color:var(--text);width:100%;font-family:'DM Sans',sans-serif;height:28px;}
+td input:focus,td select:focus{background:rgba(200,121,58,.05);box-shadow:inset 0 0 0 1.5px var(--accent2);outline:none;}
+td select{appearance:none;background-image:none;cursor:pointer;}
+td input[readonly]{background:var(--surface2);color:var(--text-muted);}
+.nc{text-align:right;}
+.nc input{text-align:right;font-family:'DM Mono',monospace;}
+.li{display:block;width:26px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);padding:5px 2px;}
+.xbtn{display:block;width:24px;text-align:center;color:var(--text-muted);cursor:pointer;padding:4px 2px;font-size:12px;transition:color .12s;}
+.xbtn:hover{color:var(--danger);}
+
+.totals-wrap{display:flex;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--border);background:var(--surface2);}
+.tg{display:grid;grid-template-columns:170px 130px;gap:3px 8px;text-align:right;align-items:center;}
+.tl{font-size:11px;color:var(--text-muted);}
+.tv{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);}
+.tv input{background:transparent;border:none;border-bottom:1px solid var(--border);padding:1px 2px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text);text-align:right;width:100%;}
+.tv input:focus{outline:none;border-bottom-color:var(--accent2);}
+.tt-row .tl{font-weight:700;font-size:12px;color:var(--text);}
+.tt-row .tv{font-size:14px;font-weight:600;color:var(--accent2);}
+
+.acw{position:relative;width:100%;}
+.acd-fixed{position:fixed;min-width:220px;background:var(--surface);border:1.5px solid var(--accent2);border-radius:6px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:99999;max-height:240px;overflow-y:auto;display:none;}
+.acd-fixed.open{display:block;}
+.aci{padding:7px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--border);transition:background .08s;}
+.aci:last-child{border-bottom:none;}
+.aci:hover,.aci.hi{background:#fef6ed;}
+.ac-name{font-size:11px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ac-code{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent2);flex-shrink:0;}
+.ac-msg{padding:8px 10px;color:var(--text-muted);font-size:11px;font-style:italic;}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:sp .6s linear infinite;flex-shrink:0;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(245,243,239,.85);backdrop-filter:blur(3px);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
+.overlay.show{display:flex;}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent2);border-radius:50%;animation:sp .7s linear infinite;}
+.ta{position:fixed;top:60px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.toast{padding:9px 13px;border-radius:6px;font-size:11px;font-weight:500;max-width:340px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:7px;animation:tin .18s ease;pointer-events:all;}
+@keyframes tin{from{opacity:0;transform:translateX(14px)}to{opacity:1}}
+.t-ok{background:#edf7f1;color:var(--success);border:1px solid #a8d5bc;}
+.t-err{background:#fdf0ee;color:var(--danger);border:1px solid #e8b0aa;}
+.t-info{background:#fef6ed;color:var(--accent2);border:1px solid #e8c9a8;}
+
+.mbg{display:none;position:fixed;inset:0;background:rgba(26,26,26,.6);backdrop-filter:blur(5px);z-index:10000;align-items:center;justify-content:center;}
+.mbg.show{display:flex;}
+.modal{background:var(--surface);border-radius:10px;padding:26px 28px;width:340px;box-shadow:var(--shadow-lg);}
+.modal h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px;}
+.modal p{color:var(--text-muted);font-size:11px;margin-bottom:16px;}
+.m-err{background:#fdf0ee;color:var(--danger);border:1px solid #e8b0aa;border-radius:5px;padding:7px 10px;font-size:11px;margin-bottom:10px;display:none;}
+
+.resp{display:none;background:#1a1a1a;border-radius:6px;padding:12px;font-family:'DM Mono',monospace;font-size:10px;color:#a8d5bc;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow-y:auto;margin-top:12px;line-height:1.7;}
+hr.dv{border:none;border-top:1px solid var(--border);margin:10px 0;}
+
+/* ── Attachments ── */
+.attach-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:20px 14px;background:var(--surface2);text-align:center;cursor:pointer;transition:all .2s;position:relative;min-height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;}
+.attach-zone:hover,.attach-zone.drag{border-color:var(--accent2);background:rgba(200,121,58,.05);}
+.attach-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;}
+.az-icon{font-size:22px;line-height:1;}
+.az-label{font-size:11px;font-weight:600;color:var(--text-label);}
+.az-sub{font-size:9px;color:var(--text-muted);}
+.attach-preview{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-top:5px;}
+.ap-thumb{width:32px;height:32px;border-radius:5px;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.ap-thumb img{width:100%;height:100%;object-fit:cover;border-radius:4px;}
+.ap-info{flex:1;min-width:0;}
+.ap-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ap-size{font-size:9px;color:var(--text-muted);margin-top:1px;}
+.ap-rm{padding:2px 8px;font-size:9px;border:1.5px solid var(--danger);color:var(--danger);background:transparent;cursor:pointer;border-radius:3px;font-weight:600;flex-shrink:0;}
+.att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:10px 0;}
+.att-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:4px;}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="mbg show" id="loginModal">
+  <div class="modal">
+    <h2>Sign In</h2>
+    <p>Portal credentials required to access GRPO.</p>
+    <div class="m-err" id="loginErr"></div>
+    <div class="field" style="margin-bottom:9px;"><label>Username</label><input id="lu" type="text" autocomplete="username" placeholder="username"></div>
+    <div class="field" style="margin-bottom:13px;"><label>Password</label><input id="lp" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"><div class="spinner"></div><span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">Posting to SAP…</span></div>
+<div class="ta" id="ta"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-mark">G</div>
+    <div><div class="tb-title">Goods Receipt PO</div><div class="tb-sub">Purchase Delivery Notes · SAP B1</div></div>
+  </div>
+  <div class="tb-actions">
+    <span class="badge badge-draft" id="statusBadge">● DRAFT</span>
+    <button class="btn btn-ghost btn-sm" onclick="toggleResp()">{} Payload</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetForm()">↺ Reset</button>
+    <button class="btn btn-primary btn-sm" onclick="submitGRPO()">✓ Post GRPO</button>
+    <span id="userChip" style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.4);margin-left:2px;"></span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- HEADER CARD -->
+<div class="hcard">
+  <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;margin-bottom:10px;">
+    <div class="g4">
+      <div class="field s2">
+        <label>Vendor <span class="req">*</span></label>
+        <div class="acw" id="vendorWrap">
+          <input type="text" id="vendorSearch" placeholder="Search vendor code or name…" autocomplete="off" oninput="vendorAc(this.value)">
+        </div>
+        <input type="hidden" id="cardCode">
+        <input type="hidden" id="cardName">
+      </div>
+      <div class="field"><label>Vendor Ref. No. (Bilty No.)</label><input type="text" id="numAtCard" placeholder="e.g. 6600" oninput="syncBilty(this.value)"></div>
+      <div class="field"><label>ARNO</label><input type="text" id="arnoHeader" placeholder="e.g. 626030507"></div>
+    </div>
+    <!-- META: removed Series, removed Branch Reg (moved to branch change only) -->
+    <div class="meta-strip">
+      <div class="mi"><label>Doc No.</label><span id="docNumDisp">AUTO</span></div>
+      <div class="mi"><label>Status</label><span id="statusDisp">Draft</span></div>
+      <div class="mi">
+        <label>Posting Date <span class="req">*</span></label>
+        <input type="date" id="docDate" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);border:none;background:transparent;padding:0;width:100px;">
+      </div>
+      <div class="mi">
+        <label>Due Date</label>
+        <input type="date" id="docDueDate" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);border:none;background:transparent;padding:0;width:100px;">
+      </div>
+      <div class="mi">
+        <label>Document Date</label>
+        <input type="date" id="taxDate" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);border:none;background:transparent;padding:0;width:100px;">
+      </div>
+    </div>
+  </div>
+
+  <hr class="dv" style="margin:8px 0;">
+
+  <div class="g2" style="max-width:400px;">
+    <div class="field">
+      <label>Branch <span class="req">*</span></label>
+      <select id="bplId"><option value="">— Select —</option></select>
+    </div>
+    <div class="field">
+      <span style="font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace;display:block;margin-bottom:4px;">REG. NO.</span>
+      <span id="branchRegDisp" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- TABS CARD -->
+<div class="tcard">
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'tc')">Contents</div>
+    <div class="tab" onclick="switchTab(this,'tat')">Attachments</div>
+  </div>
+
+  <div class="tab-pane active" id="tc">
+    <div class="lines-bar">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="stitle">Document Lines</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:10px;color:var(--text-muted);">Item/Service Type</span>
+          <select id="lineType" style="width:auto;padding:3px 20px 3px 7px;font-size:11px;" onchange="rebuildLines()">
+            <option value="Service">Service</option>
+            <option value="Items">Items</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="addLine()">+ Add Line</button>
+        <button class="btn btn-outline btn-sm" onclick="clearLines()">Clear</button>
+      </div>
+    </div>
+
+    <div class="lines-wrap" id="linesWrap">
+      <table id="linesTable">
+        <thead id="lhead"><tr></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="totals-wrap">
+      <div class="tg">
+        <span class="tl">Total Before Discount</span><span class="tv" id="totPre">₹ 0.00</span>
+        <span class="tl">Discount %</span><span class="tv"><input type="number" id="discPct" value="0" min="0" max="100" step="0.01" oninput="recalc()"></span>
+        <span class="tl">Freight</span><span class="tv"><input type="number" id="freightAmt" value="0" min="0" oninput="recalc()"></span>
+        <span class="tl">Rounding</span><span class="tv"><input type="number" id="roundAmt" value="0" oninput="recalc()"></span>
+        <span class="tl">Tax</span><span class="tv" id="totTax">₹ 0.00</span>
+        <span class="tl tt-row">Total Payment Due</span><span class="tv tt-row" id="totDoc">₹ 0.00</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;padding:10px 2px 4px;">
+      <div>
+        <div class="g2" style="margin-bottom:6px;">
+          <div class="field"><label>Buyer</label><select id="buyer" style="width:160px;"><option value="">— Select —</option></select></div>
+          <div class="field"><label>Owner</label><input type="text" id="owner" readonly style="width:160px;"></div>
+        </div>
+      </div>
+      <div class="field" style="max-width:300px;">
+        <label>Remarks</label>
+        <textarea id="comments" rows="2" placeholder="e.g. BILTY NO 6600"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tat">
+    <div style="font-size:9px;color:var(--text-muted);margin-bottom:10px;font-family:'DM Mono',monospace;">
+      Files are uploaded to the SAP B1 attachment path and linked to the GRPO via <code>AttachmentEntry</code>.
+      Max 5MB per file. PDF, JPG, PNG accepted.
+    </div>
+    <div class="att-grid">
+      <div>
+        <div class="att-label">Bilty / LR Copy</div>
+        <div class="attach-zone" id="az-bilty"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="event.preventDefault();this.classList.remove('drag');grpoHandleAttach('bilty',{files:event.dataTransfer.files})">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="grpoHandleAttach('bilty',this)">
+          <div class="az-icon">🚛</div>
+          <div class="az-label">Click or drag Bilty / LR</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-bilty"></div>
+      </div>
+      <div>
+        <div class="att-label">Invoice Copy</div>
+        <div class="attach-zone" id="az-invoice"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="event.preventDefault();this.classList.remove('drag');grpoHandleAttach('invoice',{files:event.dataTransfer.files})">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="grpoHandleAttach('invoice',this)">
+          <div class="az-icon">🧾</div>
+          <div class="az-label">Click or drag Invoice</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-invoice"></div>
+      </div>
+      <div>
+        <div class="att-label">Weighbridge / Quality Report</div>
+        <div class="attach-zone" id="az-quality"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="event.preventDefault();this.classList.remove('drag');grpoHandleAttach('quality',{files:event.dataTransfer.files})">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="grpoHandleAttach('quality',this)">
+          <div class="az-icon">⚖️</div>
+          <div class="az-label">Click or drag Report</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-quality"></div>
+      </div>
+      <div>
+        <div class="att-label">Other Documents</div>
+        <div class="attach-zone" id="az-other"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="event.preventDefault();this.classList.remove('drag');grpoHandleAttach('other',{files:event.dataTransfer.files})">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="grpoHandleAttach('other',this)">
+          <div class="az-icon">📎</div>
+          <div class="az-label">Click or drag Other</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-other"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<pre class="resp" id="respPanel"></pre>
+</div>
+
+<!-- Fixed autocomplete portal -->
+<div class="acd-fixed" id="acPortal"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const API = '';
+const GRPO_ENDPOINT = '/api/sap/grpo';
+
+let TOKEN = localStorage.getItem('grpo_token') || '';
+let lineSeq = 0;
+const _timers = {};
+
+let _taxCodes = [];
+let _branches = [];
+let _slpList  = [];
+let _sacCodes = [];
+const _grpoAttachments = {};   // { bilty: [{name,size,type,data},...], invoice: [...], ... }
+
+let _portalTarget = null;
+
+const ah  = () => TOKEN ? {'Authorization': `Bearer ${TOKEN}`} : {};
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const fmt = n => '₹ '+parseFloat(n||0).toFixed(2);
+
+// ── TOAST ─────────────────────────────────
+function toast(msg, type='info'){
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.innerHTML = `<span>${{ok:'✓',err:'✕',info:'ℹ'}[type]||'ℹ'}</span><span>${esc(String(msg))}</span>`;
+  document.getElementById('ta').appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// ── AUTH ──────────────────────────────────
+async function doLogin(){
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  const eEl = document.getElementById('loginErr');
+  eEl.style.display = 'none';
+  if(!u||!p){ eEl.textContent='Username and password required.'; eEl.style.display='block'; return; }
+  try{
+    const res  = await fetch(`${API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const data = await res.json();
+    if(!res.ok||!data.success) throw new Error(data.message||'Login failed');
+    TOKEN = data.token;
+    localStorage.setItem('grpo_token', TOKEN);
+    document.getElementById('loginModal').classList.remove('show');
+    document.getElementById('userChip').textContent = data.user?.name || data.user?.username || '';
+    toast('Signed in','ok');
+    initPage();
+  }catch(err){ eEl.textContent=err.message; eEl.style.display='block'; }
+}
+document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+(async()=>{
+  if(!TOKEN) return;
+  try{
+    const res = await fetch(`${API}/api/auth/me`,{headers:ah()});
+    const d   = await res.json();
+    if(d.success){
+      document.getElementById('loginModal').classList.remove('show');
+      document.getElementById('userChip').textContent = d.user?.name || d.user?.username || '';
+      initPage();
+    } else { TOKEN=''; localStorage.removeItem('grpo_token'); }
+  }catch{ TOKEN=''; localStorage.removeItem('grpo_token'); }
+})();
+
+// ── INIT ──────────────────────────────────
+// FIX: addLine() is called AFTER await loadTaxCodes() so tax selects populate correctly
+async function initPage(){
+  const today = new Date().toISOString().slice(0,10);
+  ['docDate','docDueDate','taxDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && !el.value) el.value = today;
+  });
+  buildHeaders();
+  loadBranches();
+  loadSacCodes();
+  await loadTaxCodes();   // ← MUST complete before addLine()
+  if(!document.querySelectorAll('#tbody tr').length) addLine();
+  loadBuyers();
+}
+
+// ── TABS ──────────────────────────────────
+function switchTab(el, pid){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(pid).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  LOOKUPS
+// ═══════════════════════════════════════════
+async function loadSacCodes(){
+  try{
+    const res = await fetch(`${API}/api/sap/lookup/sac-codes`,{headers:ah()});
+    const d   = await res.json();
+    _sacCodes = d.data || [];
+    console.log(`[GRPO] SAC codes loaded: ${_sacCodes.length}`);
+    // refresh SAC selects in any already-rendered lines
+    document.querySelectorAll('.sac-sel').forEach(sel => populateSacSelect(sel));
+  }catch(e){ console.warn('[GRPO] loadSacCodes failed:',e.message); }
+}
+
+function populateSacSelect(sel){
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— SAC —</option>' +
+    _sacCodes.map(s=>`<option value="${s.AbsEntry}"${String(s.AbsEntry)===String(cur)?' selected':''}>${esc(s.SACCode)} – ${esc(s.SACName)}</option>`).join('');
+}
+
+async function loadBranches(){
+  try{
+    const res = await fetch(`${API}/api/sap/lookup/branches`,{headers:ah()});
+    const d   = await res.json();
+    _branches = d.data || [];
+    const sel = document.getElementById('bplId');
+    sel.innerHTML = '<option value="">— Select —</option>' + _branches.map(b=>`<option value="${esc(b.BPLId)}">${esc(b.BPLName)}</option>`).join('');
+    const factory = _branches.find(b => b.BPLName.toUpperCase().includes('FACTORY'));
+    if(factory){ sel.value = String(factory.BPLId); document.getElementById('branchRegDisp').textContent = factory.TaxIdNum||'—'; }
+    // Branch change only updates Reg. No. display — shipFrom NOT touched
+    sel.addEventListener('change', ()=>{
+      const b = _branches.find(x => String(x.BPLId)===String(sel.value));
+      document.getElementById('branchRegDisp').textContent = b?.TaxIdNum || '—';
+    });
+  }catch(e){ console.warn('[GRPO] branches:', e.message); }
+}
+
+async function loadTaxCodes(){
+  try{
+    const res = await fetch(`${API}/api/sap/lookup/tax-codes`,{headers:ah()});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    if(d.data && d.data.length){
+      _taxCodes = d.data;
+      console.log('[GRPO] Tax codes loaded:', _taxCodes.length);
+    } else {
+      throw new Error(d.warning || 'No tax codes returned');
+    }
+  }catch(e){
+    console.warn('[GRPO] Tax code fetch failed, using fallback:', e.message);
+    // Hardcoded fallback so UI always has tax codes
+    _taxCodes = [
+      {Code:'CG+SG@0',  Name:'CGST+SGST 0%',  Rate:0},
+      {Code:'CG+SG@5',  Name:'CGST+SGST 5%',  Rate:5},
+      {Code:'CG+SG@12', Name:'CGST+SGST 12%', Rate:12},
+      {Code:'CG+SG@18', Name:'CGST+SGST 18%', Rate:18},
+      {Code:'CG+SG@28', Name:'CGST+SGST 28%', Rate:28},
+      {Code:'IGST@0',   Name:'IGST 0%',        Rate:0},
+      {Code:'IGST@5',   Name:'IGST 5%',        Rate:5},
+      {Code:'IGST@12',  Name:'IGST 12%',       Rate:12},
+      {Code:'IGST@18',  Name:'IGST 18%',       Rate:18},
+      {Code:'IGST@28',  Name:'IGST 28%',       Rate:28},
+      {Code:'EXEMPT',   Name:'Exempt',          Rate:0},
+      {Code:'NIL',      Name:'NIL Rated',       Rate:0},
+      {Code:'RIGST@5',  Name:'RIGST 5%',        Rate:5},
+    ];
+  }
+  // Refresh any existing selects (e.g. after rebuild)
+  document.querySelectorAll('.taxcode-sel').forEach(s => fillTaxSel(s));
+}
+
+function fillTaxSel(sel, defaultCode){
+  const prev = defaultCode || sel.value;
+  sel.innerHTML = _taxCodes.map(t =>
+    `<option value="${esc(t.Code)}" data-rate="${t.Rate||0}">${esc(t.Code)}${t.Name&&t.Name!==t.Code?' — '+t.Name:''}</option>`
+  ).join('');
+  if(prev){
+    const opt = sel.querySelector(`option[value="${CSS.escape(prev)}"]`);
+    if(opt) sel.value = prev;
+  }
+  sel.onchange = () => {
+    const opt  = sel.options[sel.selectedIndex];
+    const rate = parseFloat(opt?.dataset?.rate || 0);
+    const row  = sel.closest('tr');
+    if(row){
+      const t = row.querySelector('.taxpct-inp');
+      if(t){ t.value = rate; recalc(); }
+    }
+  };
+}
+
+async function loadBuyers(){
+  try{
+    const res = await fetch(`${API}/api/sap/lookup/sales-employees`,{headers:ah()});
+    const d   = await res.json();
+    _slpList  = d.data || [];
+    const sel = document.getElementById('buyer');
+    sel.innerHTML = '<option value="">— Select —</option>' + _slpList.map(s=>`<option value="${s.SlpCode}">${esc(s.SlpName)}</option>`).join('');
+    const ginni = _slpList.find(s => s.SlpName.toUpperCase().includes('GINNI'));
+    if(ginni) sel.value = String(ginni.SlpCode);
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════
+//  AUTOCOMPLETE ENGINE
+// ═══════════════════════════════════════════
+const portal = document.getElementById('acPortal');
+
+function positionPortal(inputEl){
+  const r = inputEl.getBoundingClientRect();
+  portal.style.left  = r.left + 'px';
+  portal.style.top   = (r.bottom + 2) + 'px';
+  portal.style.width = Math.max(240, r.width) + 'px';
+}
+
+function openPortal(inputEl, items, onSelect){
+  _portalTarget = { inputEl, onSelect };
+  portal.innerHTML = '';
+  if(!items.length){
+    portal.innerHTML = '<div class="ac-msg">No results found</div>';
+  } else {
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'aci';
+      div.innerHTML = `<span class="ac-name">${esc(item.label)}</span><span class="ac-code">${esc(item.code)}</span>`;
+      div.addEventListener('mousedown', e => { e.preventDefault(); onSelect(item); closePortal(); });
+      portal.appendChild(div);
+    });
+  }
+  positionPortal(inputEl);
+  portal.classList.add('open');
+}
+function openPortalLoading(inputEl){
+  portal.innerHTML = '<div class="aci"><div class="spin"></div><span class="ac-name" style="margin-left:6px;">Searching…</span></div>';
+  positionPortal(inputEl);
+  portal.classList.add('open');
+}
+function openPortalMsg(inputEl, msg){
+  portal.innerHTML = `<div class="ac-msg">${esc(msg)}</div>`;
+  positionPortal(inputEl);
+  portal.classList.add('open');
+}
+function closePortal(){
+  portal.classList.remove('open');
+  portal.innerHTML = '';
+  _portalTarget = null;
+}
+document.addEventListener('mousedown', e => { if(!portal.contains(e.target) && !e.target.closest('.acw')) closePortal(); });
+window.addEventListener('scroll', () => { if(_portalTarget && portal.classList.contains('open')) positionPortal(_portalTarget.inputEl); }, true);
+
+// ── Vendor AC ─────────────────────────────
+function vendorAc(q){
+  clearTimeout(_timers.vendor);
+  if(!q||q.length<1){ closePortal(); return; }
+  openPortalLoading(document.getElementById('vendorSearch'));
+  _timers.vendor = setTimeout(async()=>{
+    try{
+      const res  = await fetch(`${API}/api/sap/lookup/vendors?q=${encodeURIComponent(q)}`,{headers:ah()});
+      const data = await res.json();
+      const list = (data.data||[]).map(v=>({label:v.CardName,code:v.CardCode,raw:v}));
+      if(!list.length){ openPortalMsg(document.getElementById('vendorSearch'),'No vendors found'); return; }
+      openPortal(document.getElementById('vendorSearch'), list, item=>{
+        document.getElementById('cardCode').value     = item.raw.CardCode;
+        document.getElementById('cardName').value     = item.raw.CardName;
+        document.getElementById('vendorSearch').value = `${item.raw.CardCode} — ${item.raw.CardName}`;
+        toast(`Vendor: ${item.raw.CardName}`,'ok');
+      });
+    }catch(err){ openPortalMsg(document.getElementById('vendorSearch'),'Error: '+err.message); }
+  }, 280);
+}
+document.getElementById('vendorSearch').addEventListener('focus', function(){ if(this.value.length>0) vendorAc(this.value); });
+
+// ── GL Account AC ─────────────────────────
+function glAcForInput(inputEl, onSelect){
+  const q = inputEl.value;
+  clearTimeout(_timers['gl_'+inputEl.id]);
+  if(!q||q.length<1){ closePortal(); return; }
+  openPortalLoading(inputEl);
+  _timers['gl_'+inputEl.id] = setTimeout(async()=>{
+    try{
+      const res  = await fetch(`${API}/api/sap/lookup/gl-accounts?q=${encodeURIComponent(q)}`,{headers:ah()});
+      const data = await res.json();
+      const list = (data.data||[]).map(a=>({label:a.AcctName,code:a.AcctCode,raw:a}));
+      if(!list.length){ openPortalMsg(inputEl,'No accounts found'); return; }
+      openPortal(inputEl, list, item => onSelect(item.raw.AcctCode, item.raw.AcctName));
+    }catch(err){ openPortalMsg(inputEl,'Error: '+err.message); }
+  }, 260);
+}
+
+// ── Costing Code AC ───────────────────────
+function ccAcForInput(inputEl, dim, onSelect){
+  const q = inputEl.value;
+  clearTimeout(_timers['cc_'+inputEl.id]);
+  if(!q||q.length<1){ closePortal(); return; }
+  openPortalLoading(inputEl);
+  _timers['cc_'+inputEl.id] = setTimeout(async()=>{
+    try{
+      const res  = await fetch(`${API}/api/sap/lookup/costing-codes?q=${encodeURIComponent(q)}&dim=${dim}`,{headers:ah()});
+      const data = await res.json();
+      const list = (data.data||[]).map(c=>({label:c.PrcName||c.PrcCode,code:c.PrcCode,raw:c}));
+      if(!list.length){ openPortalMsg(inputEl,'No costing codes found'); return; }
+      openPortal(inputEl, list, item => onSelect(item.raw.PrcCode, item.raw.PrcName));
+    }catch(err){ openPortalMsg(inputEl,'Error: '+err.message); }
+  }, 240);
+}
+
+// ── Customer AC ───────────────────────────
+function custAcForInput(inputEl, onSelect){
+  const q = inputEl.value;
+  clearTimeout(_timers['cust_'+inputEl.id]);
+  if(!q||q.length<1){ closePortal(); return; }
+  openPortalLoading(inputEl);
+  _timers['cust_'+inputEl.id] = setTimeout(async()=>{
+    try{
+      const res  = await fetch(`${API}/api/sap/lookup/customers?q=${encodeURIComponent(q)}`,{headers:ah()});
+      const data = await res.json();
+      const list = (data.data||[]).map(c=>({label:c.CardName,code:c.CardCode,raw:c}));
+      if(!list.length){ openPortalMsg(inputEl,'No customers found'); return; }
+      openPortal(inputEl, list, item => onSelect(item.raw.CardCode, item.raw.CardName));
+    }catch(err){ openPortalMsg(inputEl,'Error: '+err.message); }
+  }, 240);
+}
+
+// ── Item AC ───────────────────────────────
+function itemAcForInput(inputEl, onSelect){
+  const q = inputEl.value;
+  clearTimeout(_timers['item_'+inputEl.id]);
+  if(!q||q.length<1){ closePortal(); return; }
+  openPortalLoading(inputEl);
+  _timers['item_'+inputEl.id] = setTimeout(async()=>{
+    try{
+      const res  = await fetch(`${API}/api/sap/lookup/items?q=${encodeURIComponent(q)}`,{headers:ah()});
+      const data = await res.json();
+      const list = (data.data||[]).map(i=>({label:i.ItemName,code:i.ItemCode,raw:i}));
+      if(!list.length){ openPortalMsg(inputEl,'No items found'); return; }
+      openPortal(inputEl, list, item => onSelect(item.raw));
+    }catch(err){ openPortalMsg(inputEl,'Error: '+err.message); }
+  }, 260);
+}
+
+// ═══════════════════════════════════════════
+//  TABLE HEADERS
+//
+//  CORRECTED DIMENSION MAPPING (from SAP ODIM table — Image 1):
+//    Dim1 → CostingCode  = Variety
+//    Dim2 → CostingCode2 = Effective Month
+//    Dim3 → CostingCode3 = Budget
+//    Dim4 → CostingCode4 = Sub Budget
+//    Dim5 → CostingCode5 = State
+//
+//  Location column REMOVED — not needed
+// ═══════════════════════════════════════════
+function buildHeaders(){
+  const isService = document.getElementById('lineType').value === 'Service';
+  const thead = document.getElementById('lhead');
+  const cols = isService ? [
+    {h:'#',              w:'28px'},
+    {h:'Description',    w:'130px'},
+    {h:'G/L Account',    w:'95px'},
+    {h:'G/L Name',       w:'170px'},
+    {h:'Tax Code',       w:'130px'},
+    {h:'Total (LC)',     w:'90px', nc:1},
+    {h:'Variety',        w:'90px'},      // Dim1 → CostingCode
+    {h:'Eff. Month',     w:'90px'},      // Dim2 → CostingCode2
+    {h:'Budget',         w:'90px'},      // Dim3 → CostingCode3
+    {h:'Sub Budget',     w:'80px'},      // Dim4 → CostingCode4
+    {h:'SAC Code',       w:'160px'},
+    {h:'Remarks',        w:'120px'},     // U_Remarks
+    {h:'Scheme Against', w:'110px'},
+    {h:'Sub Account',    w:'90px'},      // U_Sub_Account
+    {h:'Customer Code',  w:'110px'},     // U_CardCode
+    {h:'ARNO',           w:'95px'},      // U_ARNO
+    {h:'Bilty No.',      w:'90px'},      // U_BilltyNumber
+    {h:'PURPOSE',        w:'100px'},     // U_Purpose
+    {h:'Unit Price',     w:'90px', nc:1},
+    {h:'Tax %',          w:'50px', nc:1},
+    {h:'Litres',         w:'65px', nc:1},// U_UNE_LTS
+    {h:'',               w:'26px'},
+  ] : [
+    {h:'#',              w:'28px'},
+    {h:'Item Code',      w:'90px'},
+    {h:'Description',    w:'140px'},
+    {h:'Warehouse',      w:'75px'},
+    {h:'Tax Code',       w:'130px'},
+    {h:'Unit Price',     w:'90px', nc:1},
+    {h:'Qty',            w:'55px', nc:1},
+    {h:'Total (LC)',     w:'90px', nc:1},
+    {h:'Tax %',          w:'50px', nc:1},
+    {h:'Bilty No',       w:'80px'},
+    {h:'ARNO',           w:'95px'},
+    {h:'Sub Account',    w:'90px'},
+    {h:'Customer Code',  w:'110px'},
+    {h:'Litres',         w:'65px', nc:1},
+    {h:'',               w:'26px'},
+  ];
+
+  thead.innerHTML = '<tr>' + cols.map(c =>
+    `<th style="min-width:${c.w};width:${c.w};"${c.nc?' class="nc"':''}>${c.h}</th>`
+  ).join('') + '</tr>';
+}
+
+// ═══════════════════════════════════════════
+//  ADD LINE
+// ═══════════════════════════════════════════
+function addLine(d={}){
+  lineSeq++;
+  const lid = lineSeq;
+  const isService = document.getElementById('lineType').value === 'Service';
+  const biltyMain = document.getElementById('numAtCard').value || '';
+  const tr = document.createElement('tr');
+  tr.id = `line-${lid}`;
+
+  const subOpts  = ['SALES','SALES RETURN','BST'].map(o=>`<option value="${o}"${(d.subAcct||'SALES')===o?' selected':''}>${o}</option>`).join('');
+  const purpOpts = ['SALE','RETURNABLE','CONSUMABLE','BST',''].map(o=>`<option value="${o}"${(d.purpose||(o==='SALE'?'SALE':''))===o?' selected':''}>${o||'—'}</option>`).join('');
+  const rowNum   = document.querySelectorAll('#tbody tr').length + 1;
+
+  if(isService){
+    tr.innerHTML = `
+    <td><span class="li">${rowNum}</span></td>
+    <td style="min-width:130px;"><input class="desc-inp" type="text" id="desc-${lid}" placeholder="Description" value="${esc(d.desc||'')}"></td>
+    <td style="min-width:95px;">
+      <input class="gl-inp" type="text" id="gl-${lid}" placeholder="G/L Acct" value="${esc(d.gl||'')}"
+        oninput="glAcForInput(this,function(c,n){selGL(${lid},c,n)})"
+        onfocus="if(this.value.length>0)glAcForInput(this,function(c,n){selGL(${lid},c,n)})">
+    </td>
+    <td style="min-width:170px;"><span class="gl-name" id="glname-${lid}" style="font-size:10px;color:var(--text-muted);padding:5px 6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:165px;" title="">${esc(d.glName||'')}</span></td>
+    <td style="min-width:130px;"><select class="taxcode-sel" id="tax-${lid}"></select></td>
+    <td class="nc" style="min-width:90px;"><input class="total-inp" type="number" readonly value="${d.price||0}" style="color:var(--accent2);font-weight:600;"></td>
+
+    <!-- Dim1 = Variety → CostingCode -->
+    <td style="min-width:90px;">
+      <input class="cc1-inp" type="text" id="cc1-${lid}" placeholder="Variety"
+        value="${esc(d.variety||'')}"
+        oninput="ccAcForInput(this,1,function(c){selCC1Variety(${lid},c)})"
+        onfocus="if(this.value.length>0)ccAcForInput(this,1,function(c){selCC1Variety(${lid},c)})">
+    </td>
+    <!-- Dim2 = Effective Month → CostingCode2 -->
+    <td style="min-width:90px;">
+      <input class="cc2-inp" type="text" id="cc2-${lid}" placeholder="04-2026"
+        value="${esc(d.effMonth||'')}"
+        oninput="ccAcForInput(this,2,function(c){selCC(${lid},'cc2',c)})"
+        onfocus="if(this.value.length>0)ccAcForInput(this,2,function(c){selCC(${lid},'cc2',c)})">
+    </td>
+    <!-- Dim3 = Budget → CostingCode3 -->
+    <td style="min-width:90px;">
+      <input class="cc3-inp" type="text" id="cc3-${lid}" placeholder="Budget"
+        value="${esc(d.budget||'')}"
+        oninput="ccAcForInput(this,3,function(c){selCC(${lid},'cc3',c)})"
+        onfocus="if(this.value.length>0)ccAcForInput(this,3,function(c){selCC(${lid},'cc3',c)})">
+    </td>
+    <!-- Dim4 = Sub Budget → CostingCode4 -->
+    <td style="min-width:80px;"><input class="cc4-inp" type="text" id="cc4-${lid}" placeholder="Sub Budget" value="${esc(d.subBudget||'')}"></td>
+
+    <td style="min-width:160px;"><select class="sac-sel" id="sac-${lid}"><option value="">— SAC —</option></select></td>
+    <td style="min-width:120px;"><input class="remarks-inp" type="text" id="rem-${lid}" placeholder="BILTY NO" value="${esc(d.remarks||(biltyMain?'BILTY NO '+biltyMain:''))}"></td>
+    <td style="min-width:110px;"><input class="scheme-inp" type="text" id="scheme-${lid}" placeholder="From Variety" readonly style="background:var(--surface2);color:var(--text-muted);cursor:default;" value="${esc(d.scheme||'')}"></td>
+    <td style="min-width:90px;"><select class="subacct-sel" id="subacct-${lid}">${subOpts}</select></td>
+    <td style="min-width:110px;">
+      <input class="cust-inp" type="text" id="cust-${lid}" placeholder="ORGC000011" value="${esc(d.custCode||'')}"
+        oninput="custAcForInput(this,function(c){selCust(${lid},c)})"
+        onfocus="if(this.value.length>0)custAcForInput(this,function(c){selCust(${lid},c)})">
+    </td>
+    <td style="min-width:95px;"><input class="arno-inp" type="text" id="arno-${lid}" placeholder="626030507" value="${esc(d.arno||'')}"></td>
+    <td style="min-width:90px;"><input class="bilty-inp" type="text" id="bilty-${lid}" placeholder="${esc(biltyMain||'6600')}" value="${esc(d.bilty||biltyMain)}"></td>
+    <td style="min-width:100px;"><select class="purpose-sel" id="purp-${lid}">${purpOpts}</select></td>
+    <td class="nc" style="min-width:90px;"><input class="price-inp" type="number" id="price-${lid}" value="${d.price||0}" min="0" step="0.01" oninput="recalc()"></td>
+    <td class="nc" style="min-width:50px;"><input class="taxpct-inp" type="number" id="tp-${lid}" value="${d.taxPct||0}" min="0" max="100" oninput="recalc()"></td>
+    <td class="nc" style="min-width:65px;"><input class="litres-inp" type="number" id="litres-${lid}" value="${d.litres||0}" min="0" step="0.001"></td>
+    <td><span class="xbtn" onclick="removeLine(${lid})">✕</span></td>`;
+  } else {
+    tr.innerHTML = `
+    <td><span class="li">${rowNum}</span></td>
+    <td style="min-width:90px;">
+      <input class="icode-inp" type="text" id="icode-${lid}" placeholder="Item Code" value="${esc(d.itemCode||'')}"
+        oninput="itemAcForInput(this,function(i){selItem(${lid},i)})"
+        onfocus="if(this.value.length>0)itemAcForInput(this,function(i){selItem(${lid},i)})">
+    </td>
+    <td style="min-width:140px;"><input class="desc-inp" type="text" id="desc-${lid}" placeholder="Description" value="${esc(d.desc||'')}"></td>
+    <td style="min-width:75px;"><input class="whs-inp" type="text" id="whs-${lid}" placeholder="WH-F" value="${esc(d.whs||'')}"></td>
+    <td style="min-width:130px;"><select class="taxcode-sel" id="tax-${lid}"></select></td>
+    <td class="nc" style="min-width:90px;"><input class="price-inp" type="number" id="price-${lid}" value="${d.price||0}" min="0" step="0.01" oninput="recalc()"></td>
+    <td class="nc" style="min-width:55px;"><input class="qty-inp" type="number" id="qty-${lid}" value="${d.qty||0}" min="0" step="0.001" oninput="recalc()"></td>
+    <td class="nc" style="min-width:90px;"><input class="total-inp" type="number" readonly value="0" style="color:var(--accent2);font-weight:600;"></td>
+    <td class="nc" style="min-width:50px;"><input class="taxpct-inp" type="number" id="tp-${lid}" value="${d.taxPct||0}" min="0" max="100" oninput="recalc()"></td>
+    <td style="min-width:80px;"><input class="bilty-inp" type="text" id="bilty-${lid}" placeholder="6600" value="${esc(d.bilty||biltyMain)}"></td>
+    <td style="min-width:95px;"><input class="arno-inp" type="text" id="arno-${lid}" placeholder="626030507" value="${esc(d.arno||'')}"></td>
+    <td style="min-width:90px;"><select class="subacct-sel" id="subacct-${lid}">${subOpts}</select></td>
+    <td style="min-width:110px;">
+      <input class="cust-inp" type="text" id="cust-${lid}" placeholder="Customer Code" value="${esc(d.custCode||'')}"
+        oninput="custAcForInput(this,function(c){selCust(${lid},c)})"
+        onfocus="if(this.value.length>0)custAcForInput(this,function(c){selCust(${lid},c)})">
+    </td>
+    <td class="nc" style="min-width:65px;"><input class="litres-inp" type="number" id="litres-${lid}" value="${d.litres||0}" min="0" step="0.001"></td>
+    <td><span class="xbtn" onclick="removeLine(${lid})">✕</span></td>`;
+  }
+
+  document.getElementById('tbody').appendChild(tr);
+
+  const taxSel = tr.querySelector('.taxcode-sel');
+  if(taxSel){
+    fillTaxSel(taxSel, d.taxCode);
+    if(d.taxCode) taxSel.value = d.taxCode;
+  }
+
+  // Populate SAC select (service lines only)
+  const sacSel = tr.querySelector('.sac-sel');
+  if(sacSel){
+    populateSacSelect(sacSel);
+    if(d.sacEntry) sacSel.value = String(d.sacEntry);
+  }
+
+  renumber(); recalc();
+}
+
+// ── Selection helpers ─────────────────────
+function selGL(lid, code, name){
+  const inp  = document.getElementById(`gl-${lid}`);
+  const span = document.getElementById(`glname-${lid}`);
+  if(inp)  inp.value = code;
+  if(span){ span.textContent = name; span.title = name; }
+}
+function selCC(lid, field, code){
+  const inp = document.getElementById(`${field}-${lid}`);
+  if(inp) inp.value = code;
+}
+// Variety (Dim1 = cc1) also syncs Scheme Against
+function selCC1Variety(lid, code){
+  const inp    = document.getElementById(`cc1-${lid}`);
+  const scheme = document.getElementById(`scheme-${lid}`);
+  if(inp)    inp.value    = code;
+  if(scheme) scheme.value = code;
+}
+function selCust(lid, code){
+  const inp = document.getElementById(`cust-${lid}`);
+  if(inp) inp.value = code;
+}
+function selItem(lid, item){
+  const icode = document.getElementById(`icode-${lid}`);
+  const desc  = document.getElementById(`desc-${lid}`);
+  if(icode) icode.value = item.ItemCode;
+  if(desc)  desc.value  = item.ItemName;
+  recalc();
+}
+
+// Sync Scheme Against when Variety (cc1) typed manually
+document.getElementById('tbody').addEventListener('input', function(e){
+  if(e.target.classList.contains('cc1-inp')){
+    const row = e.target.closest('tr');
+    if(!row) return;
+    const id = row.id.replace('line-','');
+    const scheme = document.getElementById(`scheme-${id}`);
+    if(scheme) scheme.value = e.target.value;
+  }
+});
+
+function removeLine(lid){ document.getElementById(`line-${lid}`)?.remove(); renumber(); recalc(); }
+function clearLines(){ document.getElementById('tbody').innerHTML=''; lineSeq=0; recalc(); }
+function renumber(){ document.querySelectorAll('#tbody tr').forEach((tr,i)=>{ const s=tr.querySelector('.li'); if(s) s.textContent=i+1; }); }
+function rebuildLines(){
+  const n = Math.max(document.querySelectorAll('#tbody tr').length, 1);
+  buildHeaders();
+  document.getElementById('tbody').innerHTML = '';
+  lineSeq = 0;
+  for(let i=0; i<n; i++) addLine();
+}
+
+// ── Sync Bilty ────────────────────────────
+function syncBilty(v){
+  document.querySelectorAll('.bilty-inp').forEach(i => i.value = v);
+  document.querySelectorAll('.remarks-inp').forEach(i => i.value = v ? `BILTY NO ${v}` : '');
+  const cm = document.getElementById('comments');
+  if(cm && !cm.dataset.manual) cm.value = v ? `BILTY NO ${v}` : '';
+}
+document.getElementById('comments').addEventListener('input', function(){ this.dataset.manual='1'; });
+
+// ═══════════════════════════════════════════
+//  RECALCULATE
+// ═══════════════════════════════════════════
+function recalc(){
+  let pre=0, tax=0;
+  const isService = document.getElementById('lineType').value === 'Service';
+  document.querySelectorAll('#tbody tr').forEach(tr=>{
+    const price  = parseFloat(tr.querySelector('.price-inp')?.value || 0);
+    const qty    = parseFloat(tr.querySelector('.qty-inp')?.value   || 1);
+    const taxPct = parseFloat(tr.querySelector('.taxpct-inp')?.value|| 0);
+    const lt     = isService ? price * (qty>1?qty:1) : price * qty;
+    const ta     = lt * taxPct / 100;
+    const totInp = tr.querySelector('.total-inp');
+    if(totInp) totInp.value = lt.toFixed(4);
+    pre += lt; tax += ta;
+  });
+  const disc     = parseFloat(document.getElementById('discPct').value    || 0);
+  const freight  = parseFloat(document.getElementById('freightAmt').value || 0);
+  const rounding = parseFloat(document.getElementById('roundAmt').value   || 0);
+  const tot      = pre - pre*disc/100 + freight + rounding + tax;
+  document.getElementById('totPre').textContent = fmt(pre);
+  document.getElementById('totTax').textContent = fmt(tax);
+  document.getElementById('totDoc').textContent = fmt(tot);
+}
+
+// ═══════════════════════════════════════════
+//  BUILD PAYLOAD
+//
+//  CORRECTED dimension mapping:
+//    CostingCode  = Dim1 → Variety     (cc1-inp)
+//    CostingCode2 = Dim2 → Eff. Month  (cc2-inp)
+//    CostingCode3 = Dim3 → Budget      (cc3-inp)
+//    CostingCode4 = Dim4 → Sub Budget  (cc4-inp)
+// ═══════════════════════════════════════════
+//  ATTACHMENT HANDLING
+// ═══════════════════════════════════════════
+function grpoHandleAttach(key, input){
+  Array.from(input.files || []).forEach(file => {
+    if(file.size > 5 * 1024 * 1024){ toast(file.name + ' exceeds 5 MB', 'err'); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      if(!_grpoAttachments[key]) _grpoAttachments[key] = [];
+      _grpoAttachments[key].push({ name: file.name, size: file.size, type: file.type, data: e.target.result });
+      renderGrpoAttachPreviews(key);
+    };
+    r.readAsDataURL(file);
+  });
+  if(input.value !== undefined) input.value = '';
+}
+
+function renderGrpoAttachPreviews(key){
+  const el = document.getElementById('ap-' + key);
+  if(!el) return;
+  const arr = _grpoAttachments[key] || [];
+  el.innerHTML = arr.map((a, i) => `<div class="attach-preview">
+    <div class="ap-thumb">${a.type?.startsWith('image/') ? `<img src="${a.data}">` : a.type==='application/pdf' ? '📄' : '📎'}</div>
+    <div class="ap-info"><div class="ap-name">${esc(a.name)}</div><div class="ap-size">${(a.size/1024).toFixed(1)} KB</div></div>
+    <button class="ap-rm" onclick="grpoRemoveAttach('${key}',${i})">✗</button>
+  </div>`).join('');
+}
+
+function grpoRemoveAttach(key, idx){
+  if(_grpoAttachments[key]) _grpoAttachments[key].splice(idx, 1);
+  renderGrpoAttachPreviews(key);
+}
+
+function grpoHasAttachments(){
+  return Object.values(_grpoAttachments).some(arr => arr?.length > 0);
+}
+
+// ═══════════════════════════════════════════
+//    CostingCode5 = Dim5 → State       (cc5-inp)
+//
+//  LocationCode is required by SAP (OLCT.AbsEntry) — sent on every line.
+//  Series is NOT sent — SAP auto-assigns based on document date/branch.
+// ═══════════════════════════════════════════
+function buildPayload(){
+  const cardCode    = document.getElementById('cardCode').value.trim();
+  const docDate     = document.getElementById('docDate').value;
+  const dueDateV    = document.getElementById('docDueDate').value;
+  const taxDateV    = document.getElementById('taxDate').value;
+  const isService   = document.getElementById('lineType').value === 'Service';
+  const biltyMain   = document.getElementById('numAtCard').value;
+  const buyerCode   = parseInt(document.getElementById('buyer').value) || null;
+  const bplId       = parseInt(document.getElementById('bplId').value) || null;
+  const disc        = parseFloat(document.getElementById('discPct').value || 0);
+  // LocationCode = BPL ID (branch) — OLCT.AbsEntry matches BPL_IDAssignedToInvoice
+  const locationCode = bplId || null;
+  const arnoHeader   = document.getElementById('arnoHeader')?.value?.trim() || '';
+
+  const lines = [];
+  document.querySelectorAll('#tbody tr').forEach((tr, idx)=>{
+    const price   = parseFloat(tr.querySelector('.price-inp')?.value  || 0);
+    const qty     = parseFloat(tr.querySelector('.qty-inp')?.value    || 1);
+    const taxPct  = parseFloat(tr.querySelector('.taxpct-inp')?.value || 0);
+    const taxCode = tr.querySelector('.taxcode-sel')?.value || '';
+    const litres  = parseFloat(tr.querySelector('.litres-inp')?.value || 0);
+
+    if(isService){
+      const variety   = tr.querySelector('.cc1-inp')?.value || '';   // Dim1
+      const effMonth  = tr.querySelector('.cc2-inp')?.value || '';   // Dim2
+      const budget    = tr.querySelector('.cc3-inp')?.value || '';   // Dim3
+      const subBudget = tr.querySelector('.cc4-inp')?.value || '';   // Dim4
+      const remInp    = tr.querySelector('.remarks-inp')?.value || '';
+      const sacEntry  = parseInt(tr.querySelector('.sac-sel')?.value) || null;
+      const subAcct   = tr.querySelector('.subacct-sel')?.value || '';
+      const custCode  = tr.querySelector('.cust-inp')?.value?.trim() || '';
+      const arno      = tr.querySelector('.arno-inp')?.value?.trim() || '';
+      const biltyNo   = tr.querySelector('.bilty-inp')?.value?.trim() || '';
+      const purpose   = tr.querySelector('.purpose-sel')?.value || '';
+
+      const line = {
+        LineNum:         idx,
+        ItemDescription: tr.querySelector('.desc-inp')?.value || '',
+        AccountCode:     tr.querySelector('.gl-inp')?.value   || '',
+        Quantity:        1,
+        UnitPrice:       price,
+        LineTotal:       price,
+        TaxCode:         taxCode,
+        VatGroup:        taxCode,
+        FreeText:        remInp,
+      };
+
+      if(variety)    line.CostingCode  = variety;    // Dim1
+      if(effMonth)   line.CostingCode2 = effMonth;   // Dim2
+      if(budget)     line.CostingCode3 = budget;     // Dim3
+      if(subBudget)  line.CostingCode4 = subBudget;  // Dim4
+      if(sacEntry)   line.SACEntry     = sacEntry;   // GST SAC (OSAC.AbsEntry)
+
+      // UDFs
+      if(litres > 0) line.U_UNE_LTS    = litres;    // litres → U_UNE_LTS
+      if(remInp)     line.U_Remarks     = remInp;    // remarks → U_Remarks
+      if(subAcct)    line.U_Sub_Account = subAcct;   // sub account → U_Sub_Account
+      if(custCode)   line.U_CardCode    = custCode;  // customer code → U_CardCode
+      if(arno)       line.U_ARNO        = arno;      // ARNO → U_ARNO
+      if(biltyNo)    line.U_BilltyNumber= biltyNo;   // bilty no → U_BilltyNumber
+      if(purpose)    line.U_Purpose     = purpose;   // purpose → U_Purpose
+
+      if(buyerCode)     line.SalesPersonCode = buyerCode;
+      if(locationCode)  line.LocationCode    = locationCode;
+
+      lines.push(line);
+    } else {
+      const subAcct  = tr.querySelector('.subacct-sel')?.value || '';
+      const custCode = tr.querySelector('.cust-inp')?.value?.trim() || '';
+      const arno     = tr.querySelector('.arno-inp')?.value?.trim() || '';
+      const biltyNo  = tr.querySelector('.bilty-inp')?.value?.trim() || '';
+      const line = {
+        LineNum:         idx,
+        ItemCode:        tr.querySelector('.icode-inp')?.value?.trim().toUpperCase() || '',
+        ItemDescription: tr.querySelector('.desc-inp')?.value || '',
+        WarehouseCode:   tr.querySelector('.whs-inp')?.value  || '',
+        Quantity:        qty,
+        UnitPrice:       price,
+        LineTotal:       parseFloat((price*qty).toFixed(2)),
+        TaxCode:         taxCode,
+        VatGroup:        taxCode,
+      };
+      if(litres > 0) line.U_UNE_LTS     = litres;
+      if(subAcct)    line.U_Sub_Account  = subAcct;
+      if(custCode)   line.U_CardCode     = custCode;
+      if(arno)       line.U_ARNO         = arno;
+      if(biltyNo)    line.U_BilltyNumber = biltyNo;
+      if(buyerCode)     line.SalesPersonCode = buyerCode;
+      if(locationCode)  line.LocationCode    = locationCode;
+      lines.push(line);
+    }
+  });
+
+  const payload = {
+    DocType:       isService ? 'dDocument_Service' : 'dDocument_Items',
+    CardCode:      cardCode,
+    NumAtCard:     biltyMain,
+    DocDate:       docDate   ? `${docDate}T00:00:00Z`   : undefined,
+    DocDueDate:    dueDateV  ? `${dueDateV}T00:00:00Z`  : undefined,
+    TaxDate:       taxDateV  ? `${taxDateV}T00:00:00Z`  : undefined,
+    Comments:      document.getElementById('comments').value || (biltyMain ? `BILTY NO ${biltyMain}` : ''),
+    DocumentLines: lines,
+  };
+
+  // Series NOT included — SAP auto-assigns
+  if(bplId)      payload.BPL_IDAssignedToInvoice = bplId;
+  if(disc > 0)   payload.DiscountPercent = disc;
+  if(buyerCode)  payload.SalesPersonCode = buyerCode;
+
+  const freight = parseFloat(document.getElementById('freightAmt').value || 0);
+  if(freight > 0){
+    payload.DocumentAdditionalExpenses = [{
+      ExpenseCode: 1,
+      LineGross:   freight,
+      LineTotal:   freight,
+    }];
+  }
+
+  Object.keys(payload).forEach(k => { if(payload[k]===undefined) delete payload[k]; });
+
+  // Attach files (base64) if any were selected
+  if(grpoHasAttachments()) payload.attachments = _grpoAttachments;
+
+  return payload;
+}
+
+// ═══════════════════════════════════════════
+//  SUBMIT
+// ═══════════════════════════════════════════
+async function submitGRPO(){
+  if(!document.getElementById('cardCode').value.trim())
+    return toast('Select a vendor first.','err');
+  if(!document.getElementById('docDate').value)
+    return toast('Posting Date required.','err');
+  const rows = document.querySelectorAll('#tbody tr');
+  if(!rows.length)
+    return toast('Add at least one line.','err');
+
+  const isService = document.getElementById('lineType').value === 'Service';
+  if(isService){
+    let hasGL = true;
+    rows.forEach(tr => { if(!tr.querySelector('.gl-inp')?.value?.trim()) hasGL = false; });
+    if(!hasGL) return toast('All service lines need a G/L Account.','err');
+  }
+
+  const payload = buildPayload();
+  showResp(payload);
+  document.getElementById('overlay').classList.add('show');
+
+  try{
+    const res  = await fetch(`${API}${GRPO_ENDPOINT}`, {
+      method:  'POST',
+      headers: {'Content-Type':'application/json', ...ah()},
+      body:    JSON.stringify(payload),
+    });
+    const data = await res.json();
+    document.getElementById('overlay').classList.remove('show');
+
+    if(res.ok && data?.DocEntry){
+      document.getElementById('statusBadge').textContent = '● OPEN';
+      document.getElementById('statusBadge').className   = 'badge badge-open';
+      document.getElementById('docNumDisp').textContent  = data.DocNum || data.DocEntry || 'Posted';
+      document.getElementById('statusDisp').textContent  = 'Open';
+      showResp(data);
+      toast(`✓ GRPO Posted — Doc# ${data.DocNum||data.DocEntry}`, 'ok');
+    } else {
+      const sapMsg = data?.error?.message?.value || data?.message || JSON.stringify(data);
+      toast(`Error: ${sapMsg}`, 'err');
+      showResp(data);
+    }
+  }catch(err){
+    document.getElementById('overlay').classList.remove('show');
+    toast('Network error: ' + err.message, 'err');
+    showResp({error: err.message, payload});
+  }
+}
+
+function resetForm(){
+  if(!confirm('Reset all fields?')) return;
+  ['vendorSearch','cardCode','cardName','numAtCard','comments'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  delete document.getElementById('comments').dataset.manual;
+  const today = new Date().toISOString().slice(0,10);
+  ['docDate','docDueDate','taxDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = today;
+  });
+  clearLines(); addLine();
+  document.getElementById('statusBadge').textContent = '● DRAFT';
+  document.getElementById('statusBadge').className   = 'badge badge-draft';
+  document.getElementById('docNumDisp').textContent  = 'AUTO';
+  document.getElementById('statusDisp').textContent  = 'Draft';
+  document.getElementById('respPanel').style.display = 'none';
+  closePortal();
+  toast('Form reset.', 'info');
+}
+
+function toggleResp(){
+  const p = document.getElementById('respPanel');
+  p.style.display = p.style.display==='block' ? 'none' : 'block';
+  if(p.style.display==='block') showResp(buildPayload());
+}
+function showResp(d){
+  const p = document.getElementById('respPanel');
+  p.textContent = JSON.stringify(d, null, 2);
+  p.style.display = 'block';
+}
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

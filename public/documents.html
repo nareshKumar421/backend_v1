@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Documents — SAP B1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#080e18;--ink2:#0d1626;--ink3:#111f35;--blue:#1a6fff;--amber:#f5a623;--green:#0dbb8a;--red:#e53e3e;--teal:#06b6d4;--border:#1c2e48;--border2:#243650;--text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;--surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;--radius:10px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh}
+main{padding:12px;max-width:900px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px}
+.card-hd{background:var(--surface3);padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0}
+.card-hd .right{margin-left:auto;font-size:11px;color:var(--text3);font-weight:400}
+.card-bd{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:4px;display:block}
+.fi{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;height:36px}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,111,255,.15)}
+select.fi{cursor:pointer;appearance:none;background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233d5470'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:26px}
+select.fi option{background:var(--surface2)}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:500px){.fi-row{grid-template-columns:1fr}}
+.fi-mono{font-family:var(--mono);font-size:12px}
+.doc-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.doc-card:hover{border-color:var(--blue);transform:translateY(-1px)}
+.doc-top{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.doc-num{font-family:var(--mono);font-size:12px;color:var(--blue);font-weight:600}
+.doc-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px}
+.doc-badge.open{background:rgba(13,187,138,.1);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+.doc-badge.closed{background:rgba(229,62,62,.08);color:var(--red);border:1px solid rgba(229,62,62,.2)}
+.doc-badge.attach{background:rgba(26,111,255,.08);color:var(--blue);border:1px solid rgba(26,111,255,.25)}
+.doc-name{font-size:12px;font-weight:600;color:var(--text)}
+.doc-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.doc-meta b{color:var(--text2)}
+.type-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.type-tab{padding:6px 12px;border-radius:8px;font-size:10px;font-weight:700;color:var(--text3);cursor:pointer;border:1px solid var(--border2);background:none;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.type-tab:hover{color:var(--text2);border-color:var(--text3)}
+.type-tab.on{color:var(--blue);border-color:var(--blue);background:rgba(26,111,255,.06)}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.b-primary{background:var(--blue);color:#fff}.b-primary:hover:not(:disabled){background:#0d4fd4}
+.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.empty-msg{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:56px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;max-width:280px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:12px;overflow-y:auto}
+.modal-bg.show{display:flex}
+.modal{background:var(--ink2);border:1px solid var(--border2);border-radius:var(--radius);width:100%;max-width:700px;margin:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:mIn .2s ease}
+@keyframes mIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hd{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}.modal-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-bd{padding:14px;max-height:75vh;overflow-y:auto}
+.dt-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(28,46,72,.3);font-size:12px}
+.dt-row .dt-l{color:var(--text3);font-weight:600;font-size:10px;text-transform:uppercase;min-width:35%}
+.dt-row .dt-v{color:var(--text);text-align:right;font-family:var(--mono);font-size:11px}
+.line-card{background:var(--ink3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:4px;font-size:11px}
+.att-row{display:flex;align-items:center;gap:10px;padding:8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;margin-bottom:4px}
+.att-name{font-size:11px;color:var(--text);flex:1}
+.att-btn{padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;background:rgba(26,111,255,.08);color:var(--blue);border:1px solid rgba(26,111,255,.25);cursor:pointer}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<div class="modal-bg" id="doc-modal"><div class="modal" id="modal-inner"></div></div>
+<main id="app"></main>
+
+<script>
+'use strict';
+let _tok=null,_user=null;
+const BE=`${window.location.origin}/api`;
+(function(){try{_tok=sessionStorage.getItem('portal_token')||localStorage.getItem('token');const u=sessionStorage.getItem('portal_user');if(u)_user=JSON.parse(u);}catch(_e){}})();
+if(!_tok)window.location.href='/';
+
+let _co='JIVO_OIL_HANADB';
+let _docType='PurchaseOrders';
+let _docs=[];
+let _loading=false;
+let _search='';
+let _bpSearch='';
+let _dateFrom='';
+let _dateTo='';
+let _docStatus='';
+let _skip=0;
+
+const TYPES=[
+  {key:'PurchaseOrders',label:'Purchase Order',icon:'&#128196;',group:'Purchase'},
+  {key:'PurchaseDeliveryNotes',label:'GRPO',icon:'&#128230;',group:'Purchase'},
+  {key:'PurchaseInvoices',label:'AP Invoice',icon:'&#128179;',group:'Purchase'},
+  {key:'PurchaseCreditNotes',label:'AP Credit Note',icon:'&#128179;',group:'Purchase'},
+  {key:'PurchaseReturns',label:'Goods Return',icon:'&#128260;',group:'Purchase'},
+  {key:'Invoices',label:'AR Invoice',icon:'&#128176;',group:'Sales'},
+  {key:'CreditNotes',label:'AR Credit Memo',icon:'&#128176;',group:'Sales'},
+  {key:'Returns',label:'Return Notes',icon:'&#128260;',group:'Sales'},
+  {key:'JournalEntries',label:'Journal Entry',icon:'&#128209;',group:'Finance'},
+];
+
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function q(s){return document.querySelector(s);}
+function mk(c){const d=document.createElement('div');d.className=c;return d;}
+function fmtDate(d){if(!d)return'-';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+function fmtAmt(v,c){return(c||'INR')+' '+Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+async function api(m,p,b=null){
+  const h={'Content-Type':'application/json'};if(_tok)h['Authorization']='Bearer '+_tok;
+  const o={method:m.toUpperCase(),headers:h};if(b)o.body=JSON.stringify(b);
+  let r,d;try{r=await fetch(BE+p,o);d=await r.json();}catch(_e){throw new Error('Cannot reach server');}
+  if(r.status===401){window.location.href='/';throw new Error('Session expired');}
+  if(!r.ok)throw new Error(d?.message||'HTTP '+r.status);return d;
+}
+function toast(msg,type='ok'){const tc=document.getElementById('toast-c');const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=(type==='ok'?'OK ':'ERR ')+msg;tc.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+async function loadDocs(){
+  _loading=true;render();
+  try{
+    let qs=_search?`&q=${encodeURIComponent(_search)}`:'';
+    if(_bpSearch)qs+=`&bp=${encodeURIComponent(_bpSearch)}`;
+    if(_dateFrom)qs+=`&dateFrom=${_dateFrom}`;
+    if(_dateTo)qs+=`&dateTo=${_dateTo}`;
+    if(_docStatus)qs+=`&status=${_docStatus}`;
+    const r=await api('GET',`/sap/documents/${_docType}?company=${encodeURIComponent(_co)}&top=20&skip=${_skip}${qs}`);
+    _docs=r.data||[];
+  }catch(e){toast(e.message,'err');_docs=[];}
+  _loading=false;render();
+}
+
+function render(){
+  const app=document.getElementById('app');app.innerHTML='';
+
+  // Company + Type selector
+  const c1=mk('card');
+  c1.innerHTML=`<div class="card-hd">&#128196; Documents Viewer</div>
+  <div class="card-bd">
+    <div class="fg"><label class="fl">Company</label><select class="fi" id="sel-co">
+      <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+      <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+      <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+      <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+    </select></div>
+    <div class="fg"><label class="fl">Document Type</label>
+      <div class="type-tabs" id="type-tabs">
+        ${TYPES.map(t=>`<button class="type-tab${_docType===t.key?' on':''}" data-dt="${t.key}">${t.icon} ${t.label}</button>`).join('')}
+      </div>
+    </div>
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Doc Number</label><input class="fi fi-mono" id="inp-search" value="${esc(_search)}" placeholder="e.g. 123456"/></div>
+      <div class="fg"><label class="fl">Vendor / Customer</label><input class="fi" id="inp-bp" value="${esc(_bpSearch)}" placeholder="BP Code or Name..."/></div>
+    </div>
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Date From</label><input class="fi" id="inp-datefrom" type="date" value="${_dateFrom}"/></div>
+      <div class="fg"><label class="fl">Date To</label><input class="fi" id="inp-dateto" type="date" value="${_dateTo}"/></div>
+    </div>
+    <div class="fg"><label class="fl">Status</label><select class="fi" id="inp-status">
+      <option value="" ${_docStatus===''?'selected':''}>All</option>
+      <option value="O" ${_docStatus==='O'?'selected':''}>Open</option>
+      <option value="C" ${_docStatus==='C'?'selected':''}>Closed</option>
+      <option value="L" ${_docStatus==='L'?'selected':''}>Cancelled</option>
+    </select></div>
+    <div style="display:flex;gap:6px">
+      <button class="btn b-primary" id="btn-search" style="flex:1;height:36px">Search</button>
+      <button class="btn b-cancel" id="btn-clear" style="height:36px;font-size:11px">Clear All</button>
+    </div>
+  </div>`;
+  app.appendChild(c1);
+
+  // Documents list
+  const c2=mk('card');
+  const typeCfg=TYPES.find(t=>t.key===_docType);
+  let listHtml='';
+  if(_loading){
+    listHtml='<div class="empty-msg"><span class="sp" style="border-color:rgba(26,111,255,.25);border-top-color:var(--blue)"></span> Loading...</div>';
+  }else if(!_docs.length){
+    listHtml='<div class="empty-msg">No documents found</div>';
+  }else{
+    const isJE=_docType==='JournalEntries';
+    listHtml=_docs.map(d=>{
+      const num=isJE?(d.Number||d.JdtNum):(d.DocNum||d.DocEntry);
+      const entry=isJE?d.JdtNum:d.DocEntry;
+      const date=isJE?fmtDate(d.ReferenceDate):fmtDate(d.DocDate);
+      const total=isJE?'':fmtAmt(d.DocTotal,d.DocCurrency);
+      const status=d.DocumentStatus==='bost_Close'?'closed':'open';
+      const hasAttach=d.AttachmentEntry&&d.AttachmentEntry>0;
+      return`<div class="doc-card" data-entry="${entry}" data-type="${_docType}">
+        <div class="doc-top">
+          <span class="doc-num">#${num}</span>
+          ${!isJE?`<span class="doc-badge ${status}">${status==='closed'?'Closed':'Open'}</span>`:''}
+          ${hasAttach?'<span class="doc-badge attach">Attachment</span>':''}
+        </div>
+        <div class="doc-name">${esc(isJE?(d.Memo||'-'):(d.CardName||d.CardCode||'-'))}</div>
+        <div class="doc-meta">
+          <span>Date: <b>${date}</b></span>
+          ${!isJE?`<span>Total: <b>${total}</b></span>`:''}
+          ${!isJE&&d.CardCode?`<span>BP: <b>${esc(d.CardCode)}</b></span>`:''}
+          ${isJE&&d.Reference?`<span>Ref: <b>${esc(d.Reference)}</b></span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  c2.innerHTML=`<div class="card-hd">${typeCfg?.icon||''} ${typeCfg?.label||_docType}<span class="right">${_docs.length} doc${_docs.length!==1?'s':''}</span></div>
+  <div class="card-bd">${listHtml}
+    ${!_loading&&_docs.length>=20?`<div style="display:flex;gap:6px;margin-top:8px;justify-content:center">
+      ${_skip>0?'<button class="btn b-cancel" id="btn-prev" style="font-size:11px">Prev</button>':''}
+      <button class="btn b-cancel" id="btn-next" style="font-size:11px">Next 20</button>
+    </div>`:''}
+  </div>`;
+  app.appendChild(c2);
+
+  // Wire events
+  setTimeout(()=>{
+    q('#sel-co')&&(q('#sel-co').onchange=function(){_co=this.value;_skip=0;loadDocs();});
+    document.querySelectorAll('[data-dt]').forEach(b=>{b.onclick=function(){_docType=this.dataset.dt;_skip=0;_search='';loadDocs();};});
+    q('#btn-search')&&(q('#btn-search').onclick=function(){
+      _search=(q('#inp-search')?.value||'').trim();
+      _bpSearch=(q('#inp-bp')?.value||'').trim();
+      _dateFrom=q('#inp-datefrom')?.value||'';
+      _dateTo=q('#inp-dateto')?.value||'';
+      _docStatus=q('#inp-status')?.value||'';
+      _skip=0;loadDocs();
+    });
+    q('#btn-clear')&&(q('#btn-clear').onclick=function(){_search='';_bpSearch='';_dateFrom='';_dateTo='';_docStatus='';_skip=0;loadDocs();});
+    q('#inp-search')&&(q('#inp-search').onkeydown=function(e){if(e.key==='Enter')q('#btn-search')?.click();});
+    q('#inp-bp')&&(q('#inp-bp').onkeydown=function(e){if(e.key==='Enter')q('#btn-search')?.click();});
+    q('#btn-prev')&&(q('#btn-prev').onclick=function(){_skip=Math.max(0,_skip-20);loadDocs();});
+    q('#btn-next')&&(q('#btn-next').onclick=function(){_skip+=20;loadDocs();});
+    document.querySelectorAll('[data-entry]').forEach(c=>{c.onclick=function(){openDetail(this.dataset.type,parseInt(this.dataset.entry));};});
+  },0);
+}
+
+async function openDetail(type,entry){
+  const modal=document.getElementById('doc-modal'),inner=document.getElementById('modal-inner');
+  modal.classList.add('show');
+  inner.innerHTML='<div style="padding:40px;text-align:center;color:var(--text3)"><span class="sp" style="border-color:rgba(26,111,255,.25);border-top-color:var(--blue)"></span> Loading...</div>';
+  try{
+    const r=await api('GET',`/sap/documents/${type}/${entry}?company=${encodeURIComponent(_co)}`);
+    const d=r.data;
+    const isJE=type==='JournalEntries';
+    const typeCfg=TYPES.find(t=>t.key===type);
+    const num=isJE?(d.Number||d.JdtNum):(d.DocNum||d.DocEntry);
+
+    // Lines
+    const lines=isJE?(d.JournalEntryLines||[]):(d.DocumentLines||[]);
+    const linesHtml=lines.length?lines.map((l,i)=>{
+      if(isJE) return(i===0?`<div class="line-card" style="font-weight:700;color:var(--text3);font-size:10px;text-transform:uppercase;background:var(--surface3)"><div style="display:flex;gap:8px"><span style="min-width:80px">Account</span><span style="flex:1">Memo</span><span style="min-width:80px;text-align:right">Debit</span><span style="min-width:80px;text-align:right">Credit</span></div></div>`:'')+`<div class="line-card"><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-family:var(--mono);color:var(--blue);min-width:80px">${esc(l.AccountCode)}</span><span style="flex:1;color:var(--text2)">${esc(l.LineMemo||'')}</span><span style="color:var(--green);font-family:var(--mono);min-width:80px;text-align:right">${l.Debit?'Dr '+fmtAmt(l.Debit):''}</span><span style="color:var(--red);font-family:var(--mono);min-width:80px;text-align:right">${l.Credit?'Cr '+fmtAmt(l.Credit):''}</span></div></div>`;
+      return(i===0?`<div class="line-card" style="font-weight:700;color:var(--text3);font-size:10px;text-transform:uppercase;background:var(--surface3)"><div style="display:flex;gap:8px"><span style="min-width:80px">Item Code</span><span style="flex:1">Description</span><span style="min-width:60px;text-align:right">Qty</span><span style="min-width:50px">Whse</span><span style="min-width:80px;text-align:right">Unit Price</span><span style="min-width:90px;text-align:right">Total</span></div></div>`:'')+`<div class="line-card"><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-family:var(--mono);color:var(--blue);min-width:80px">${esc(l.ItemCode||'')}</span><span style="flex:1;color:var(--text2)">${esc(l.ItemDescription||'')}</span><span style="font-family:var(--mono);min-width:60px;text-align:right">${l.Quantity||''}</span><span style="color:var(--text3);min-width:50px">${esc(l.WarehouseCode||'')}</span><span style="font-family:var(--mono);color:var(--text3);min-width:80px;text-align:right">${l.UnitPrice?fmtAmt(l.UnitPrice):'-'}</span><span style="font-family:var(--mono);color:var(--text);min-width:90px;text-align:right">${l.LineTotal?fmtAmt(l.LineTotal):''}</span></div></div>`;
+    }).join(''):'<div class="empty-msg">No lines</div>';
+
+    // Attachments
+    let attachHtml='';
+    if(!isJE&&d.AttachmentEntry&&d.AttachmentEntry>0){
+      try{
+        const att=await api('GET',`/sap/attachments/${d.AttachmentEntry}?company=${encodeURIComponent(_co)}`);
+        const attLines=att.data?.Attachments2_Lines||[];
+        if(attLines.length){
+          attachHtml=`<div style="margin-top:12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Attachments (${attLines.length})</div>`+
+            attLines.map((a,i)=>`<div class="att-row"><span style="font-size:16px">&#128206;</span><div class="att-name">${esc(a.FileName||'')}.${esc(a.FileExtension||'')}<div style="font-size:9px;color:var(--text3)">${esc(a.SourcePath||'')}</div></div><button class="att-btn" onclick="viewAttachment(${d.AttachmentEntry},${a.LineNum||i})">View</button></div>`).join('');
+        }
+      }catch(_e){}
+    }
+
+    inner.innerHTML=`<div class="modal-hd"><div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px"><span>${typeCfg?.icon||''}</span><span>${typeCfg?.label||type}</span><span style="font-family:var(--mono);color:var(--blue)">#${num}</span></div><button class="modal-close" id="m-close">X</button></div>
+    <div class="modal-bd">
+      ${isJE?`
+        <div class="dt-row"><span class="dt-l">Number</span><span class="dt-v">${d.Number||d.JdtNum}</span></div>
+        <div class="dt-row"><span class="dt-l">Date</span><span class="dt-v">${fmtDate(d.ReferenceDate)}</span></div>
+        <div class="dt-row"><span class="dt-l">Due Date</span><span class="dt-v">${fmtDate(d.DueDate)}</span></div>
+        <div class="dt-row"><span class="dt-l">Memo</span><span class="dt-v" style="font-family:var(--font)">${esc(d.Memo||'-')}</span></div>
+        <div class="dt-row"><span class="dt-l">Reference</span><span class="dt-v">${esc(d.Reference||'-')}</span></div>
+      `:`
+        <div class="dt-row"><span class="dt-l">Doc Number</span><span class="dt-v">${d.DocNum||d.DocEntry}</span></div>
+        <div class="dt-row"><span class="dt-l">Date</span><span class="dt-v">${fmtDate(d.DocDate)}</span></div>
+        <div class="dt-row"><span class="dt-l">Due Date</span><span class="dt-v">${fmtDate(d.DocDueDate)}</span></div>
+        <div class="dt-row"><span class="dt-l">Business Partner</span><span class="dt-v" style="font-family:var(--font)">${esc(d.CardName||d.CardCode||'-')}</span></div>
+        <div class="dt-row"><span class="dt-l">Total</span><span class="dt-v">${fmtAmt(d.DocTotal,d.DocCurrency)}</span></div>
+        <div class="dt-row"><span class="dt-l">Status</span><span class="dt-v">${d.DocumentStatus==='bost_Close'?'Closed':'Open'}</span></div>
+        <div class="dt-row"><span class="dt-l">Comments</span><span class="dt-v" style="font-family:var(--font)">${esc(d.Comments||'-')}</span></div>
+      `}
+      <div style="margin-top:12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Lines (${lines.length})</div>
+      ${linesHtml}
+      ${attachHtml}
+    </div>`;
+    q('#m-close').onclick=()=>modal.classList.remove('show');
+    modal.onclick=e=>{if(e.target===modal)modal.classList.remove('show');};
+  }catch(e){inner.innerHTML=`<div style="padding:30px;text-align:center;color:var(--red)">${esc(e.message)}</div>`;}
+}
+
+window.viewAttachment=function(entry,lineId){
+  const url=BE+`/sap/attachments/${entry}/download/${lineId}?company=${encodeURIComponent(_co)}`;
+  // Need auth header — fetch as blob and open
+  fetch(url,{headers:{'Authorization':'Bearer '+_tok}})
+    .then(r=>{
+      if(!r.ok)throw new Error('File not accessible');
+      return r.blob();
+    })
+    .then(blob=>{
+      const burl=URL.createObjectURL(blob);
+      window.open(burl,'_blank');
+    })
+    .catch(e=>{toast('Cannot open: '+e.message,'err');});
+};
+
+loadDocs();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

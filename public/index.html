@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>SAP B1 — Unified Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+/* Hide old nav — sidebar.js handles navigation */
+nav#nav{display:none!important}
+</style>
+<style>
+:root{
+  --ink:#f4f6f9;--ink2:#ffffff;--ink3:#e8ecf1;
+  --blue:#0a6ed1;--blue2:#085cad;--blue-glow:rgba(10,110,209,.12);
+  --amber:#e78c07;--amber2:#c97800;--green:#2b7d2b;--red:#cc1919;
+  --border:#d9dce0;--border2:#c4c6c8;
+  --text:#32363a;--text2:#515456;--text3:#6a6d70;
+  --surface:#ffffff;--surface2:#f7f7f7;
+  --radius:10px;--radius-lg:14px;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{display:none}
+
+/* ── GRADIENT BG ── */
+.bg-glow{display:none;
+  background:none
+             radial-gradient(ellipse 40% 40% at 80% 70%,rgba(245,166,35,.04) 0%,transparent 60%)}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:#fff;backdrop-filter:blur(20px);border-bottom:1px solid #d9dce0;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-logo{background:var(--blue);color:#fff;font-family:var(--display);font-size:18px;letter-spacing:2px;padding:4px 10px;border-radius:6px}
+.nav-title{font-size:12px;font-weight:500;color:var(--text2);display:none}
+@media(min-width:480px){.nav-title{display:block}}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-link{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;text-decoration:none;border:none;background:none;font-family:var(--font)}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nav-link.active{color:var(--blue);background:rgba(26,111,255,.1)}
+.nav-user{display:flex;align-items:center;gap:8px}
+.user-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);display:none}
+@media(min-width:600px){.user-pill{display:flex;align-items:center;gap:6px}}
+.user-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.btn-logout{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--border2);color:var(--text3);background:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN ── */
+main{position:relative;z-index:1;padding:20px 16px 60px;max-width:1200px;margin:0 auto}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:40px 32px;width:100%;max-width:420px;box-shadow:var(--shadow)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.login-logo-box{background:var(--blue);color:#fff;font-family:var(--display);font-size:22px;letter-spacing:2px;padding:6px 12px;border-radius:8px}
+.login-logo-text{font-size:13px;font-weight:500;color:var(--text2)}
+.login-h{font-family:var(--display);font-size:28px;letter-spacing:1px;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--text3);margin-bottom:28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.3px}
+.badge-blue{background:rgba(26,111,255,.15);color:var(--blue);border:1px solid rgba(26,111,255,.3)}
+.badge-amber{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.badge-green{background:rgba(13,187,138,.15);color:var(--green);border:1px solid rgba(13,187,138,.3)}
+.badge-red{background:rgba(229,62,62,.15);color:var(--red);border:1px solid rgba(229,62,62,.3)}
+.badge-purple{background:rgba(159,90,253,.15);color:#9f5afd;border:1px solid rgba(159,90,253,.3)}
+
+.field{margin-bottom:16px}
+.field-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:7px;display:block}
+.field-input{width:100%;padding:10px 13px;background:var(--ink3);border:1.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border .2s,box-shadow .2s}
+.field-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.field-input::placeholder{color:var(--text3)}
+.btn-primary{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.btn-primary:hover:not(:disabled){background:var(--blue2);box-shadow:0 4px 20px rgba(26,111,255,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.err-box{background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);color:#fc8181;padding:10px 13px;border-radius:var(--radius);font-size:12px;margin-bottom:16px;display:none}
+.err-box.show{display:block}
+
+/* ── DASHBOARD ── */
+.page-header{margin-bottom:24px}
+.page-title{font-family:var(--display);font-size:32px;letter-spacing:1px;color:var(--text);margin-bottom:4px}
+.page-sub{font-size:12px;color:var(--text3)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+@media(min-width:640px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 16px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.s-blue::after{background:var(--blue)}
+.stat-card.s-amber::after{background:var(--amber)}
+.stat-card.s-green::after{background:var(--green)}
+.stat-card.s-red::after{background:var(--red)}
+.stat-val{font-family:var(--display);font-size:36px;letter-spacing:1px;color:var(--text);line-height:1}
+.stat-label{font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+
+/* ── MODULE CARDS ── */
+.modules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+@media(min-width:600px){.modules-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.modules-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1200px){.modules-grid{grid-template-columns:repeat(5,1fr)}}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center}
+.module-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.06);border-color:#047e7e}
+.mc-icon{font-size:28px;margin-bottom:8px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#f4f6f9;border-radius:12px}
+.mc-title{font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px}
+.mc-desc{font-size:10px;color:var(--text3);line-height:1.4}
+
+/* ── APPROVAL PIPELINE ── */
+.pipeline{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:24px}
+.pipeline-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:16px}
+.pipeline-steps{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
+.pipeline-step{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:80px}
+.ps-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3);background:var(--ink3);transition:all .3s}
+.ps-circle.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 4px rgba(26,111,255,.2)}
+.ps-circle.done{background:var(--green);border-color:var(--green);color:#fff}
+.ps-circle.rejected{background:var(--red);border-color:var(--red);color:#fff}
+.ps-label{font-size:9px;font-weight:600;text-align:center;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;line-height:1.3;max-width:72px}
+.ps-label.active{color:var(--blue)}
+.ps-label.done{color:var(--green)}
+.pipeline-arrow{flex-shrink:0;width:24px;height:2px;background:var(--border);margin:0 -4px;margin-top:-20px;position:relative;top:-10px}
+.pipeline-arrow.done{background:var(--green)}
+
+/* ── SPINNER ── */
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;top:66px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:10px 14px;border-radius:var(--radius);font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:slideIn .2s ease;display:flex;align-items:center;gap:8px;max-width:300px;pointer-events:auto}
+.toast-ok{background:var(--green);color:#fff}
+.toast-err{background:var(--red);color:#fff}
+.toast-warn{background:var(--amber);color:#fff}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="toast-container" id="toast-c"></div>
+
+<nav id="nav" style="display:none">
+  <div class="nav-brand">
+    <span class="nav-logo">SAP</span>
+    <span class="nav-title">Business One Portal</span>
+  </div>
+  <div class="nav-links" id="nav-links"></div>
+  <div class="nav-user">
+    <div class="user-pill" id="user-pill">
+      <span class="user-dot"></span>
+      <span id="user-name-nav">User</span>
+    </div>
+    <button class="btn-logout" id="btn-logout">Logout</button>
+  </div>
+</nav>
+
+<div id="root"></div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════
+//  STATE & CONFIG
+// ════════════════════════════════════════════════════
+let _tok = null;
+let _user = null;
+let _cfg = null;
+
+(function(){
+  try {
+    _tok = sessionStorage.getItem('portal_token') || localStorage.getItem('token') || null;
+    const u = sessionStorage.getItem('portal_user');
+    if (u) _user = JSON.parse(u);
+  } catch {}
+})();
+
+const BACKEND = `${window.location.origin}/api`;
+
+async function api(method, path, body = null) {
+  const h = { 'Content-Type': 'application/json' };
+  if (_tok) h['Authorization'] = 'Bearer ' + _tok;
+  const opt = { method: method.toUpperCase(), headers: h };
+  if (body) opt.body = JSON.stringify(body);
+  let r, d;
+  try { r = await fetch(BACKEND + path, opt); d = await r.json(); }
+  catch (e) { throw new Error('Cannot reach server'); }
+  if (r.status === 401) { doLogout(); throw new Error('Session expired'); }
+  if (!r.ok) throw new Error(d?.message || 'HTTP ' + r.status);
+  return d;
+}
+
+function toast(msg, type = 'ok') {
+  const tc = document.getElementById('toast-c');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = (type === 'ok' ? '✓  ' : type === 'err' ? '✗  ' : '⚠  ') + msg;
+  tc.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function esc(v) { return (v || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════
+async function doLogin(username, password) {
+  const r = await api('POST', '/auth/login', { username, password });
+  _tok = r.token; _user = r.user;
+  try { sessionStorage.setItem('portal_token', _tok); sessionStorage.setItem('portal_user', JSON.stringify(_user)); localStorage.setItem('token', _tok); } catch {}
+  window.location.reload();
+}
+
+function doLogout() {
+  _tok = null; _user = null; _cfg = null;
+  try { sessionStorage.clear(); localStorage.removeItem('token'); } catch {}
+  window.location.reload();
+}
+
+async function loadConfig() {
+  try { const r = await api('GET', '/config'); _cfg = r; } catch {}
+}
+
+// ════════════════════════════════════════════════════
+//  RENDER ENGINE
+// ════════════════════════════════════════════════════
+function renderApp() {
+  const nav = document.getElementById('nav');
+  const root = document.getElementById('root');
+
+  if (!_tok || !_user) {
+    root.innerHTML = '';
+    root.appendChild(buildLogin());
+    return;
+  }
+
+  // Nav handled by sidebar.js — no old nav needed
+
+  root.innerHTML = '';
+  root.appendChild(buildDashboard());
+}
+
+function buildNavLinks() {
+  const container = document.getElementById('nav-links');
+  const role = _user?.role;
+  const links = [
+    { label: '⌂ Home', href: '/' },
+    { label: '⊞ BOM', href: '/bom' },
+    { label: '✅ Approvals', href: '/approvals' },
+  ];
+  if (role === 'manager' || role === 'sr_manager' || role === 'sap_adder') {
+    links.push({ label: '◧ Customers', href: '/admin' });
+  }
+  if (role === 'sap_adder') {
+    links.push({ label: '⚙ Admin', href: '/admin' });
+  }
+  container.innerHTML = links.map(l =>
+    `<a href="${l.href}" class="nav-link">${l.label}</a>`
+  ).join('');
+}
+
+// ════════════════════════════════════════════════════
+//  LOGIN PAGE
+// ════════════════════════════════════════════════════
+function buildLogin() {
+  const wrap = document.createElement('div');
+  wrap.className = 'login-wrap';
+  wrap.innerHTML = `
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="login-logo-box">SAP</span>
+        <span class="login-logo-text">Business One</span>
+      </div>
+      <div class="login-h">Sign In</div>
+      <div class="login-sub">SAP B1 Customer Portal</div>
+      <div class="err-box" id="login-err"></div>
+      <div class="field">
+        <label class="field-label">Username</label>
+        <input class="field-input" id="l-user" placeholder="Enter username" autocomplete="username"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input class="field-input" id="l-pass" type="password" placeholder="Enter password" autocomplete="current-password"/>
+      </div>
+      <button class="btn-primary" id="l-btn">
+        <span id="l-sp" style="display:none" class="sp"></span>
+        Sign In
+      </button>
+    </div>`;
+
+  setTimeout(() => {
+    const doLogin = async () => {
+      const user = wrap.querySelector('#l-user').value.trim();
+      const pass = wrap.querySelector('#l-pass').value;
+      const errEl = wrap.querySelector('#login-err');
+      const btn = wrap.querySelector('#l-btn');
+      const sp = wrap.querySelector('#l-sp');
+      errEl.classList.remove('show');
+      if (!user || !pass) { errEl.textContent = 'Username and password required'; errEl.classList.add('show'); return; }
+      btn.disabled = true; sp.style.display = 'inline-block';
+      try {
+        await doLogin_fn(user, pass);
+      } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); btn.disabled = false; sp.style.display = 'none'; }
+    };
+    wrap.querySelector('#l-btn').onclick = doLogin;
+    wrap.querySelector('#l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    wrap.querySelector('#l-user').focus();
+  }, 0);
+
+  return wrap;
+}
+
+async function doLogin_fn(username, password) {
+  const r = await fetch(BACKEND + '/auth/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.message || 'Login failed');
+  _tok = d.token; _user = d.user;
+  try { sessionStorage.setItem('portal_token', _tok); sessionStorage.setItem('portal_user', JSON.stringify(_user)); localStorage.setItem('token', _tok); } catch {}
+  window.location.reload();
+}
+
+// ════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════
+function buildDashboard() {
+  const wrap = document.createElement('main');
+  const role = _user?.role;
+  const levels = _cfg?.approvalLevels || 3;
+  const flow = _cfg?.statusFlow || ['PENDING', 'L1_APPROVED', 'L2_APPROVED', 'SAP_PUSHED'];
+  const levelLabels = _cfg?.levelLabels || {};
+  const isAdmin = role === 'admin' || role === 'sap_adder';
+  const userModules = Array.isArray(_user?.modules) ? _user.modules : null;
+  const canSee = (m) => !userModules || isAdmin || userModules.includes(m);
+
+  // Pipeline labels
+  const stepDefs = {
+    PENDING:     { label: 'Submitted', icon: '📝' },
+    L1_APPROVED: { label: 'L1 Approved\n(Manager)', icon: '✓' },
+    L2_APPROVED: { label: 'L2 Approved\n(Sr.Mgr)', icon: '✓' },
+    L3_APPROVED: { label: 'L3 Approved\n(SAP Adder)', icon: '✓' },
+    SAP_PUSHED:  { label: 'In SAP B1', icon: '🚀' },
+    REJECTED:    { label: 'Rejected', icon: '✗' },
+  };
+
+  wrap.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">WELCOME BACK</div>
+      <div class="page-sub">${esc(_user?.name || _user?.username)} · <span class="badge badge-${role === 'sap_adder' ? 'green' : role === 'sr_manager' ? 'amber' : 'blue'}">${esc(role?.toUpperCase())}</span></div>
+    </div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card s-blue"><div class="stat-val" id="s-pending">—</div><div class="stat-label">Pending Review</div></div>
+      <div class="stat-card s-amber"><div class="stat-val" id="s-approved">—</div><div class="stat-label">In Progress</div></div>
+      <div class="stat-card s-green"><div class="stat-val" id="s-pushed">—</div><div class="stat-label">Pushed to SAP</div></div>
+      <div class="stat-card s-red"><div class="stat-val" id="s-rejected">—</div><div class="stat-label">Rejected</div></div>
+    </div>
+
+    <div class="modules-grid">
+      ${canSee('bom') ? `<a href="/bom" class="module-card">
+        <div class="mc-icon" style="color:#0a6ed1">&#8862;</div>
+        <div class="mc-title">BOM</div>
+        <div class="mc-desc">Create & update Bill of Materials with ${levels}-level approval</div>
+      </a>` : ''}
+      ${canSee('production') ? `<a href="/production" class="module-card">
+        <div class="mc-icon" style="color:#6c32a9">&#9881;</div>
+        <div class="mc-title">Production</div>
+        <div class="mc-desc">Create production orders, release & manage</div>
+      </a>
+      <a href="/issue-production" class="module-card">
+        <div class="mc-icon" style="color:#047e7e">&#128295;</div>
+        <div class="mc-title">Issue</div>
+        <div class="mc-desc">Issue components from inventory for production</div>
+      </a>
+      <a href="/receipt-production" class="module-card">
+        <div class="mc-icon" style="color:#2b7d2b">&#128230;</div>
+        <div class="mc-title">Receipt</div>
+        <div class="mc-desc">Receive finished goods into inventory</div>
+      </a>` : ''}
+      ${canSee('grpo') ? `<a href="/grpo" class="module-card">
+        <div class="mc-icon" style="color:#515456">&#128196;</div>
+        <div class="mc-title">GRPO</div>
+        <div class="mc-desc">Goods Receipt PO for purchase deliveries</div>
+      </a>` : ''}
+      ${canSee('approvals') ? `<a href="/approvals" class="module-card">
+        <div class="mc-icon" style="color:#e78c07">&#9989;</div>
+        <div class="mc-title">Approvals</div>
+        <div class="mc-desc">Review & approve BOM, customer, vendor requests</div>
+      </a>` : ''}
+      ${canSee('customers') ? `<a href="/register" class="module-card">
+        <div class="mc-icon" style="color:#047e7e">&#9639;</div>
+        <div class="mc-title">Customers</div>
+        <div class="mc-desc">Customer registration with documents & addresses</div>
+      </a>` : ''}
+      ${canSee('vendors') ? `<a href="/vendor-register" class="module-card">
+        <div class="mc-icon" style="color:#d14900">&#127981;</div>
+        <div class="mc-title">Vendors</div>
+        <div class="mc-desc">Vendor registration with bank details & MSME</div>
+      </a>` : ''}
+      ${canSee('budget') ? `<a href="/budget" class="module-card">
+        <div class="mc-icon" style="color:#c97800">&#128176;</div>
+        <div class="mc-title">Budget</div>
+        <div class="mc-desc">Manage budgets with monthly allocation lines</div>
+      </a>` : ''}
+      ${canSee('documents') ? `<a href="/documents" class="module-card">
+        <div class="mc-icon" style="color:#515456">&#128196;</div>
+        <div class="mc-title">Documents</div>
+        <div class="mc-desc">View & manage uploaded documents</div>
+      </a>` : ''}
+      ${canSee('sap-approvals') ? `<a href="/sap-approvals" class="module-card">
+        <div class="mc-icon" style="color:#2b7d2b">&#9989;</div>
+        <div class="mc-title">SAP Approvals</div>
+        <div class="mc-desc">Approve or reject SAP B1 approval requests</div>
+      </a>` : ''}
+      ${canSee('reports') ? `<a href="/reports" class="module-card">
+        <div class="mc-icon" style="color:#0a6ed1">&#128202;</div>
+        <div class="mc-title">Reports</div>
+        <div class="mc-desc">View SAP reports and analytics</div>
+      </a>` : ''}
+      ${isAdmin ? `
+      <a href="/admin" class="module-card">
+        <div class="mc-icon" style="color:#515456">&#9881;</div>
+        <div class="mc-title">Admin</div>
+        <div class="mc-desc">Manage users, roles & module access</div>
+      </a>` : ''}
+    </div>`;
+
+  // Load stats
+  setTimeout(async () => {
+    try {
+      const r = await api('GET', '/stats');
+      const d = r.data || {};
+      const pending = (d.byStatus?.PENDING || 0);
+      const inProgress = (d.byStatus?.L1_APPROVED || 0) + (d.byStatus?.L2_APPROVED || 0) + (d.byStatus?.L3_APPROVED || 0);
+      const pushed = d.byStatus?.SAP_PUSHED || 0;
+      const rejected = d.byStatus?.REJECTED || 0;
+      wrap.querySelector('#s-pending').textContent = pending;
+      wrap.querySelector('#s-approved').textContent = inProgress;
+      wrap.querySelector('#s-pushed').textContent = pushed;
+      wrap.querySelector('#s-rejected').textContent = rejected;
+    } catch {}
+  }, 0);
+
+  return wrap;
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+(async () => {
+  if (_tok) await loadConfig();
+  renderApp();
+})();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

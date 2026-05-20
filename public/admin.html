@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Admin — SAP B1 Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#080e18;--ink2:#0d1626;--ink3:#111f35;
+  --blue:#1a6fff;--blue2:#0d4fd4;--blue-glow:rgba(26,111,255,.2);
+  --amber:#f5a623;--amber2:#d4891b;--green:#0dbb8a;--red:#e53e3e;--purple:#9f5afd;
+  --border:#1c2e48;--border2:#243650;
+  --text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;
+  --surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;
+  --radius:8px;--radius-lg:14px;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");opacity:.4;pointer-events:none;z-index:0}
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 80% 30%,rgba(159,90,253,.06) 0%,transparent 60%)}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(8,14,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-logo{background:var(--purple);color:#fff;font-family:var(--display);font-size:17px;letter-spacing:2px;padding:4px 9px;border-radius:6px}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:center}
+.nav-link{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap;border:none;background:none;font-family:var(--font)}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nav-link.active{color:var(--purple);background:rgba(159,90,253,.1)}
+.nav-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-sm{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--border2);color:var(--text3);background:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-sm:hover{border-color:var(--red);color:var(--red)}
+.role-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(159,90,253,.1);border:1px solid rgba(159,90,253,.25);color:var(--purple)}
+
+main{position:relative;z-index:1;padding:16px;max-width:1300px;margin:0 auto}
+
+/* ACCESS DENIED */
+.access-denied{text-align:center;padding:80px 20px}
+.ad-icon{font-size:52px;margin-bottom:16px}
+.ad-title{font-family:var(--display);font-size:28px;color:var(--red);margin-bottom:8px}
+.ad-msg{font-size:13px;color:var(--text3);max-width:360px;margin:0 auto}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.page-title{font-family:var(--display);font-size:28px;letter-spacing:1px;color:var(--text)}
+.page-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* TABS */
+.admin-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.admin-tab{padding:9px 18px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:6px}
+.admin-tab:hover{color:var(--text2)}
+.admin-tab.on{color:var(--purple);border-bottom-color:var(--purple)}
+.admin-tab .tab-count{background:rgba(159,90,253,.15);color:var(--purple);border-radius:8px;padding:1px 6px;font-size:9px;font-weight:700}
+
+/* WIN */
+.win{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+.win-bar{background:var(--surface3);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.win-title{font-weight:700;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px}
+.win-actions{display:flex;gap:6px;align-items:center}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+@media(min-width:640px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.sc-blue::after{background:var(--blue)}.stat-card.sc-amber::after{background:var(--amber)}
+.stat-card.sc-green::after{background:var(--green)}.stat-card.sc-red::after{background:var(--red)}
+.stat-card.sc-purple::after{background:var(--purple)}
+.stat-val{font-family:var(--display);font-size:34px;letter-spacing:1px;color:var(--text);line-height:1}
+.stat-label{font-size:11px;color:var(--text3);margin-top:5px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+
+/* USER TABLE */
+.user-table{width:100%;border-collapse:collapse;font-size:12px}
+.user-table thead th{background:var(--surface3);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
+.user-table tbody tr{transition:background .1s;cursor:pointer}
+.user-table tbody tr:hover td{background:rgba(26,111,255,.04)}
+.user-table td{padding:10px 12px;border-bottom:1px solid rgba(28,46,72,.5);vertical-align:middle}
+.user-table .u-avatar{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:var(--display);flex-shrink:0}
+.u-av-mgr{background:rgba(245,166,35,.2);color:var(--amber)}
+.u-av-srm{background:rgba(159,90,253,.2);color:var(--purple)}
+.u-av-sap{background:rgba(13,187,138,.2);color:var(--green)}
+.u-name{font-weight:600;color:var(--text);font-size:12.5px}
+.u-username{font-family:var(--mono);font-size:10.5px;color:var(--text3)}
+.user-tbl-actions{display:flex;gap:5px;align-items:center}
+
+/* ROLE BADGES */
+.role-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.rp-manager{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.rp-sr_manager{background:rgba(159,90,253,.12);color:var(--purple);border:1px solid rgba(159,90,253,.25)}
+.rp-sap_adder{background:rgba(13,187,138,.12);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+
+/* STATUS DOT */
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px}
+.sd-active{background:var(--green);box-shadow:0 0 4px rgba(13,187,138,.5)}
+.sd-inactive{background:var(--text3)}
+
+/* BUTTONS */
+.btn{padding:6px 13px;border-radius:6px;border:none;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.b-primary{background:var(--blue);color:#fff}
+.b-primary:hover:not(:disabled){background:var(--blue2);box-shadow:0 3px 12px rgba(26,111,255,.4)}
+.b-purple{background:var(--purple);color:#fff}
+.b-purple:hover:not(:disabled){background:#8b44ef;box-shadow:0 3px 12px rgba(159,90,253,.4)}
+.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.b-cancel:hover{border-color:var(--text2);color:var(--text)}
+.b-edit{background:rgba(26,111,255,.1);color:var(--blue);border:1px solid rgba(26,111,255,.25)}
+.b-edit:hover{background:rgba(26,111,255,.2)}
+.b-del{background:rgba(229,62,62,.08);color:var(--red);border:1px solid rgba(229,62,62,.2)}
+.b-del:hover{background:rgba(229,62,62,.18)}
+.b-amber{background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.b-amber:hover{background:rgba(245,166,35,.2)}
+.b-green{background:rgba(13,187,138,.1);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+.b-green:hover{background:rgba(13,187,138,.2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.modal{background:var(--ink2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:500px;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:mIn .2s ease}
+.modal.wide{max-width:700px}
+@keyframes mIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-weight:700;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px}
+.modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.modal-close:hover{background:var(--red);border-color:var(--red);color:#fff}
+.modal-body{padding:18px}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;justify-content:flex-end}
+
+/* FORM FIELDS */
+.form-group{margin-bottom:14px}
+.form-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.form-label .req{color:var(--red)}
+.form-input{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:12.5px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;transition:border .15s,box-shadow .15s;height:36px}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.form-input::placeholder{color:var(--text3)}
+.form-select{width:100%;padding:0 30px 0 12px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:12.5px;font-family:var(--font);background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5 4.5-5z' fill='%233d5470'/%3E%3C/svg%3E") no-repeat right 10px center;color:var(--text);outline:none;height:36px;cursor:pointer;appearance:none}
+.form-select:focus{border-color:var(--blue)}
+.form-select option{background:var(--surface2)}
+.form-err{font-size:11px;color:var(--red);margin-top:4px}
+.form-hint{font-size:10.5px;color:var(--text3);margin-top:3px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.form-grid{grid-template-columns:1fr}}
+
+/* ROLE INFO CARDS */
+.role-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+@media(max-width:600px){.role-info-grid{grid-template-columns:1fr}}
+.role-info-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.role-info-card:hover{border-color:var(--border2)}
+.role-info-card.selected-mgr{border-color:var(--amber);background:rgba(245,166,35,.06)}
+.role-info-card.selected-srm{border-color:var(--purple);background:rgba(159,90,253,.06)}
+.role-info-card.selected-sap{border-color:var(--green);background:rgba(13,187,138,.06)}
+.ric-icon{font-size:22px;margin-bottom:6px}
+.ric-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+.ric-desc{font-size:10.5px;color:var(--text3);line-height:1.4}
+.ric-check{display:none;font-size:14px;float:right;margin-top:-28px}
+.role-info-card.selected-mgr .ric-check,.role-info-card.selected-srm .ric-check,.role-info-card.selected-sap .ric-check{display:block}
+
+/* BOM REQUEST TABLE */
+.req-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.req-table thead th{background:var(--surface3);padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap}
+.req-table tbody tr{cursor:pointer;transition:background .1s}
+.req-table tbody tr:hover td{background:rgba(26,111,255,.04)}
+.req-table td{padding:8px 10px;border-bottom:1px solid rgba(28,46,72,.5);vertical-align:middle}
+
+/* STATUS BADGES */
+.status-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap}
+.sb-PENDING{background:rgba(26,111,255,.15);color:var(--blue);border:1px solid rgba(26,111,255,.2)}
+.sb-L1_APPROVED{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.sb-L2_APPROVED{background:rgba(159,90,253,.15);color:var(--purple);border:1px solid rgba(159,90,253,.2)}
+.sb-L3_APPROVED{background:rgba(245,100,35,.15);color:#f5641a;border:1px solid rgba(245,100,35,.2)}
+.sb-SAP_PUSHED{background:rgba(13,187,138,.15);color:var(--green);border:1px solid rgba(13,187,138,.2)}
+.sb-REJECTED{background:rgba(229,62,62,.15);color:var(--red);border:1px solid rgba(229,62,62,.2)}
+.sb-CANCELLED{background:rgba(61,84,112,.15);color:var(--text3);border:1px solid rgba(61,84,112,.2)}
+
+/* ALERTS */
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.al-info{background:rgba(26,111,255,.08);border:1px solid rgba(26,111,255,.2);color:#60a5fa}
+.al-amber{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:#fcd34d}
+.al-red{background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.2);color:#fc8181}
+
+/* SEARCH */
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-input{padding:6px 12px 6px 32px;border:1.5px solid var(--border2);border-radius:6px;font-size:12px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;width:200px;transition:border .15s}
+.search-input:focus{border-color:var(--blue);width:240px}
+.search-icon{position:absolute;left:10px;color:var(--text3);font-size:13px;pointer-events:none}
+
+/* EMPTY */
+.empty-state{padding:40px 20px;text-align:center;color:var(--text3)}
+.empty-state .es-icon{font-size:36px;margin-bottom:10px;opacity:.5}
+
+/* SP */
+.sp{width:12px;height:12px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+.sp-purple{border-color:rgba(159,90,253,.25);border-top-color:var(--purple)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast-c{position:fixed;top:62px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:var(--radius);font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;display:flex;align-items:center;gap:7px;max-width:300px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}.t-warn{background:var(--amber);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* CONFIRM DIALOG */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;display:flex;align-items:center;justify-content:center;padding:16px}
+.confirm-box{background:var(--ink2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:mIn .2s ease}
+.confirm-icon{font-size:40px;margin-bottom:12px}
+.confirm-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.confirm-msg{font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.5}
+.confirm-btns{display:flex;gap:8px;justify-content:center}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="toast-c" id="toast-c"></div>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">ADM</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">⌂ Home</a>
+    <a href="/bom" class="nav-link">⊞ BOM</a>
+    <a href="/approvals" class="nav-link">✅ Approvals</a>
+    <a href="/register" class="nav-link">◧ Customers</a>
+    <a href="/admin" class="nav-link active">⚙ Admin</a>
+  </div>
+  <div class="nav-right">
+    <span class="role-badge" id="role-badge">ADMIN</span>
+    <button class="btn-sm" id="btn-logout">Logout</button>
+  </div>
+</nav>
+
+<main id="main-area">
+  <div style="padding:60px;text-align:center;color:var(--text3)">
+    <span class="sp sp-purple"></span>
+    <div style="margin-top:12px">Loading admin panel…</div>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let _tok = null, _user = null, _cfg = null;
+let _users = [], _bomRequests = [], _customerStats = {};
+let _activeTab = 'overview';
+let _userSearch = '';
+let _reqFilter = 'ALL';
+
+(function(){
+  try {
+    _tok  = sessionStorage.getItem('portal_token') || localStorage.getItem('token') || null;
+    const u = sessionStorage.getItem('portal_user');
+    if (u) _user = JSON.parse(u);
+  } catch {}
+})();
+
+if (!_tok) { window.location.href = '/'; }
+
+document.getElementById('btn-logout').onclick = () => {
+  sessionStorage.clear(); localStorage.removeItem('token');
+  window.location.href = '/';
+};
+
+const BACKEND = `${window.location.origin}/api`;
+
+// ════════════════════════════════════════
+//  API
+// ════════════════════════════════════════
+async function api(method, path, body = null) {
+  const h = { 'Content-Type': 'application/json' };
+  if (_tok) h['Authorization'] = 'Bearer ' + _tok;
+  const opt = { method: method.toUpperCase(), headers: h };
+  if (body) opt.body = JSON.stringify(body);
+  let r, d;
+  try { r = await fetch(BACKEND + path, opt); d = await r.json(); }
+  catch (e) { throw new Error('Cannot reach server'); }
+  if (r.status === 401) { window.location.href = '/'; throw new Error('Session expired'); }
+  if (!r.ok) throw new Error(d?.message || 'HTTP ' + r.status);
+  return d;
+}
+
+function toast(msg, type = 'ok') {
+  const tc = document.getElementById('toast-c');
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.textContent = (type === 'ok' ? '✓  ' : type === 'err' ? '✗  ' : '⚠  ') + msg;
+  tc.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+const ALL_MODULES=[{k:'bom',l:'BOM'},{k:'production',l:'Production'},{k:'grpo',l:'GRPO'},{k:'approvals',l:'Approvals'},{k:'customers',l:'Customers'},{k:'vendors',l:'Vendors'},{k:'budget',l:'Budget'},{k:'documents',l:'Documents'},{k:'sap-approvals',l:'SAP Approvals'},{k:'reports',l:'Reports'},{k:'admin',l:'Admin'}];
+function buildModuleCheckboxes(user){
+  const mods=user&&Array.isArray(user.modules)?user.modules:[];
+  return ALL_MODULES.map(function(m){
+    const c=mods.includes(m.k);
+    return '<label style="display:flex;align-items:center;gap:5px;padding:6px 10px;border:1.5px solid '+(c?'var(--amber)':'var(--border2)')+';border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;background:'+(c?'rgba(245,166,35,.06)':'var(--surface2)')+';color:'+(c?'var(--amber)':'var(--text3)')+'"><input type="checkbox" class="uc-mod-cb" value="'+m.k+'" '+(c?'checked':'')+' style="accent-color:var(--amber)"/> '+m.l+'</label>';
+  }).join('');
+}
+
+function esc(v) {
+  return (v || '').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════
+//  ROLE HELPERS
+// ════════════════════════════════════════
+const ROLE_LABELS = {
+  manager:    'Manager',
+  sr_manager: 'Sr. Manager',
+  sap_adder:  'SAP Adder',
+};
+const ROLE_DESCS = {
+  manager:    'L1 approver — reviews PENDING BOM requests',
+  sr_manager: 'L2 approver — reviews L1-approved requests',
+  sap_adder:  'Final approver — pushes approved BOMs to SAP B1. Also manages users.',
+};
+
+function getRolePillClass(role) {
+  return { manager:'rp-manager', sr_manager:'rp-sr_manager', sap_adder:'rp-sap_adder' }[role] || 'rp-manager';
+}
+
+function getAvatarClass(role) {
+  return { manager:'u-av-mgr', sr_manager:'u-av-srm', sap_adder:'u-av-sap' }[role] || 'u-av-mgr';
+}
+
+const STATUS_LABELS = {
+  PENDING:'Pending', L1_APPROVED:'L1 Approved', L2_APPROVED:'L2 Approved',
+  L3_APPROVED:'L3 Approved', SAP_PUSHED:'In SAP B1', REJECTED:'Rejected', CANCELLED:'Cancelled',
+};
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+async function init() {
+  const main = document.getElementById('main-area');
+
+  // Check access — sap_adder or admin
+  if (_user?.role !== 'sap_adder' && _user?.role !== 'admin') {
+    main.innerHTML = `
+      <div class="access-denied">
+        <div class="ad-icon">🔐</div>
+        <div class="ad-title">Access Denied</div>
+        <div class="ad-msg">The Admin panel requires <strong>SAP Adder</strong> role. Your current role is <strong>${esc(_user?.role || 'unknown')}</strong>.</div>
+        <div style="margin-top:24px"><a href="/" class="btn b-primary" style="text-decoration:none;display:inline-flex">← Back to Home</a></div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('role-badge').textContent = 'SAP ADDER';
+
+  // Load everything in parallel
+  await Promise.all([loadConfig(), loadUsers(), loadBomRequests()]);
+  render();
+}
+
+async function loadConfig() {
+  try { const r = await api('GET', '/config'); _cfg = r; } catch {}
+}
+
+async function loadUsers() {
+  try { const r = await api('GET', '/users'); _users = r.data || []; }
+  catch (e) { console.warn('Users load failed:', e.message); }
+}
+
+async function loadBomRequests() {
+  try { const r = await api('GET', '/bom-requests?status=ALL'); _bomRequests = r.data || []; }
+  catch (e) { console.warn('BOM requests load failed:', e.message); }
+}
+
+// ════════════════════════════════════════
+//  MAIN RENDER
+// ════════════════════════════════════════
+function render() {
+  const main = document.getElementById('main-area');
+  main.innerHTML = '';
+
+  // Page header
+  const ph = document.createElement('div');
+  ph.className = 'page-header';
+  ph.innerHTML = `
+    <div>
+      <div class="page-title">ADMIN PANEL</div>
+      <div class="page-sub">User Management · BOM Requests · System Overview</div>
+    </div>`;
+  main.appendChild(ph);
+
+  // Tabs
+  const pendingUsers = _users.filter(u => !u.active).length;
+  const myTurnBoms   = _bomRequests.filter(r => r.status === 'L2_APPROVED' || r.status === 'L3_APPROVED').length;
+  const tabs = [
+    { id:'overview', icon:'⊟', label:'Overview' },
+    { id:'users',    icon:'👥', label:`Users`, count: _users.length },
+    { id:'bom',      icon:'⊞', label:'BOM Requests', count: _bomRequests.filter(r=>r.status==='PENDING'||r.status.includes('APPROVED')).length },
+  ];
+
+  const tabBar = document.createElement('div');
+  tabBar.className = 'admin-tabs';
+  tabs.forEach(tab => {
+    const btn = document.createElement('button');
+    btn.className = `admin-tab${_activeTab === tab.id ? ' on' : ''}`;
+    btn.innerHTML = `${tab.icon} ${tab.label}${tab.count !== undefined ? `<span class="tab-count">${tab.count}</span>` : ''}`;
+    btn.onclick = () => { _activeTab = tab.id; render(); };
+    tabBar.appendChild(btn);
+  });
+  main.appendChild(tabBar);
+
+  // Content
+  const content = document.createElement('div');
+  if (_activeTab === 'overview') content.appendChild(buildOverview());
+  else if (_activeTab === 'users') content.appendChild(buildUsersTab());
+  else if (_activeTab === 'bom') content.appendChild(buildBomTab());
+  main.appendChild(content);
+}
+
+// ════════════════════════════════════════
+//  OVERVIEW TAB
+// ════════════════════════════════════════
+function buildOverview() {
+  const div = document.createElement('div');
+  const levels = _cfg?.approvalLevels || 3;
+  const flow   = _cfg?.statusFlow || [];
+
+  // Stats
+  const pending  = _bomRequests.filter(r => r.status === 'PENDING').length;
+  const inProg   = _bomRequests.filter(r => r.status.includes('APPROVED')).length;
+  const pushed   = _bomRequests.filter(r => r.status === 'SAP_PUSHED').length;
+  const rejected = _bomRequests.filter(r => r.status === 'REJECTED').length;
+  const managers = _users.filter(u => u.role === 'manager').length;
+  const srMgrs   = _users.filter(u => u.role === 'sr_manager').length;
+  const sapAdders= _users.filter(u => u.role === 'sap_adder').length;
+
+  div.innerHTML = `
+    <!-- System Config -->
+    <div class="win" style="margin-bottom:16px">
+      <div class="win-bar"><div class="win-title">⚙ System Configuration</div></div>
+      <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:6px">Approval Levels</div>
+          <div style="font-family:var(--display);font-size:32px;color:var(--blue)">${levels}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">Configured in .env</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:6px">Approval Flow</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+            ${(flow.filter(s=>s!=='REJECTED'&&s!=='DRAFT')).map(s=>`<span style="font-size:10px;background:rgba(26,111,255,.1);color:var(--blue);padding:2px 7px;border-radius:4px;font-weight:600">${s.replace('_',' ')}</span>`).join('<span style="color:var(--text3);font-size:10px">→</span>')}
+          </div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:6px">Role Mapping</div>
+          ${Object.entries(_cfg?.approvalMap || {}).map(([status,role])=>`
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+              <span style="color:var(--text3)">${status.replace('_',' ')}</span>
+              <span class="role-pill ${getRolePillClass(role)}">${ROLE_LABELS[role]||role}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- BOM Stats -->
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">
+      <div class="stat-card sc-blue"><div class="stat-val">${pending}</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card sc-amber"><div class="stat-val">${inProg}</div><div class="stat-label">In Progress</div></div>
+      <div class="stat-card sc-green"><div class="stat-val">${pushed}</div><div class="stat-label">In SAP B1</div></div>
+      <div class="stat-card sc-red"><div class="stat-val">${rejected}</div><div class="stat-label">Rejected</div></div>
+      <div class="stat-card sc-purple"><div class="stat-val">${_users.length}</div><div class="stat-label">Portal Users</div></div>
+    </div>
+
+    <!-- Users Summary -->
+    <div class="win">
+      <div class="win-bar">
+        <div class="win-title">👥 User Roster</div>
+        <button class="btn b-purple" onclick="document.querySelector('.admin-tab:nth-child(2)').click()">Manage Users →</button>
+      </div>
+      <div style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+        <div style="border:1px solid rgba(245,166,35,.25);background:rgba(245,166,35,.06);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Managers (L1)</div>
+          <div style="font-family:var(--display);font-size:28px;color:var(--amber)">${managers}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:3px">Approve PENDING requests</div>
+        </div>
+        <div style="border:1px solid rgba(159,90,253,.25);background:rgba(159,90,253,.06);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Sr. Managers (L2)</div>
+          <div style="font-family:var(--display);font-size:28px;color:var(--purple)">${srMgrs}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:3px">Approve L1-approved requests</div>
+        </div>
+        <div style="border:1px solid rgba(13,187,138,.25);background:rgba(13,187,138,.06);border-radius:var(--radius);padding:14px">
+          <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">SAP Adders (Final)</div>
+          <div style="font-family:var(--display);font-size:28px;color:var(--green)">${sapAdders}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:3px">Final approval + SAP push</div>
+        </div>
+      </div>
+    </div>`;
+
+  return div;
+}
+
+// ════════════════════════════════════════
+//  USERS TAB
+// ════════════════════════════════════════
+function buildUsersTab() {
+  const div = document.createElement('div');
+
+  const win = document.createElement('div');
+  win.className = 'win';
+
+  const bar = document.createElement('div');
+  bar.className = 'win-bar';
+  bar.innerHTML = `
+    <div class="win-title">👥 Portal Users <span style="font-size:11px;color:var(--text3);font-weight:400">${_users.length} total</span></div>
+    <div class="win-actions">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="user-search" placeholder="Search users…" value="${esc(_userSearch)}" autocomplete="off"/>
+      </div>
+      <button class="btn b-purple" id="add-user-btn">+ Add User</button>
+    </div>`;
+  win.appendChild(bar);
+
+  // Role legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;background:var(--ink2)';
+  legend.innerHTML = `
+    <span style="font-size:10.5px;color:var(--text3)">Roles:</span>
+    <span class="role-pill rp-manager">Manager — L1 Approver</span>
+    <span class="role-pill rp-sr_manager">Sr. Manager — L2 Approver</span>
+    <span class="role-pill rp-sap_adder">SAP Adder — Final + Admin</span>`;
+  win.appendChild(legend);
+
+  // Filter results
+  const filtered = _users.filter(u => {
+    if (!_userSearch) return true;
+    const q = _userSearch.toLowerCase();
+    return (u.username || '').toLowerCase().includes(q)
+      || (u.fullName || '').toLowerCase().includes(q)
+      || (u.email || '').toLowerCase().includes(q)
+      || (u.role || '').toLowerCase().includes(q);
+  });
+
+  const tableWrap = document.createElement('div');
+  tableWrap.style.overflowX = 'auto';
+
+  if (!filtered.length) {
+    tableWrap.innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">👥</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:6px">No users found</p>
+        <p>Try adjusting your search or add a new user.</p>
+      </div>`;
+  } else {
+    const tbl = document.createElement('table');
+    tbl.className = 'user-table';
+    tbl.innerHTML = `
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name / Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(u => {
+          const initial = (u.fullName || u.username || 'U')[0].toUpperCase();
+          const isMe = u.username === _user?.username;
+          return `<tr data-uid="${u.id}">
+            <td style="width:44px;padding:8px 6px 8px 12px">
+              <div class="u-avatar ${getAvatarClass(u.role)}">${initial}</div>
+            </td>
+            <td>
+              <div class="u-name">${esc(u.fullName || u.username)}${isMe ? ' <span style="font-size:9px;background:rgba(26,111,255,.1);color:var(--blue);padding:1px 5px;border-radius:3px;font-weight:600">YOU</span>' : ''}</div>
+              <div class="u-username">@${esc(u.username)}</div>
+            </td>
+            <td style="color:var(--text2);font-size:11.5px">${esc(u.email || '—')}</td>
+            <td><span class="role-pill ${getRolePillClass(u.role)}">${esc(ROLE_LABELS[u.role] || u.role)}</span></td>
+            <td>
+              <span class="status-dot ${u.active ? 'sd-active' : 'sd-inactive'}"></span>
+              <span style="font-size:11px;color:${u.active ? 'var(--green)' : 'var(--text3)'}">${u.active ? 'Active' : 'Inactive'}</span>
+            </td>
+            <td style="font-size:11px;color:var(--text3)">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : 'Never'}</td>
+            <td>
+              <div class="user-tbl-actions">
+                <button class="btn b-edit" data-action="edit" data-uid="${u.id}" style="padding:4px 9px;font-size:10px">✎ Edit</button>
+                <button class="btn b-amber" data-action="pwd" data-uid="${u.id}" style="padding:4px 9px;font-size:10px">🔑 Password</button>
+                ${!isMe ? `<button class="btn b-del" data-action="del" data-uid="${u.id}" style="padding:4px 9px;font-size:10px">✕</button>` : ''}
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>`;
+    tableWrap.appendChild(tbl);
+  }
+
+  win.appendChild(tableWrap);
+  div.appendChild(win);
+
+  // Wire events
+  setTimeout(() => {
+    const searchEl = document.getElementById('user-search');
+    if (searchEl) {
+      searchEl.oninput = e => { _userSearch = e.target.value; buildUsersTab_inline(div); };
+      searchEl.focus();
+    }
+
+    document.getElementById('add-user-btn').onclick = () => openUserModal(null);
+
+    // Action buttons via delegation
+    tableWrap.addEventListener('click', e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const uid    = parseInt(btn.dataset.uid);
+      const action = btn.dataset.action;
+      const user   = _users.find(u => u.id === uid);
+      if (!user) return;
+      if (action === 'edit') openUserModal(user);
+      else if (action === 'pwd') openPasswordModal(user);
+      else if (action === 'del') confirmDelete(user);
+    });
+  }, 0);
+
+  return div;
+}
+
+// Inline rebuild of user table (after search)
+function buildUsersTab_inline(container) {
+  container.innerHTML = '';
+  container.appendChild(buildUsersTab());
+}
+
+// ════════════════════════════════════════
+//  BOM REQUESTS TAB
+// ════════════════════════════════════════
+function buildBomTab() {
+  const div = document.createElement('div');
+
+  // Filter buttons
+  const filterBar = document.createElement('div');
+  filterBar.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center';
+
+  const statuses = ['ALL', 'PENDING', 'L1_APPROVED', 'L2_APPROVED', 'L3_APPROVED', 'SAP_PUSHED', 'REJECTED', 'CANCELLED'];
+  const levels   = _cfg?.approvalLevels || 3;
+  const visibleStatuses = statuses.filter(s => {
+    if (s === 'L2_APPROVED' && levels < 3) return false;
+    if (s === 'L3_APPROVED' && levels < 4) return false;
+    return true;
+  });
+
+  visibleStatuses.forEach(s => {
+    const count = s === 'ALL' ? _bomRequests.length : _bomRequests.filter(r => r.status === s).length;
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (s === _reqFilter ? ' b-primary' : ' b-cancel');
+    btn.style.fontSize = '11px';
+    btn.innerHTML = `${s === 'ALL' ? 'All' : STATUS_LABELS[s] || s} <span style="opacity:.7">(${count})</span>`;
+    btn.onclick = () => { _reqFilter = s; buildBomTab_inline(div); };
+    filterBar.appendChild(btn);
+  });
+
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'btn b-amber';
+  refreshBtn.style.cssText = 'font-size:11px;margin-left:auto';
+  refreshBtn.innerHTML = '↻ Refresh';
+  refreshBtn.onclick = async () => {
+    refreshBtn.disabled = true;
+    await loadBomRequests();
+    buildBomTab_inline(div);
+    toast('Refreshed');
+  };
+  filterBar.appendChild(refreshBtn);
+  div.appendChild(filterBar);
+
+  // Table
+  const filtered = _reqFilter === 'ALL'
+    ? _bomRequests
+    : _bomRequests.filter(r => r.status === _reqFilter);
+
+  const win = document.createElement('div');
+  win.className = 'win';
+
+  const bar = document.createElement('div');
+  bar.className = 'win-bar';
+  bar.innerHTML = `<div class="win-title">⊞ BOM Requests <span style="font-size:11px;color:var(--text3);font-weight:400">${filtered.length} shown</span></div>`;
+  win.appendChild(bar);
+
+  const tableWrap = document.createElement('div');
+  tableWrap.style.overflowX = 'auto';
+
+  if (!filtered.length) {
+    tableWrap.innerHTML = `<div class="empty-state"><div class="es-icon">📭</div><p style="font-size:13px;color:var(--text2)">No requests found</p></div>`;
+  } else {
+    const tbl = document.createElement('table');
+    tbl.className = 'req-table';
+    tbl.innerHTML = `
+      <thead>
+        <tr>
+          <th>#</th><th>Type</th><th>Item Code</th><th>Description</th>
+          <th>Status</th><th>Submitted By</th><th>Submitted At</th>
+          <th>Components</th><th>Approval Steps</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(r => {
+          const logCount = (r.approvalLog || []).length;
+          return `<tr>
+            <td style="font-family:var(--mono);color:var(--text3);font-size:10px">${r.id}</td>
+            <td><span class="status-badge ${r.type === 'CREATE' ? 'sb-SAP_PUSHED' : 'sb-L1_APPROVED'}" style="font-size:9px">${r.type}</span></td>
+            <td style="font-family:var(--mono);color:var(--blue);font-size:11px;font-weight:600">${esc(r.itemCode)}</td>
+            <td style="color:var(--text2);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.itemName || '—')}</td>
+            <td><span class="status-badge sb-${r.status}">${STATUS_LABELS[r.status] || r.status}</span></td>
+            <td style="font-size:11px">${esc(r.submittedByName || r.submittedBy)}</td>
+            <td style="font-size:11px;color:var(--text3);white-space:nowrap">${r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—'}</td>
+            <td style="font-family:var(--mono);text-align:center;color:var(--text3)">${(r.components||[]).length}</td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${logCount}/${levels} done</td>
+          </tr>`;
+        }).join('')}
+      </tbody>`;
+    tableWrap.appendChild(tbl);
+  }
+
+  win.appendChild(tableWrap);
+  div.appendChild(win);
+
+  return div;
+}
+
+function buildBomTab_inline(container) {
+  container.innerHTML = '';
+  container.appendChild(buildBomTab());
+}
+
+// ════════════════════════════════════════
+//  ADD / EDIT USER MODAL
+// ════════════════════════════════════════
+function openUserModal(user) {
+  const isEdit = !!user;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${isEdit ? `✎ Edit User — @${esc(user.username)}` : '+ Add New User'}</div>
+      <button class="modal-close" id="uc-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Role Selector Cards -->
+      <div class="form-group">
+        <div class="form-label">Select Role <span class="req">*</span></div>
+        <div class="role-info-grid" id="role-cards">
+          <div class="role-info-card${(!isEdit || user.role==='manager') ? ' selected-mgr' : ''}" data-role="manager">
+            <div class="ric-check" style="color:var(--amber)">✓</div>
+            <div class="ric-icon">👔</div>
+            <div class="ric-title">Manager (L1)</div>
+            <div class="ric-desc">Reviews and approves PENDING BOM requests as first approver</div>
+          </div>
+          <div class="role-info-card${isEdit && user.role==='sr_manager' ? ' selected-srm' : ''}" data-role="sr_manager">
+            <div class="ric-check" style="color:var(--purple)">✓</div>
+            <div class="ric-icon">🏆</div>
+            <div class="ric-title">Sr. Manager (L2)</div>
+            <div class="ric-desc">Reviews L1-approved requests as second approver in the chain</div>
+          </div>
+          <div class="role-info-card${isEdit && user.role==='sap_adder' ? ' selected-sap' : ''}" data-role="sap_adder">
+            <div class="ric-check" style="color:var(--green)">✓</div>
+            <div class="ric-icon">🚀</div>
+            <div class="ric-title">SAP Adder (Final)</div>
+            <div class="ric-desc">Final approver who pushes BOMs to SAP B1. Also manages portal users.</div>
+          </div>
+        </div>
+        <input type="hidden" id="uc-role" value="${isEdit ? esc(user.role) : 'manager'}"/>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <div class="form-label">Username <span class="req">*</span></div>
+          <input class="form-input" id="uc-username" placeholder="john.doe" value="${isEdit ? esc(user.username) : ''}" ${isEdit ? 'readonly style="opacity:.6;cursor:not-allowed"' : ''}/>
+          <div class="form-hint">Lowercase, no spaces</div>
+          <div class="form-err" id="e-uc-username"></div>
+        </div>
+        ${!isEdit ? `
+        <div class="form-group">
+          <div class="form-label">Password <span class="req">*</span></div>
+          <input class="form-input" id="uc-password" type="password" placeholder="Min 6 characters"/>
+          <div class="form-err" id="e-uc-password"></div>
+        </div>` : '<div></div>'}
+        <div class="form-group">
+          <div class="form-label">Full Name</div>
+          <input class="form-input" id="uc-fullname" placeholder="John Doe" value="${isEdit ? esc(user.fullName || '') : ''}"/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Email</div>
+          <input class="form-input" id="uc-email" type="email" placeholder="john@company.com" value="${isEdit ? esc(user.email || '') : ''}"/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">SAP User ID <span style="font-weight:400;font-size:10px;color:var(--text3)">(for SAP approvals)</span></div>
+          <input class="form-input" id="uc-sapuserid" type="number" placeholder="e.g. 47" value="${isEdit ? (user.sapUserId||'') : ''}"/>
+        </div>
+      </div>
+
+      ${isEdit ? `
+      <div class="form-group">
+        <div class="form-label">Account Status</div>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 14px;border:1.5px solid ${user.active?'var(--green)':'var(--border2)'};border-radius:var(--radius);background:${user.active?'rgba(13,187,138,.06)':'var(--surface2)'}">
+            <input type="radio" name="uc-active" value="1" ${user.active?'checked':''} style="accent-color:var(--green)"/>
+            <span style="font-size:12px;font-weight:600;color:${user.active?'var(--green)':'var(--text3)'}">Active</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 14px;border:1.5px solid ${!user.active?'var(--red)':'var(--border2)'};border-radius:var(--radius);background:${!user.active?'rgba(229,62,62,.06)':'var(--surface2)'}">
+            <input type="radio" name="uc-active" value="0" ${!user.active?'checked':''} style="accent-color:var(--red)"/>
+            <span style="font-size:12px;font-weight:600;color:${!user.active?'var(--red)':'var(--text3)'}">Inactive</span>
+          </label>
+        </div>
+      </div>` : ''}
+
+      <div class="form-group">
+        <div class="form-label">Module Access <span style="font-weight:400;font-size:10px;color:var(--text3)">(leave empty for full access)</span></div>
+        <div id="uc-modules" style="display:flex;flex-wrap:wrap;gap:6px">
+          ${buildModuleCheckboxes(isEdit?user:null)}
+        </div>
+      </div>
+
+      <div class="form-err" id="e-uc-global"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn b-cancel" id="uc-cancel">Cancel</button>
+      <button class="btn b-purple" id="uc-save">
+        <span id="uc-sp" style="display:none" class="sp"></span>
+        ${isEdit ? '✓ Save Changes' : '+ Create User'}
+      </button>
+    </div>`;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Role card selection
+  let selectedRole = isEdit ? user.role : 'manager';
+  modal.querySelectorAll('[data-role]').forEach(card => {
+    card.onclick = () => {
+      modal.querySelectorAll('[data-role]').forEach(c => {
+        c.className = 'role-info-card';
+      });
+      const role = card.dataset.role;
+      selectedRole = role;
+      modal.querySelector('#uc-role').value = role;
+      const cls = role === 'manager' ? 'selected-mgr' : role === 'sr_manager' ? 'selected-srm' : 'selected-sap';
+      card.classList.add(cls);
+    };
+  });
+
+  const closeModal = () => overlay.remove();
+  modal.querySelector('#uc-close').onclick  = closeModal;
+  modal.querySelector('#uc-cancel').onclick = closeModal;
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+
+  modal.querySelector('#uc-save').onclick = async () => {
+    const btn = modal.querySelector('#uc-save');
+    const sp  = modal.querySelector('#uc-sp');
+    const err = modal.querySelector('#e-uc-global');
+    err.textContent = '';
+
+    const username = (modal.querySelector('#uc-username')?.value || '').trim().toLowerCase();
+    const password = modal.querySelector('#uc-password')?.value || '';
+    const fullName = (modal.querySelector('#uc-fullname')?.value || '').trim();
+    const email    = (modal.querySelector('#uc-email')?.value || '').trim();
+    const role     = selectedRole;
+    const active   = isEdit ? modal.querySelector('input[name="uc-active"]:checked')?.value !== '0' : true;
+    const modules  = Array.from(modal.querySelectorAll('.uc-mod-cb:checked')).map(cb=>cb.value);
+    const modulesVal = modules.length ? modules : null; // null = full access
+    const sapUserId = (modal.querySelector('#uc-sapuserid')?.value||'').trim()||null;
+
+    // Validate
+    let ok = true;
+    if (!isEdit) {
+      if (!username) { modal.querySelector('#e-uc-username').textContent = 'Username required'; ok = false; }
+      else if (!/^[a-z0-9._-]+$/.test(username)) { modal.querySelector('#e-uc-username').textContent = 'Only lowercase letters, numbers, . _ -'; ok = false; }
+      if (!password || password.length < 6) { modal.querySelector('#e-uc-password').textContent = 'Min 6 characters'; ok = false; }
+    }
+    if (!role) { err.textContent = 'Please select a role'; ok = false; }
+    if (!ok) return;
+
+    btn.disabled = true; sp.style.display = 'inline-block';
+
+    try {
+      if (isEdit) {
+        await api('PATCH', `/users/${user.id}`, { fullName, email, role, active, modules: modulesVal, sapUserId });
+        toast(`✓ User @${user.username} updated`);
+      } else {
+        await api('POST', '/users', { username, password, fullName, email, role, modules: modulesVal, sapUserId });
+        toast(`✓ User @${username} created`);
+      }
+      closeModal();
+      await loadUsers();
+      render();
+    } catch (e) {
+      err.textContent = e.message;
+      btn.disabled = false; sp.style.display = 'none';
+    }
+  };
+}
+
+// ════════════════════════════════════════
+//  CHANGE PASSWORD MODAL
+// ════════════════════════════════════════
+function openPasswordModal(user) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">🔑 Change Password — @${esc(user.username)}</div>
+      <button class="modal-close" id="pw-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert al-info">Setting a new password will immediately take effect. The user will need to use the new password on their next login.</div>
+      <div class="form-group">
+        <div class="form-label">New Password <span class="req">*</span></div>
+        <input class="form-input" id="pw-new" type="password" placeholder="Minimum 6 characters" autocomplete="new-password"/>
+        <div class="form-err" id="e-pw-new"></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Confirm Password <span class="req">*</span></div>
+        <input class="form-input" id="pw-confirm" type="password" placeholder="Repeat new password"/>
+        <div class="form-err" id="e-pw-confirm"></div>
+      </div>
+      <div class="form-err" id="e-pw-global"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn b-cancel" id="pw-cancel">Cancel</button>
+      <button class="btn b-amber" id="pw-save">
+        <span id="pw-sp" style="display:none" class="sp"></span>
+        🔑 Set Password
+      </button>
+    </div>`;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  const closeModal = () => overlay.remove();
+  modal.querySelector('#pw-close').onclick   = closeModal;
+  modal.querySelector('#pw-cancel').onclick  = closeModal;
+  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
+
+  modal.querySelector('#pw-save').onclick = async () => {
+    const newPw  = modal.querySelector('#pw-new').value;
+    const confPw = modal.querySelector('#pw-confirm').value;
+    const errN   = modal.querySelector('#e-pw-new');
+    const errC   = modal.querySelector('#e-pw-confirm');
+    const errG   = modal.querySelector('#e-pw-global');
+    errN.textContent = errC.textContent = errG.textContent = '';
+
+    let ok = true;
+    if (!newPw || newPw.length < 6) { errN.textContent = 'Minimum 6 characters'; ok = false; }
+    if (newPw !== confPw) { errC.textContent = 'Passwords do not match'; ok = false; }
+    if (!ok) return;
+
+    const btn = modal.querySelector('#pw-save');
+    const sp  = modal.querySelector('#pw-sp');
+    btn.disabled = true; sp.style.display = 'inline-block';
+
+    try {
+      await api('PATCH', `/users/${user.id}`, { password: newPw });
+      toast(`✓ Password updated for @${user.username}`);
+      closeModal();
+    } catch (e) {
+      errG.textContent = e.message;
+      btn.disabled = false; sp.style.display = 'none';
+    }
+  };
+}
+
+// ════════════════════════════════════════
+//  DELETE CONFIRMATION
+// ════════════════════════════════════════
+function confirmDelete(user) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+
+  const box = document.createElement('div');
+  box.className = 'confirm-box';
+  box.innerHTML = `
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">Delete User?</div>
+    <div class="confirm-msg">
+      Are you sure you want to delete <strong>@${esc(user.username)}</strong>
+      (${esc(user.fullName || user.username)})?<br/>
+      <span style="color:var(--red)">This action cannot be undone.</span>
+    </div>
+    <div class="confirm-btns">
+      <button class="btn b-cancel" id="del-cancel">Cancel</button>
+      <button class="btn b-del" id="del-confirm">
+        <span id="del-sp" style="display:none" class="sp"></span>
+        ✕ Delete User
+      </button>
+    </div>`;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const closeOverlay = () => overlay.remove();
+  box.querySelector('#del-cancel').onclick = closeOverlay;
+  overlay.onclick = e => { if (e.target === overlay) closeOverlay(); };
+
+  box.querySelector('#del-confirm').onclick = async () => {
+    const btn = box.querySelector('#del-confirm');
+    const sp  = box.querySelector('#del-sp');
+    btn.disabled = true; sp.style.display = 'inline-block';
+    try {
+      await api('DELETE', `/users/${user.id}`);
+      toast(`✓ User @${user.username} deleted`, 'warn');
+      closeOverlay();
+      await loadUsers();
+      render();
+    } catch (e) {
+      toast(e.message, 'err');
+      btn.disabled = false; sp.style.display = 'none';
+    }
+  };
+}
+
+// ════════════════════════════════════════
+//  START
+// ════════════════════════════════════════
+init();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

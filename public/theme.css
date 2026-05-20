@@ -1,0 +1,707 @@
+/* ══════════════════════════════════════════════════════════════
+   SAP B1 Portal — Convergent Teal Theme
+   Include via <link rel="stylesheet" href="/theme.css"/> in each page
+   OR loaded dynamically by sidebar.js
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --ink: #f4f6f9;
+  --ink2: #ffffff;
+  --ink3: #e8ecf1;
+  --blue: #0a6ed1;
+  --blue2: #085cad;
+  --blue-glow: rgba(10,110,209,.12);
+  --amber: #e78c07;
+  --amber2: #c97800;
+  --green: #2b7d2b;
+  --green2: #059669;
+  --red: #cc1919;
+  --purple: #6c32a9;
+  --teal: #047e7e;
+  --gold: #c97800;
+  --orange: #d14900;
+  --border: #d9dce0;
+  --border2: #c4c6c8;
+  --text: #32363a;
+  --text2: #515456;
+  --text3: #6a6d70;
+  --surface: #ffffff;
+  --surface2: #f7f7f7;
+  --surface3: #eef0f3;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+body {
+  background: var(--ink) !important;
+  color: var(--text) !important;
+}
+
+body::before {
+  display: none !important;
+}
+
+.bg-glow {
+  display: none !important;
+}
+
+/* ── SIDEBAR THEME ─────────────────────────── */
+.sb {
+  background: linear-gradient(180deg, #047e7e 0%, #035b5b 100%) !important;
+  border-right: none !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,.1) !important;
+}
+.sb-logo span {
+  background: #fff !important;
+  color: #047e7e !important;
+  font-weight: 800 !important;
+}
+.sb-link {
+  color: rgba(255,255,255,.75) !important;
+  border-left-color: transparent !important;
+}
+.sb-link:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,.1) !important;
+}
+.sb-link.active {
+  color: #fff !important;
+  background: rgba(255,255,255,.15) !important;
+  border-left-color: #fff !important;
+}
+.sb-link .sb-ico {
+  color: rgba(255,255,255,.8) !important;
+}
+.sb-link.active .sb-ico {
+  color: #fff !important;
+}
+.sb-bottom {
+  border-top-color: rgba(255,255,255,.15) !important;
+}
+.sb-user {
+  color: rgba(255,255,255,.6) !important;
+}
+.sb-user .sb-role {
+  color: rgba(255,255,255,.9) !important;
+}
+.sb-logout {
+  color: rgba(255,255,255,.6) !important;
+  border-color: rgba(255,255,255,.2) !important;
+}
+.sb-logout:hover {
+  color: #fff !important;
+  border-color: #fff !important;
+  background: rgba(255,255,255,.1) !important;
+}
+
+/* ── MOBILE BOTTOM BAR ─────────────────────── */
+.mob-bar {
+  background: #fff !important;
+  border-top: 1px solid #d9dce0 !important;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.06) !important;
+}
+.mob-bar a {
+  color: #6a6d70 !important;
+}
+.mob-bar a.active {
+  color: #047e7e !important;
+  background: rgba(4,126,126,.06) !important;
+}
+.mob-bar .mb-more {
+  color: #6a6d70 !important;
+}
+
+/* ── CARDS ──────────────────────────────────── */
+.card, .win {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05) !important;
+}
+.card-hd, .win-bar {
+  background: #f0f2f5 !important;
+  border-bottom-color: #d9dce0 !important;
+  color: #32363a !important;
+}
+
+/* ── FORM FIELDS ───────────────────────────── */
+.fi, .f-inp, .form-input, .t-inp, .comp-inp, .line-inp, .batch-inp {
+  background: #fff !important;
+  border-color: #bfbfbf !important;
+  color: #32363a !important;
+}
+.fi:focus, .f-inp:focus, .form-input:focus, .comp-inp:focus, .line-inp:focus {
+  border-color: #0a6ed1 !important;
+  box-shadow: 0 0 0 2px rgba(10,110,209,.12) !important;
+}
+.fi::placeholder, .f-inp::placeholder, .form-input::placeholder {
+  color: #999 !important;
+}
+select.fi, .f-sel, .form-select, .t-sel {
+  background-color: #fff !important;
+  border-color: #bfbfbf !important;
+  color: #32363a !important;
+}
+select.fi option, .f-sel option, .form-select option, .t-sel option {
+  background: #fff !important;
+}
+
+/* ── LABELS ────────────────────────────────── */
+.fl, .f-lbl, .form-label, .comp-fl, .line-fl {
+  color: #6a6d70 !important;
+}
+
+/* ── BUTTONS ───────────────────────────────── */
+.b-primary, .b-planned, .b-save {
+  background: #0a6ed1 !important;
+  color: #fff !important;
+}
+.b-primary:hover:not(:disabled), .b-planned:hover:not(:disabled), .b-save:hover:not(:disabled) {
+  background: #085cad !important;
+}
+.b-cancel {
+  background: #fff !important;
+  border-color: #bfbfbf !important;
+  color: #32363a !important;
+}
+.b-cancel:hover {
+  background: #f0f2f5 !important;
+}
+.b-add, .b-new {
+  background: rgba(4,126,126,.06) !important;
+  color: #047e7e !important;
+  border-color: rgba(4,126,126,.25) !important;
+}
+.b-add:hover, .b-new:hover {
+  background: rgba(4,126,126,.12) !important;
+}
+.b-del {
+  background: rgba(204,25,25,.04) !important;
+  color: #cc1919 !important;
+  border-color: rgba(204,25,25,.2) !important;
+}
+.b-issue, .b-release {
+  background: #2b7d2b !important;
+}
+.b-close {
+  background: #e78c07 !important;
+}
+
+/* ── TABS ──────────────────────────────────── */
+.tabs, .module-tabs {
+  background: #eef0f3 !important;
+}
+.tab, .module-tab {
+  color: #6a6d70 !important;
+}
+.tab.on, .module-tab.on {
+  background: #fff !important;
+  color: #047e7e !important;
+  border-color: #d9dce0 !important;
+}
+.tab-btn.on {
+  color: #0a6ed1 !important;
+  border-bottom-color: #0a6ed1 !important;
+}
+
+/* ── COMPONENT CARDS ───────────────────────── */
+.comp-card, .line-card, .po-card, .blist-card, .req-card {
+  background: #f7f7f7 !important;
+  border-color: #d9dce0 !important;
+}
+.comp-card:hover, .po-card:hover, .blist-card:hover, .req-card:hover {
+  border-color: #047e7e !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
+}
+.comp-item, .po-code, .blist-id {
+  color: #0a6ed1 !important;
+}
+.comp-fv {
+  color: #515456 !important;
+}
+
+/* ── ALERTS ────────────────────────────────── */
+.alert, .al-info, .al-teal, .al-purple {
+  background: #e6f3ff !important;
+  border-color: #b3d7ff !important;
+  color: #0a6ed1 !important;
+}
+.al-green {
+  background: #e6f5e6 !important;
+  border-color: #b3dab3 !important;
+  color: #2b7d2b !important;
+}
+.al-amber, .al-gold {
+  background: #fff5e6 !important;
+  border-color: #ffd699 !important;
+  color: #c97800 !important;
+}
+.al-red {
+  background: #ffe6e6 !important;
+  border-color: #ffb3b3 !important;
+  color: #cc1919 !important;
+}
+
+/* ── BADGES / PILLS ────────────────────────── */
+.status-badge, .po-badge, .comp-type, .rc-type-badge {
+  font-weight: 700 !important;
+}
+.po-badge.released {
+  background: #e6f3ff !important;
+  color: #0a6ed1 !important;
+  border-color: #b3d7ff !important;
+}
+.po-badge.planned {
+  background: #fff5e6 !important;
+  color: #c97800 !important;
+  border-color: #ffd699 !important;
+}
+.po-badge.closed {
+  background: #e6f5e6 !important;
+  color: #2b7d2b !important;
+  border-color: #b3dab3 !important;
+}
+
+/* ── STATS / PILLS ─────────────────────────── */
+.stat-pill {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+
+/* ── TABLE ──────────────────────────────────── */
+.bom-tbl th, .p-tbl th, .sr-tbl th, .comp-table th {
+  background: #eef0f3 !important;
+  color: #6a6d70 !important;
+  border-color: #d9dce0 !important;
+}
+.bom-tbl td, .p-tbl td {
+  background: #fff !important;
+  border-color: #eef0f3 !important;
+}
+.bom-tbl tbody tr:nth-child(even) td, .p-tbl tbody tr:nth-child(even) td {
+  background: #f7f7f7 !important;
+}
+.bom-tbl tbody tr:hover td, .p-tbl tbody tr:hover td {
+  background: #e6f3ff !important;
+}
+
+/* ── SEARCH DROPDOWN ───────────────────────── */
+.search-dd, .item-dd {
+  background: #fff !important;
+  border-color: #0a6ed1 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12) !important;
+  z-index: 500 !important;
+}
+/* Prevent card overflow from clipping dropdowns */
+.card, .card-bd, .win {
+  overflow: visible !important;
+}
+.sd-row, .dd-row {
+  border-bottom-color: #eef0f3 !important;
+}
+.sd-row:hover, .dd-row:hover {
+  background: #e6f3ff !important;
+}
+.sd-code, .dd-code {
+  color: #0a6ed1 !important;
+}
+
+/* ── TOAST ──────────────────────────────────── */
+.t-ok {
+  background: #2b7d2b !important;
+}
+.t-err {
+  background: #cc1919 !important;
+}
+
+/* ── MODAL ─────────────────────────────────── */
+.modal, .modal-overlay .modal {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+.modal-hd, .modal-header {
+  background: #f0f2f5 !important;
+  border-bottom-color: #d9dce0 !important;
+}
+.modal-bd, .modal-body {
+  background: #fff !important;
+}
+.modal-footer {
+  background: #f7f7f7 !important;
+  border-top-color: #d9dce0 !important;
+}
+
+/* ── TOTALS ────────────────────────────────── */
+.total-row, .tot-strip {
+  background: #eef0f3 !important;
+}
+.total-row .tv {
+  color: #047e7e !important;
+}
+
+/* ── PIPELINE ──────────────────────────────── */
+.pipeline-header {
+  background: #f0f2f5 !important;
+  border-color: #d9dce0 !important;
+}
+
+/* ── BATCH SECTION ─────────────────────────── */
+.batch-sec {
+  background: #f7f7f7 !important;
+  border-color: #d9dce0 !important;
+}
+
+/* ── ORDER INFO ────────────────────────────── */
+.order-info, .oi-item {
+  color: #32363a !important;
+}
+.oi-l {
+  color: #6a6d70 !important;
+}
+
+/* ── SUCCESS BOX ───────────────────────────── */
+.suc-box, .success-page {
+  background: #fff !important;
+}
+.suc-title {
+  color: #2b7d2b !important;
+}
+.suc-pill {
+  background: #e6f3ff !important;
+  color: #0a6ed1 !important;
+  border-color: #b3d7ff !important;
+}
+
+/* ── SKELETON ──────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #eef0f3 25%, #f7f7f7 50%, #eef0f3 75%) !important;
+}
+
+/* ── EMPTY MESSAGE ─────────────────────────── */
+.empty-msg, .bom-msg, .po-empty {
+  color: #6a6d70 !important;
+}
+
+/* ── FILTER TABS ───────────────────────────── */
+.filter-tab {
+  border-color: #d9dce0 !important;
+  color: #6a6d70 !important;
+  background: #fff !important;
+}
+.filter-tab.on, .filter-tab:hover {
+  border-color: #047e7e !important;
+  color: #047e7e !important;
+}
+
+/* ── DT ROWS (detail) ──────────────────────── */
+.dt-row {
+  border-bottom-color: #eef0f3 !important;
+}
+.dt-row .dt-l {
+  color: #6a6d70 !important;
+}
+.dt-row .dt-v {
+  color: #32363a !important;
+}
+
+/* ═══════════════════════════════════════════
+   LOGIN PAGE + HOME DASHBOARD
+   ═══════════════════════════════════════════ */
+.login-card {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08) !important;
+}
+.login-h {
+  color: #32363a !important;
+}
+.login-sub {
+  color: #6a6d70 !important;
+}
+.login-logo-box {
+  background: #0a6ed1 !important;
+}
+.login-logo-text {
+  color: #32363a !important;
+}
+.field-label {
+  color: #6a6d70 !important;
+}
+.field-input {
+  background: #fff !important;
+  border-color: #bfbfbf !important;
+  color: #32363a !important;
+}
+.field-input:focus {
+  border-color: #0a6ed1 !important;
+  box-shadow: 0 0 0 3px rgba(10,110,209,.12) !important;
+}
+.field-input::placeholder {
+  color: #999 !important;
+}
+.btn-primary {
+  background: #0a6ed1 !important;
+  border: none !important;
+}
+.btn-primary:hover {
+  background: #085cad !important;
+}
+.err-box {
+  background: #ffe6e6 !important;
+  border-color: #ffb3b3 !important;
+  color: #cc1919 !important;
+}
+
+/* Dashboard cards */
+.dash-card, .quick-card {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+.dash-card:hover, .quick-card:hover {
+  border-color: #0a6ed1 !important;
+}
+.stat-box {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+.page-title {
+  color: #32363a !important;
+}
+.page-sub {
+  color: #6a6d70 !important;
+}
+
+/* Stat cards on dashboard */
+.stat-card {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+.stat-val {
+  color: #32363a !important;
+}
+.stat-label {
+  color: #6a6d70 !important;
+}
+.stats-grid {
+  gap: 12px !important;
+}
+
+/* Info pill on dashboard */
+.info-pill, .pipeline-info {
+  background: #f0f2f5 !important;
+  border-color: #d9dce0 !important;
+  color: #6a6d70 !important;
+}
+
+/* Action cards / Quick links on dashboard */
+.actions-grid > div, [class*="action"] {
+  background: #fff !important;
+  border-color: #d9dce0 !important;
+}
+
+/* Nav (if still visible on some pages) */
+nav {
+  background: #fff !important;
+  border-bottom-color: #d9dce0 !important;
+}
+.nav-link {
+  color: #6a6d70 !important;
+}
+.nav-link.active {
+  color: #0a6ed1 !important;
+  background: rgba(10,110,209,.06) !important;
+}
+
+/* Role badges */
+.badge {
+  border-radius: 6px !important;
+}
+.badge-blue {
+  background: #e6f3ff !important;
+  color: #0a6ed1 !important;
+  border-color: #b3d7ff !important;
+}
+.badge-amber {
+  background: #fff5e6 !important;
+  color: #c97800 !important;
+  border-color: #ffd699 !important;
+}
+.badge-green {
+  background: #e6f5e6 !important;
+  color: #2b7d2b !important;
+  border-color: #b3dab3 !important;
+}
+
+/* ═══════════════════════════════════════════
+   MODERN ROUNDED CORNERS
+   ═══════════════════════════════════════════ */
+.card, .win, .req-card, .po-card, .blist-card, .comp-card, .line-card {
+  border-radius: 12px !important;
+}
+.card-hd, .win-bar {
+  border-radius: 12px 12px 0 0 !important;
+}
+.btn {
+  border-radius: 10px !important;
+}
+.fi, .f-inp, .form-input, .form-select, .f-sel {
+  border-radius: 8px !important;
+}
+.tab, .filter-tab, .status-badge, .po-badge, .comp-type, .rc-type-badge {
+  border-radius: 8px !important;
+}
+.tabs {
+  border-radius: 12px !important;
+}
+.modal {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+.alert {
+  border-radius: 10px !important;
+}
+.search-dd, .item-dd {
+  border-radius: 10px !important;
+}
+.toast {
+  border-radius: 10px !important;
+}
+.batch-sec {
+  border-radius: 10px !important;
+}
+.suc-pill {
+  border-radius: 10px !important;
+}
+
+/* ═══════════════════════════════════════════
+   BOM MODULE — MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Header fields stack vertically */
+  .hdr-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .hdr-fields {
+    padding: 10px !important;
+  }
+  .f-row {
+    flex-wrap: wrap !important;
+  }
+  .f-lbl {
+    min-width: 80px !important;
+    font-size: 9px !important;
+  }
+  .f-inp, .f-sel {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  /* Table horizontal scroll */
+  .tbl-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .bom-tbl {
+    min-width: 700px !important;
+    font-size: 10px !important;
+  }
+  .bom-tbl th {
+    font-size: 8px !important;
+    padding: 4px 4px !important;
+  }
+  .bom-tbl td {
+    padding: 0 2px !important;
+    height: 28px !important;
+  }
+
+  /* BOM tab buttons */
+  .tab-row, .tab-btn {
+    font-size: 10px !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Footer buttons wrap */
+  .win-footer {
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .f-left {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+  .f-left .btn {
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 11px !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Search results */
+  .sr-tbl {
+    font-size: 10px !important;
+  }
+  .search-bar {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .search-bar .f-inp, .search-bar .f-sel, .search-bar .btn {
+    width: 100% !important;
+  }
+
+  /* General page padding */
+  main {
+    padding: 8px !important;
+  }
+
+  /* Approval cards grid */
+  .req-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pipeline steps */
+  .pipeline-header {
+    overflow-x: auto !important;
+    padding: 10px !important;
+  }
+
+  /* Stats row wrap */
+  .stats-row {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .stat-pill {
+    font-size: 10px !important;
+    padding: 4px 10px !important;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .filter-tab {
+    font-size: 9px !important;
+    padding: 4px 10px !important;
+  }
+
+  /* GRPO, Register forms */
+  .mgr-grid, .form-grid, .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .mgr-grid.g3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modal full screen on mobile */
+  .modal {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    min-height: 100vh !important;
+  }
+  .modal-overlay {
+    padding: 0 !important;
+  }
+}

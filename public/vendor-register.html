@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vendor Registration — SAP B1 Portal</title>
+<meta name="description" content="Register as a new vendor/supplier. Fill in your business details, bank information, and upload required documents."/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0a0f1e;--navy2:#0d1428;--navy3:#111b35;
+  --indigo:#2d3a8c;--indigo2:#3d4db0;
+  --accent:#e8a820;--accent2:#c07810;
+  --green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
+  --border:#1e2d50;--border2:#263759;
+  --text:#e8eef8;--text2:#8fa3c0;--text3:#3d5070;
+  --surface:#0f1c32;--surface2:#162038;--surface3:#0b1422;
+  --radius:8px;--radius-lg:12px;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Playfair Display',serif;
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 20%,rgba(232,168,32,.06) 0%,transparent 55%),radial-gradient(ellipse 50% 60% at 85% 80%,rgba(45,58,140,.08) 0%,transparent 55%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+.topbar{background:rgba(10,15,30,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.4)}
+.topbar-brand{display:flex;align-items:center;gap:12px}
+.sap-logo{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--display);font-size:13px;padding:5px 12px;border-radius:6px;letter-spacing:1px;font-style:italic}
+.topbar-title{font-size:13px;font-weight:500;color:var(--text2);letter-spacing:.2px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.vend-badge{background:rgba(232,168,32,.12);color:var(--accent);border:1px solid rgba(232,168,32,.3);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.page{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:32px 20px 80px}
+.steps-wrap{display:flex;align-items:center;margin-bottom:36px}
+.step{display:flex;align-items:center;gap:10px}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 10px;transition:background .4s}
+.step-line.done{background:var(--green)}
+.step-circle{width:34px;height:34px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text3);background:var(--surface);flex-shrink:0;transition:all .3s}
+.step.active .step-circle{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(232,168,32,.2)}
+.step.done .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+.step-label{font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:.2px}
+.step.active .step-label{color:var(--accent)}
+.step.done .step-label{color:var(--green)}
+.progress-wrap{background:var(--border);border-radius:3px;height:3px;margin-bottom:36px;overflow:hidden}
+.progress-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--indigo2));transition:width .5s ease}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:20px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--indigo2),transparent)}
+.card-title{font-family:var(--display);font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:.3px}
+.card-sub{font-size:12.5px;color:var(--text2);margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.card-sub span{color:var(--red)}
+.sec{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin:24px 0 13px;padding-bottom:7px;border-bottom:1px solid rgba(232,168,32,.2);display:flex;align-items:center;gap:8px}
+.sec::before{content:'';display:inline-block;width:3px;height:13px;background:var(--accent);border-radius:2px;flex-shrink:0}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+.span4{grid-column:span 4}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text2)}
+.label .req{color:var(--red);margin-left:2px}
+input,select,textarea{padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;transition:border .2s,box-shadow .2s;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,168,32,.12)}
+input[readonly],select[disabled]{background:var(--surface3);color:var(--text3);cursor:not-allowed}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:80px}
+.ferr{font-size:11px;color:var(--red);margin-top:2px}
+.no-upper{text-transform:none!important}
+input:not([type=email]):not([type=password]):not([type=file]):not([type=checkbox]):not([type=radio]):not([type=number]):not(.no-upper){text-transform:uppercase}
+textarea{text-transform:uppercase}
+select{text-transform:none}
+.type-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px}
+.type-card{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:2px solid var(--border2);border-radius:10px;cursor:pointer;transition:all .2s;background:var(--surface);user-select:none}
+.type-card.selected{border-color:var(--accent);background:rgba(232,168,32,.07)}
+.type-card input[type=radio]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;margin-top:2px}
+.type-card-title{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px}
+.type-card.selected .type-card-title{color:var(--accent)}
+.type-card-desc{font-size:11px;color:var(--text2)}
+.addr-block{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:14px;position:relative}
+.addr-block-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.addr-block-lbl{font-size:11.5px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:7px}
+.addr-block-num{background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.addr-remove-btn{padding:4px 12px;font-size:11px;border:1.5px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer;background:none;font-weight:600;transition:all .15s}
+.addr-remove-btn:hover{background:var(--red);color:#fff}
+.add-addr-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;font-size:12px;font-weight:600;border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--radius);cursor:pointer;background:rgba(232,168,32,.05);transition:all .2s;margin-bottom:16px}
+.add-addr-btn:hover{background:rgba(232,168,32,.12)}
+.addr-name-wrap{position:relative}
+.bank-block{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:14px;position:relative}
+.bank-block-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.bank-block-lbl{font-size:11.5px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:7px}
+.bank-block-num{background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.bank-remove-btn{padding:4px 12px;font-size:11px;border:1.5px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer;background:none;font-weight:600;transition:all .15s}
+.bank-remove-btn:hover{background:var(--red);color:#fff}
+.add-bank-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;font-size:12px;font-weight:600;border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--radius);cursor:pointer;background:rgba(232,168,32,.05);transition:all .2s;margin-bottom:16px}
+.add-bank-btn:hover{background:rgba(232,168,32,.12)}
+.btn-row{display:flex;gap:12px;margin-top:28px;justify-content:flex-end}
+.btn{padding:11px 26px;border-radius:var(--radius);border:none;font-family:var(--font);font-size:13.5px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover:not(:disabled){box-shadow:0 6px 20px rgba(232,168,32,.4);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.attach-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:22px 16px;background:var(--surface2);text-align:center;cursor:pointer;transition:all .2s;position:relative;min-height:110px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.attach-zone:hover,.attach-zone.drag{border-color:var(--accent);background:rgba(232,168,32,.05)}
+.attach-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+.az-icon{font-size:26px;margin-bottom:8px;line-height:1}
+.az-label{font-size:12px;font-weight:600;color:var(--text2)}
+.az-sub{font-size:10.5px;color:var(--text3);margin-top:3px}
+.attach-preview{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius);margin-top:7px}
+.ap-thumb{width:36px;height:36px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ap-info{flex:1;min-width:0}
+.ap-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ap-size{font-size:10.5px;color:var(--text3);margin-top:2px}
+.ap-rm{padding:3px 9px;font-size:10.5px;border:1.5px solid var(--red);color:var(--red);border-radius:4px;cursor:pointer;background:none;flex-shrink:0;font-weight:600;transition:all .15s}
+.ap-rm:hover{background:var(--red);color:#fff}
+.alert{padding:11px 15px;border-radius:var(--radius);font-size:12.5px;margin-bottom:18px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+.a-info{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:#93c5fd}
+.a-warn{background:rgba(232,168,32,.08);border:1px solid rgba(232,168,32,.2);color:#fcd34d}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.b-sup{background:rgba(139,92,246,.12);color:var(--purple);border:1px solid rgba(139,92,246,.25)}
+.b-serv{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.b-both{background:rgba(232,168,32,.12);color:var(--accent);border:1px solid rgba(232,168,32,.25)}
+.rev-table{width:100%;border-collapse:collapse;font-size:13px}
+.rev-table tr{border-bottom:1px solid var(--border)}
+.rev-table tr:last-child{border:none}
+.rev-table td{padding:10px 6px;vertical-align:top}
+.rev-table td:first-child{color:var(--text2);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:36%;padding-top:12px}
+.rev-table td.val{font-weight:500;color:var(--text)}
+.success-wrap{text-align:center;padding:56px 24px}
+.success-icon{font-size:64px;margin-bottom:22px;animation:popIn .6s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-wrap h2{font-family:var(--display);font-size:26px;font-weight:800;color:var(--accent);margin-bottom:10px}
+.success-wrap p{font-size:13.5px;color:var(--text2);max-width:440px;margin:0 auto 16px;line-height:1.6}
+.ref-box{display:inline-block;background:rgba(232,168,32,.1);border:1px solid rgba(232,168,32,.3);border-radius:8px;padding:10px 28px;font-family:var(--mono);font-size:16px;font-weight:600;color:var(--accent);margin:14px 0}
+.sp{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:70px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:11px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;box-shadow:var(--shadow);animation:tIn .3s ease;display:flex;align-items:center;gap:9px;max-width:360px;line-height:1.4;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}
+.t-err{background:var(--red);color:#fff}
+.t-warn{background:var(--accent);color:#fff}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.gstin-row{display:flex;gap:8px;align-items:stretch}
+.gstin-row input{flex:1;min-width:0}
+.fetch-btn{padding:0 14px;height:38px;background:var(--indigo);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-family:var(--font);transition:background .15s}
+.fetch-btn:hover{background:var(--indigo2)}
+.pan-wrap{position:relative}
+.pan-auto{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:rgba(16,185,129,.12);color:var(--green);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;pointer-events:none;white-space:nowrap;display:none}
+.toggle-block{padding:14px 18px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;background:var(--surface2);width:100%;transition:all .25s}
+.toggle-block.active{border-color:var(--accent);background:rgba(232,168,32,.04)}
+.toggle-block>label{display:flex;align-items:center;gap:12px;cursor:pointer}
+.toggle-block input[type=checkbox]{width:19px;height:19px;accent-color:var(--accent);padding:0;flex-shrink:0}
+.toggle-title{font-weight:700;font-size:14px;color:var(--text)}
+.toggle-sub{font-size:11.5px;color:var(--text2);margin-top:2px}
+/* address name frozen */
+.addr-name-frozen{background:var(--surface3)!important;color:var(--text2)!important;cursor:not-allowed!important;border-color:rgba(232,168,32,.25)!important;padding-right:90px!important}
+.addr-name-frozen:focus{box-shadow:none!important;border-color:rgba(232,168,32,.25)!important}
+.addr-name-badges{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
+.badge-autofill{background:rgba(16,185,129,.15);color:#10b981;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.4px;white-space:nowrap}
+.badge-frozen{background:rgba(61,84,112,.2);color:var(--text3);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.badge-frozen svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:640px){
+  .g2,.g3,.g4,.type-cards{grid-template-columns:1fr}
+  .span2,.span3,.span4{grid-column:span 1}
+  .card{padding:20px 16px}
+  .topbar{padding:0 16px}
+  .topbar-title{display:none}
+}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="sap-logo">SAP</span>
+    <span class="topbar-title">Business One — Vendor Registration</span>
+  </div>
+  <div class="topbar-right">
+    <span class="vend-badge">🏭 VENDOR FORM</span>
+  </div>
+</div>
+<div id="root"></div>
+
+<script>
+'use strict';
+const BACKEND = (() => localStorage.getItem('BACKEND_URL') || `${window.location.origin}/api`)();
+let S = { step:1, fd:{}, submissionId:null, toasts:[] };
+
+const STATES_LIST = ['','Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
+const COUNTRIES_LIST = ['India','United States','United Kingdom','UAE','Singapore','Germany','Japan','Australia'];
+const STATE_SHORT = {'Andhra Pradesh':'AP','Arunachal Pradesh':'AR','Assam':'AS','Bihar':'BH','Chandigarh':'CH','Chhattisgarh':'CG','Delhi':'DL','Goa':'GA','Gujarat':'GJ','Haryana':'HR','Himachal Pradesh':'HP','Jammu & Kashmir':'JK','Jharkhand':'JH','Karnataka':'KA','Kerala':'KL','Madhya Pradesh':'MP','Maharashtra':'MH','Manipur':'MN','Meghalaya':'ML','Mizoram':'MZ','Nagaland':'NL','Odisha':'OD','Punjab':'PB','Rajasthan':'RJ','Sikkim':'SK','Tamil Nadu':'TN','Telangana':'TG','Tripura':'TR','Uttar Pradesh':'UP','Uttarakhand':'UK','West Bengal':'WB'};
+
+// ── Utils ─────────────────────────────────────────────────
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg,type='ok'){const id=Date.now();S.toasts.push({id,msg,type});renderToasts();setTimeout(()=>{S.toasts=S.toasts.filter(t=>t.id!==id);renderToasts();},4500);}
+function renderToasts(){let tc=document.querySelector('.toast-c');if(!tc){tc=document.createElement('div');tc.className='toast-c';document.body.appendChild(tc);}tc.innerHTML=S.toasts.map(t=>`<div class="toast t-${t.type==='ok'?'ok':t.type==='warn'?'warn':'err'}">${t.type==='ok'?'✓':'✗'}  ${esc(t.msg)}</div>`).join('');}
+async function api(method,path,body=null){const h={'Content-Type':'application/json'};const opt={method:method.toUpperCase(),headers:h};if(body)opt.body=JSON.stringify(body);let r;try{r=await fetch(BACKEND+path,opt);}catch(e){throw new Error('Cannot reach server.');}let d;try{d=await r.json();}catch{throw new Error('Server error ('+r.status+')');}if(!r.ok)throw new Error(d?.message||d?.errors?.[0]?.msg||'Error '+r.status);return d;}
+
+// ── Address helpers ───────────────────────────────────────
+function buildAddrBlockHTML(prefix,label,idx,saved,removable){
+  saved=saved||{};
+  const SOPTS=STATES_LIST.map(v=>`<option value="${esc(v)}" ${(saved.state||''===v)?'selected':''}>${v||'-- Select State --'}</option>`).join('');
+  const COPTS=COUNTRIES_LIST.map(v=>`<option value="${esc(v)}" ${(saved.country||'India')===v?'selected':''}>${v}</option>`).join('');
+  return `<div class="addr-block" id="${prefix}-block-wrap-${idx}">
+    <div class="addr-block-hdr">
+      <div class="addr-block-lbl"><span class="addr-block-num">${idx}</span>${label}${idx>1?' Address #'+idx:''}</div>
+      ${removable?`<button type="button" class="addr-remove-btn" onclick="document.getElementById('${prefix}-block-wrap-${idx}').remove()">✗ Remove</button>`:''}
+    </div>
+    <div class="grid g2" style="gap:13px">
+      <div class="field span2">
+        <label class="label">Address Name <span class="req">*</span><span style="font-size:9px;color:var(--text3);text-transform:none;font-weight:400;margin-left:4px">(auto-filled · read-only)</span></label>
+        <div class="addr-name-wrap" style="position:relative">
+          <input id="${prefix}-addrName-${idx}" class="addr-name-frozen" value="${esc((saved.addrName||'').toUpperCase())}" placeholder="AUTO-FILLED: VENDOR NAME – STATE CODE" readonly tabindex="-1" style="user-select:none"/>
+          <div class="addr-name-badges"><span class="badge-autofill">AUTO-FILL</span><span class="badge-frozen"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>FROZEN</span></div>
+        </div>
+      </div>
+      <div class="field span2"><label class="label">Street / PO Box <span class="req">*</span></label><input id="${prefix}-street-${idx}" value="${esc((saved.street||'').toUpperCase())}" placeholder="PLOT NO., STREET NAME, LOCALITY"/></div>
+      <div class="field span2"><label class="label">Block / Area</label><input id="${prefix}-block-${idx}" value="${esc((saved.block||'').toUpperCase())}" placeholder="INDUSTRIAL AREA / SECTOR"/></div>
+      <div class="field"><label class="label">City <span class="req">*</span></label><input id="${prefix}-city-${idx}" value="${esc((saved.city||'').toUpperCase())}" placeholder="CITY NAME"/></div>
+      <div class="field"><label class="label">Pin Code</label><input id="${prefix}-zip-${idx}" value="${esc((saved.zip||'').toUpperCase())}" placeholder="110001"/></div>
+      <div class="field"><label class="label">State <span class="req">*</span></label><select id="${prefix}-state-${idx}">${SOPTS}</select></div>
+      <div class="field"><label class="label">Country</label><select id="${prefix}-country-${idx}">${COPTS}</select></div>
+      <div class="field span2">
+        <label class="label">GSTIN <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(State-wise — optional)</span></label>
+        <input id="${prefix}-gstin-${idx}" value="${esc((saved.gstin||'').toUpperCase())}" placeholder="E.G. 06ABCDE1234F1Z5" maxlength="15"/>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireAddrAutoFill(container,prefix,idx,cardNameInputId){
+  const addrNameEl=container.querySelector(`#${prefix}-addrName-${idx}`);
+  const stateEl=container.querySelector(`#${prefix}-state-${idx}`);
+  if(!addrNameEl||!stateEl)return;
+  function autoFill(){
+    const cn=cardNameInputId?document.getElementById(cardNameInputId):null;
+    const bizName=((cn?cn.value:'')||S?.fd?.cardName||'').toUpperCase().trim();
+    const stateFull=stateEl.value||'';
+    const stateShort=STATE_SHORT[stateFull]||stateFull.toUpperCase().substring(0,2);
+    addrNameEl.value=bizName?(stateShort?`${bizName} - ${stateShort}`:bizName).substring(0,50).toUpperCase():'';
+  }
+  stateEl.addEventListener('change',autoFill);
+  if(cardNameInputId){const cn=document.getElementById(cardNameInputId);if(cn)cn.addEventListener('input',autoFill);}
+  if(stateEl.value)autoFill();
+}
+
+function collectAddrBlocks(container,prefix){
+  const addrs=[];
+  container.querySelectorAll(`[id^="${prefix}-block-wrap-"]`).forEach(div=>{
+    const n=div.id.replace(`${prefix}-block-wrap-`,'');
+    if(isNaN(n))return;
+    const addrName=(div.querySelector(`#${prefix}-addrName-${n}`)?.value||'').trim().toUpperCase();
+    const street=(div.querySelector(`#${prefix}-street-${n}`)?.value||'').trim().toUpperCase();
+    if(!addrName&&!street)return;
+    addrs.push({addrName,street,block:(div.querySelector(`#${prefix}-block-${n}`)?.value||'').trim().toUpperCase(),city:(div.querySelector(`#${prefix}-city-${n}`)?.value||'').trim().toUpperCase(),zip:(div.querySelector(`#${prefix}-zip-${n}`)?.value||'').trim().toUpperCase(),state:div.querySelector(`#${prefix}-state-${n}`)?.value||'',country:div.querySelector(`#${prefix}-country-${n}`)?.value||'India',gstin:(div.querySelector(`#${prefix}-gstin-${n}`)?.value||'').trim().toUpperCase()});
+  });
+  return addrs;
+}
+
+// ── Render ────────────────────────────────────────────────
+function render(){
+  const root=document.getElementById('root');root.innerHTML='';
+  const pg=document.createElement('div');pg.className='page';
+  const pct=S.step===1?33:S.step===2?66:100;
+  pg.innerHTML=`<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>`;
+  pg.appendChild(buildSteps());
+  if(S.step===1)pg.appendChild(renderStep1());
+  else if(S.step===2)pg.appendChild(renderStep2());
+  else pg.appendChild(renderStep3());
+  root.appendChild(pg);
+}
+
+function buildSteps(){
+  const labels=['Vendor Details','Review','Confirmation'];
+  const wrap=document.createElement('div');wrap.className='steps-wrap';
+  labels.forEach((lb,i)=>{
+    const n=i+1;const s=document.createElement('div');
+    s.className='step'+(n<S.step?' done':n===S.step?' active':'');
+    s.innerHTML=`<div class="step-circle">${n<S.step?'✓':n}</div><span class="step-label">${lb}</span>`;
+    wrap.appendChild(s);
+    if(i<labels.length-1){const line=document.createElement('div');line.className='step-line'+(n<S.step?' done':'');wrap.appendChild(line);}
+  });
+  return wrap;
+}
+
+// ── STEP 1 ────────────────────────────────────────────────
+function renderStep1(){
+  const fd=S.fd;
+  const card=document.createElement('div');card.className='card';
+  const vt=fd.vendorType||'SUPPLIER';
+  const savedBill=fd.allBillAddresses?.length?fd.allBillAddresses:[{addrName:fd.billAddressName||'',street:fd.billStreet||'',block:fd.billBlock||'',city:fd.billCity||'',zip:fd.billZip||'',state:fd.billState||'',country:fd.billCountry||'India',gstin:fd.gstin||''}];
+  const savedShip=fd.allShipAddresses?.length?fd.allShipAddresses:[{addrName:fd.shipAddressName||'',street:fd.shipStreet||'',block:fd.shipBlock||'',city:fd.shipCity||'',zip:fd.shipZip||'',state:fd.shipState||'',country:fd.shipCountry||'India'}];
+
+  card.innerHTML=`
+    <div class="card-title">Vendor Registration Form</div>
+    <div class="card-sub">Fill in your business and banking details. Fields marked <span>*</span> are required. Vendor code prefix: <code style="font-family:var(--mono);color:var(--accent)">VENDA</code></div>
+
+    <div class="sec">🏢 Company / Database</div>
+    <div class="grid g2" style="margin-bottom:8px">
+      <div class="field">
+        <label class="label">Submit to Company <span class="req">*</span></label>
+        <select id="f-company">
+          <option value="JIVO_OIL_HANADB" ${(fd.company||'JIVO_OIL_HANADB')==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil (JIVO_OIL_HANADB)</option>
+          <option value="JIVO_BEVERAGES_HANADB" ${(fd.company||'')==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages (JIVO_BEVERAGES_HANADB)</option>
+          <option value="JIVO_MART_HANADB" ${(fd.company||'')==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart (JIVO_MART_HANADB)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec">🏷 Vendor Type</div>
+    <div class="type-cards">
+      <label class="type-card ${vt==='SUPPLIER'?'selected':''}"><input type="radio" name="vendType" value="SUPPLIER" ${vt==='SUPPLIER'?'checked':''}/>
+        <div><div class="type-card-title">Supplier</div><div class="type-card-desc">Goods / Raw materials / Products</div></div></label>
+      <label class="type-card ${vt==='SERVICE'?'selected':''}"><input type="radio" name="vendType" value="SERVICE" ${vt==='SERVICE'?'checked':''}/>
+        <div><div class="type-card-title">Service Provider</div><div class="type-card-desc">Labour / Consulting / Maintenance</div></div></label>
+      <label class="type-card ${vt==='BOTH'?'selected':''}"><input type="radio" name="vendType" value="BOTH" ${vt==='BOTH'?'checked':''}/>
+        <div><div class="type-card-title">Both</div><div class="type-card-desc">Goods & services</div></div></label>
+    </div>
+
+    <div class="sec">📋 Business Information</div>
+    <div class="grid g2">
+      <div class="field"><label class="label">Company / Vendor Name <span class="req">*</span></label><input id="f-cardName" placeholder="E.G. SHREE GANESH INDUSTRIES PVT LTD" value="${esc((fd.cardName||'').toUpperCase())}"/><span class="ferr" id="e-cardName"></span></div>
+      <div class="field"><label class="label">Foreign / Trade Name</label><input id="f-foreignName" placeholder="ALTERNATE TRADE NAME" value="${esc((fd.foreignName||'').toUpperCase())}"/></div>
+      <div class="field"><label class="label">Type of Business <span class="req">*</span></label>
+        <select id="f-typeOfBusiness">${['Company','Individual','Partnership','LLP','Proprietorship','Trust','Society'].map(v=>`<option ${(fd.typeOfBusiness||'Company')===v?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label class="label">Industry / Sector <span class="req">*</span></label>
+        <select id="f-industry">${['','Manufacturing','Trading','Transport & Logistics','Food & Beverage','Chemicals','Pharma','Agriculture','IT Services','Printing & Packaging','Engineering','Textiles','Construction','Others'].map(v=>`<option value="${v}" ${(fd.industry||'')===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}</select>
+        <span class="ferr" id="e-industry"></span></div>
+    </div>
+
+    <div class="sec">👤 Primary Contact Person</div>
+    <div class="grid g3">
+      <div class="field"><label class="label">First Name <span class="req">*</span></label><input id="f-contactFirst" placeholder="RAMESH" value="${esc((fd.contactFirst||'').toUpperCase())}"/><span class="ferr" id="e-contactFirst"></span></div>
+      <div class="field"><label class="label">Last Name <span class="req">*</span></label><input id="f-contactLast" placeholder="GUPTA" value="${esc((fd.contactLast||'').toUpperCase())}"/><span class="ferr" id="e-contactLast"></span></div>
+      <div class="field"><label class="label">Designation</label><input id="f-contactTitle" placeholder="PROPRIETOR / SALES HEAD" value="${esc((fd.contactTitle||'').toUpperCase())}"/></div>
+      <div class="field"><label class="label">Mobile Number <span class="req">*</span></label><input id="f-mobile" placeholder="+91 99999 99999" value="${esc(fd.mobile||'')}" class="no-upper"/><span class="ferr" id="e-mobile"></span></div>
+      <div class="field"><label class="label">Email Address <span class="req">*</span></label><input id="f-email" type="email" placeholder="vendor@company.com" value="${esc(fd.email||'')}" style="text-transform:none"/><span class="ferr" id="e-email"></span></div>
+      <div class="field"><label class="label">Alternate Contact</label><input id="f-altContact" placeholder="+91 88888 88888" value="${esc(fd.altContact||'')}" class="no-upper"/></div>
+    </div>
+
+    <div style="display:flex;align-items:center;margin-top:24px"><div class="sec" style="margin:0;flex:1">🏠 Billing Address(es)</div></div>
+    <div class="alert a-info" style="margin-top:12px;margin-bottom:10px">ℹ <strong>Address Name</strong> is auto-filled as <strong>VENDOR NAME – STATE CODE</strong>.</div>
+    <div id="bill-addr-container" style="margin-top:4px">${savedBill.map((a,i)=>buildAddrBlockHTML('fb','Billing',i+1,a,i>0)).join('')}</div>
+    <button type="button" class="add-addr-btn" id="add-bill-addr">+ Add Another Billing Address</button>
+
+    <div class="sec" style="margin-top:8px">🚚 Shipping Address(es)</div>
+    <div style="margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 16px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:8px;width:fit-content">
+        <input type="checkbox" id="sameAsBill" ${fd.sameAsBill!==false?'checked':''} style="width:18px;height:18px;padding:0;accent-color:var(--accent)"/>
+        <span style="font-size:13px;font-weight:600;color:var(--text)">Same as first Billing Address</span>
+      </label>
+    </div>
+    <div id="ship-addr-section" style="${fd.sameAsBill!==false?'display:none':''}">
+      <div id="ship-addr-container">${savedShip.map((a,i)=>buildAddrBlockHTML('fs','Shipping',i+1,a,i>0)).join('')}</div>
+      <button type="button" class="add-addr-btn" id="add-ship-addr">+ Add Another Shipping Address</button>
+    </div>
+
+    <div class="sec">🏦 Tax & Compliance</div>
+    <div class="grid g3">
+      <div class="field span2"><label class="label">GSTIN <span class="req">*</span></label>
+        <div class="gstin-row"><input id="f-gstin" placeholder="E.G. 06ABCDE1234F1Z5" value="${esc((fd.gstin||'').toUpperCase())}" maxlength="15"/>
+        <button type="button" id="gstin-fetch" class="fetch-btn"><span id="gstin-sp" style="display:none" class="sp"></span>Auto PAN</button></div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:3px">Auto-extracts PAN from 15-digit GSTIN</div>
+        <span class="ferr" id="e-gstin"></span></div>
+      <div class="field"><label class="label">PAN Number <span class="req">*</span></label>
+        <div class="pan-wrap"><input id="f-pan" placeholder="ABCDE1234F" value="${esc((fd.pan||'').toUpperCase())}" maxlength="10" style="padding-right:52px"/>
+        <span id="pan-badge" class="pan-auto" style="display:${fd.panAutoFetched?'block':'none'}">AUTO</span></div>
+        <span class="ferr" id="e-pan"></span></div>
+      <div class="field"><label class="label">TAN Number <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(if applicable)</span></label>
+        <input id="f-tan" placeholder="BLRA12345B" value="${esc((fd.tan||'').toUpperCase())}" maxlength="10"/></div>
+      <div class="field"><label class="label">Currency</label>
+        <select id="f-currency">${['Indian Rupee','US Dollar','Euro','British Pound','UAE Dirham'].map(v=>`<option ${(fd.currency||'Indian Rupee')===v?'selected':''}>${v}</option>`).join('')}</select></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         MSME / UDYAM — FIXED FIELDS
+         U_MSME_Type  : Micro | Small | Medium | Large
+         U_MSME_BType : Manufacturing | Service | Trading | Others
+         U_Fssai      : FSSAI License Number (new field)
+    ═══════════════════════════════════════════════════════ -->
+    <div class="sec">🏭 MSME / Udyam Registration</div>
+    <div class="toggle-block ${fd.hasMsme?'active':''}" id="msme-wrap">
+      <label><input type="checkbox" id="f-hasMsme" ${fd.hasMsme?'checked':''}/>
+        <div><div class="toggle-title">Registered under MSME / Udyam</div>
+        <div class="toggle-sub">Check if this vendor holds an MSME / Udyam registration certificate</div></div></label>
+      <div id="msme-fields" style="${fd.hasMsme?'':'display:none'}">
+        <div class="grid g3" style="margin-top:16px">
+
+          <!-- Row 1: Udyam No + MSME Type -->
+          <div class="field span2">
+            <label class="label">Udyam Registration Number <span class="req">*</span></label>
+            <input id="f-msmeNo" placeholder="UDYAM-HR-18-0040140" value="${esc((fd.msmeNo||'').toUpperCase())}" maxlength="19"/>
+            <span class="ferr" id="e-msmeNo"></span>
+          </div>
+          <div class="field">
+            <label class="label">MSME Type <span class="req">*</span>
+              <span style="font-size:9px;color:var(--text3);text-transform:none;font-weight:400;margin-left:4px">(U_MSME_Type)</span>
+            </label>
+            <!-- FIX: SAP UDF U_MSME_Type values = Micro, Small, Medium, Large -->
+            <select id="f-msmeType">
+              ${['','MICRO','SMALL','MEDIUM','LARGE'].map(v=>`<option value="${v}" ${(fd.msmeType||'')===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}
+            </select>
+            <span class="ferr" id="e-msmeType"></span>
+          </div>
+
+          <!-- Row 2: Business Type + Certificate upload hint -->
+          <div class="field span2">
+            <label class="label">MSME Business Type <span class="req">*</span>
+              <span style="font-size:9px;color:var(--text3);text-transform:none;font-weight:400;margin-left:4px">(U_MSME_BType)</span>
+            </label>
+            <!-- FIX: U_MSME_BType field — was missing entirely -->
+            <select id="f-msmeBType">
+              ${['','Manufacturing','Service','Trading','Others'].map(v=>`<option value="${v}" ${(fd.msmeBType||'')===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}
+            </select>
+            <span class="ferr" id="e-msmeBType"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         FSSAI LICENSE — NEW FIELD (U_Fssai)
+         Shown always (not only for MSME) — applies to food vendors
+    ═══════════════════════════════════════════════════════ -->
+    <div class="sec">🍽 FSSAI License</div>
+    <div class="grid g2">
+      <div class="field">
+        <label class="label">FSSAI License No
+          <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(U_Fssai — if applicable)</span>
+        </label>
+        <input id="f-fssaiNo" placeholder="E.G. 10020042001234" value="${esc((fd.fssaiNo||'').toUpperCase())}" maxlength="14" style="font-family:var(--mono);font-size:12px"/>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:2px">14-digit FSSAI license number for food / beverage vendors</div>
+      </div>
+    </div>
+
+    <div class="sec">🏦 Bank Account Details</div>
+    <div class="alert a-info">ℹ Provide at least one bank account. IFSC code will be stored in SAP's <code style="font-family:var(--mono)">SwiftNum</code> field (OCRB).</div>
+    <div id="bank-container">${buildBankBlockHTML(1,fd.bankAccounts?.[0]||{},false)}</div>
+    <button type="button" class="add-bank-btn" id="add-bank-btn">+ Add Another Bank Account</button>
+
+    <div class="sec">📎 Required Documents</div>
+    <div class="alert a-warn">⚠ Upload clear scanned copies or photos. Max <strong>5MB</strong> per file. PDF, JPG, PNG accepted.</div>
+    <div class="grid g2" style="align-items:start">
+      <div class="field">
+        <label class="label">PAN Card <span class="req">*</span></label>
+        <div class="attach-zone" id="az-pan"><input type="file" id="f-att-pan" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('pan',this)"/>
+          <div class="az-icon">🪪</div><div class="az-label">Click or drag PAN Card</div><div class="az-sub">PDF, JPG, PNG — max 5MB</div></div>
+        <div id="ap-pan"></div><span class="ferr" id="e-att-pan"></span>
+      </div>
+      <div class="field">
+        <label class="label">Cancelled Cheque <span class="req">*</span></label>
+        <div class="attach-zone" id="az-cheque"><input type="file" id="f-att-cheque" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('cheque',this)"/>
+          <div class="az-icon">🏦</div><div class="az-label">Click or drag Cancelled Cheque</div><div class="az-sub">PDF, JPG, PNG — max 5MB</div></div>
+        <div id="ap-cheque"></div><span class="ferr" id="e-att-cheque"></span>
+      </div>
+      <div class="field">
+        <label class="label">GST Certificate <span class="req">*</span></label>
+        <div class="attach-zone" id="az-gst"><input type="file" id="f-att-gst" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('gst',this)"/>
+          <div class="az-icon">📄</div><div class="az-label">Click or drag GST Certificate</div><div class="az-sub">PDF, JPG, PNG — max 5MB</div></div>
+        <div id="ap-gst"></div><span class="ferr" id="e-att-gst"></span>
+      </div>
+      <div class="field" id="az-msme-wrap" style="${fd.hasMsme?'':'display:none'}">
+        <label class="label">MSME Certificate <span class="req">*</span></label>
+        <div class="attach-zone" id="az-msme"><input type="file" id="f-att-msme" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('msme',this)"/>
+          <div class="az-icon">🏭</div><div class="az-label">Click or drag MSME Certificate</div><div class="az-sub">PDF, JPG, PNG — max 5MB</div></div>
+        <div id="ap-msme"></div><span class="ferr" id="e-att-msme"></span>
+      </div>
+      <div class="field" id="az-fssai-wrap" style="${fd.fssaiNo?'':'display:none'}">
+        <label class="label">FSSAI Certificate <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(if FSSAI entered above)</span></label>
+        <div class="attach-zone" id="az-fssai"><input type="file" id="f-att-fssai" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('fssai',this)"/>
+          <div class="az-icon">🍽</div><div class="az-label">Click or drag FSSAI Certificate</div><div class="az-sub">PDF, JPG, PNG — max 5MB</div></div>
+        <div id="ap-fssai"></div>
+      </div>
+      <div class="field">
+        <label class="label">Other Documents <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(optional)</span></label>
+        <div class="attach-zone" id="az-other"><input type="file" id="f-att-other" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleAttach('other',this)"/>
+          <div class="az-icon">📁</div><div class="az-label">Other Supporting Documents</div><div class="az-sub">Multiple files allowed</div></div>
+        <div id="ap-other"></div>
+      </div>
+    </div>
+
+    <div class="sec">📝 Additional Information</div>
+    <div class="field">
+      <label class="label">Remarks <span class="req">*</span></label>
+      <textarea id="f-remarks" placeholder="DESCRIBE PRODUCTS / SERVICES, DELIVERY CAPABILITIES, LEAD TIME, ETC...">${esc((fd.remarks||'').toUpperCase())}</textarea>
+      <span class="ferr" id="e-remarks"></span>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" id="btn-next1">Review Details →</button></div>`;
+
+  // Wire vendor type
+  card.querySelectorAll('input[name="vendType"]').forEach(r=>{
+    r.onchange=function(){S.fd.vendorType=this.value;card.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));this.closest('.type-card').classList.add('selected');};
+  });
+
+  // Wire address auto-fill
+  let billCount=savedBill.length,shipCount=savedShip.length;
+  savedBill.forEach((_,i)=>wireAddrAutoFill(card.querySelector('#bill-addr-container'),'fb',i+1,'f-cardName'));
+  savedShip.forEach((_,i)=>wireAddrAutoFill(card.querySelector('#ship-addr-container'),'fs',i+1,'f-cardName'));
+
+  card.querySelector('#sameAsBill').onchange=function(){card.querySelector('#ship-addr-section').style.display=this.checked?'none':'';S.fd.sameAsBill=!this.checked;};
+  card.querySelector('#add-bill-addr').onclick=()=>{billCount++;const c=card.querySelector('#bill-addr-container');const d=document.createElement('div');d.innerHTML=buildAddrBlockHTML('fb','Billing',billCount,{},true);c.appendChild(d.firstElementChild);wireAddrAutoFill(c,'fb',billCount,'f-cardName');};
+  card.querySelector('#add-ship-addr').onclick=()=>{shipCount++;const c=card.querySelector('#ship-addr-container');const d=document.createElement('div');d.innerHTML=buildAddrBlockHTML('fs','Shipping',shipCount,{},true);c.appendChild(d.firstElementChild);wireAddrAutoFill(c,'fs',shipCount,'f-cardName');};
+
+  // GSTIN → PAN
+  const gEl=card.querySelector('#f-gstin'),pEl=card.querySelector('#f-pan'),pBadge=card.querySelector('#pan-badge');
+  gEl.oninput=function(){this.value=this.value.toUpperCase();if(this.value.length===15){const pan=this.value.substring(2,12);pEl.value=pan;pBadge.style.display='block';S.fd.panAutoFetched=true;S.fd.pan=pan;}else if(S.fd.panAutoFetched){pEl.value='';pBadge.style.display='none';S.fd.panAutoFetched=false;}};
+  pEl.oninput=function(){this.value=this.value.toUpperCase();if(S.fd.panAutoFetched){pBadge.style.display='none';S.fd.panAutoFetched=false;}};
+  card.querySelector('#gstin-fetch').onclick=()=>{const g=(gEl.value||'').trim().toUpperCase();if(g.length!==15){card.querySelector('#e-gstin').textContent='Enter a valid 15-digit GSTIN first';return;}const pan=g.substring(2,12);pEl.value=pan;pBadge.style.display='block';S.fd.panAutoFetched=true;toast('PAN extracted: '+pan);};
+
+  // MSME toggle
+  const msmeCk=card.querySelector('#f-hasMsme'),msmeF=card.querySelector('#msme-fields'),msmeW=card.querySelector('#msme-wrap'),msmeAz=card.querySelector('#az-msme-wrap');
+  msmeCk.onchange=function(){msmeF.style.display=this.checked?'':'none';msmeW.classList.toggle('active',this.checked);if(msmeAz)msmeAz.style.display=this.checked?'':'none';S.fd.hasMsme=this.checked;};
+
+  // FSSAI — show attachment zone when number entered
+  const fssaiInp=card.querySelector('#f-fssaiNo'),fssaiAz=card.querySelector('#az-fssai-wrap');
+  fssaiInp.oninput=function(){this.value=this.value.toUpperCase();if(fssaiAz)fssaiAz.style.display=this.value.trim().length>0?'':'none';};
+
+  // Bank accounts
+  let bankCount=fd.bankAccounts?.length||1;
+  if(fd.bankAccounts?.length>1){const bc=card.querySelector('#bank-container');for(let i=2;i<=fd.bankAccounts.length;i++){const d=document.createElement('div');d.innerHTML=buildBankBlockHTML(i,fd.bankAccounts[i-1]||{},true);bc.appendChild(d.firstElementChild);}}
+  card.querySelector('#add-bank-btn').onclick=()=>{bankCount++;const bc=card.querySelector('#bank-container');const d=document.createElement('div');d.innerHTML=buildBankBlockHTML(bankCount,{},true);bc.appendChild(d.firstElementChild);};
+
+  // Restore attachments
+  if(!S.fd.attachments)S.fd.attachments={};
+  ['pan','cheque','gst','msme','fssai','other'].forEach(key=>{if(S.fd.attachments[key])renderAttachPreview(card,key,S.fd.attachments[key]);});
+
+  // Drag-drop
+  card.querySelectorAll('.attach-zone').forEach(z=>{
+    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag');});
+    z.addEventListener('dragleave',()=>z.classList.remove('drag'));
+    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');const k=z.id.replace('az-','');const inp=z.querySelector('input[type=file]');if(inp&&e.dataTransfer.files.length){inp.files=e.dataTransfer.files;window.handleAttach(k,inp);}});
+  });
+
+  // NEXT / VALIDATE
+  card.querySelector('#btn-next1').onclick=()=>{
+    const v=id=>(card.querySelector('#'+id)?.value||'').trim().toUpperCase();
+    const err=(id,msg)=>{const el=card.querySelector('#e-'+id);if(el)el.textContent=msg;};
+    const clr=id=>{const el=card.querySelector('#e-'+id);if(el)el.textContent='';};
+    const emailVal=(card.querySelector('#f-email')?.value||'').trim();
+    const sameAsBill=card.querySelector('#sameAsBill').checked;
+    let ok=true;
+
+    card.querySelectorAll('input:not([type=email]):not([type=file]):not([type=checkbox]):not([type=radio]):not([type=number]):not(.no-upper)').forEach(inp=>{if(!inp.readOnly&&inp.value)inp.value=inp.value.toUpperCase();});
+    card.querySelectorAll('textarea').forEach(t=>{if(t.value)t.value=t.value.toUpperCase();});
+
+    if(!v('f-cardName')){err('cardName','Vendor name is required');ok=false;}else clr('cardName');
+    if(!card.querySelector('#f-industry')?.value){err('industry','Industry is required');ok=false;}else clr('industry');
+    if(!v('f-contactFirst')){err('contactFirst','First name is required');ok=false;}else clr('contactFirst');
+    if(!v('f-contactLast')){err('contactLast','Last name is required');ok=false;}else clr('contactLast');
+
+    const mob=(card.querySelector('#f-mobile')?.value||'').trim();
+    if(!mob){err('mobile','Mobile number is required');ok=false;}
+    else if(!/^[0-9+\s\-]{8,15}$/.test(mob)){err('mobile','Enter a valid mobile number');ok=false;}
+    else clr('mobile');
+
+    if(!emailVal){err('email','Email is required');ok=false;}
+    else if(!/\S+@\S+\.\S+/.test(emailVal)){err('email','Enter a valid email address');ok=false;}
+    else clr('email');
+
+    const gstin=v('f-gstin');
+    if(!gstin){err('gstin','GSTIN is required');ok=false;}
+    else if(!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)){err('gstin','Invalid GSTIN format (e.g. 06ABCDE1234F1Z5)');ok=false;}
+    else clr('gstin');
+
+    const pan=v('f-pan');
+    if(!pan){err('pan','PAN is required');ok=false;}
+    else if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)){err('pan','Invalid PAN format (e.g. ABCDE1234F)');ok=false;}
+    else clr('pan');
+
+    if(!v('f-remarks')){err('remarks','Remarks are required');ok=false;}else clr('remarks');
+
+    const firstBillDiv=card.querySelector('#fb-block-wrap-1');
+    if(firstBillDiv){
+      if(!firstBillDiv.querySelector('#fb-street-1')?.value?.trim()){toast('Please fill Street in the billing address','err');ok=false;}
+      if(!firstBillDiv.querySelector('#fb-city-1')?.value?.trim()){toast('Please fill City in the billing address','err');ok=false;}
+      if(!firstBillDiv.querySelector('#fb-state-1')?.value){toast('Please select State in the billing address','err');ok=false;}
+    }
+
+    // MSME validation — all 3 fields now required
+    const hasMsme=card.querySelector('#f-hasMsme')?.checked;
+    if(hasMsme){
+      if(!v('f-msmeNo')){err('msmeNo','MSME number is required');ok=false;}
+      else if(!/^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/.test(v('f-msmeNo'))){err('msmeNo','Format: UDYAM-HR-18-0040140');ok=false;}
+      else clr('msmeNo');
+      if(!card.querySelector('#f-msmeType')?.value){err('msmeType','MSME Type is required');ok=false;}else clr('msmeType');
+      if(!card.querySelector('#f-msmeBType')?.value){err('msmeBType','MSME Business Type is required');ok=false;}else clr('msmeBType');
+      if(!S.fd.attachments?.msme){err('att-msme','MSME certificate is required');ok=false;}
+    }
+
+    if(!S.fd.attachments?.pan){err('att-pan','PAN card document is required');ok=false;}
+    if(!S.fd.attachments?.cheque){err('att-cheque','Cancelled cheque is required');ok=false;}
+    if(!S.fd.attachments?.gst){err('att-gst','GST certificate is required');ok=false;}
+
+    const firstBank=card.querySelector('#bank-block-1');
+    if(firstBank){
+      if(!(firstBank.querySelector('#bank-accNo-1')?.value||'').trim()){toast('Bank account number is required','err');ok=false;}
+      if(!(firstBank.querySelector('#bank-ifsc-1')?.value||'').trim()){toast('IFSC code is required','err');ok=false;}
+      if(!(firstBank.querySelector('#bank-name-1')?.value||'').trim()){toast('Bank name is required','err');ok=false;}
+    }
+
+    if(!ok){const fe=card.querySelector('.ferr:not(:empty)');if(fe)fe.scrollIntoView({behavior:'smooth',block:'center'});return;}
+
+    // Collect banks
+    const bankAccounts=[];
+    card.querySelectorAll('[id^="bank-block-"]').forEach(div=>{
+      const n=div.id.replace('bank-block-','');if(isNaN(n))return;
+      const accNo=(div.querySelector(`#bank-accNo-${n}`)?.value||'').trim().toUpperCase();
+      if(!accNo)return;
+      bankAccounts.push({bankName:(div.querySelector(`#bank-name-${n}`)?.value||'').trim().toUpperCase(),accNo,ifsc:(div.querySelector(`#bank-ifsc-${n}`)?.value||'').trim().toUpperCase(),accountType:div.querySelector(`#bank-type-${n}`)?.value||'Current',branch:(div.querySelector(`#bank-branch-${n}`)?.value||'').trim().toUpperCase(),swiftCode:(div.querySelector(`#bank-swift-${n}`)?.value||'').trim().toUpperCase(),isPrimary:n==='1'});
+    });
+
+    const allBill=collectAddrBlocks(card.querySelector('#bill-addr-container'),'fb');
+    const allShip=sameAsBill?[]:collectAddrBlocks(card.querySelector('#ship-addr-container'),'fs');
+    const pb=allBill[0]||{},ps=sameAsBill?pb:(allShip[0]||pb);
+
+    S.fd={...S.fd,
+      company:card.querySelector('#f-company')?.value||'JIVO_OIL_HANADB',
+      vendorType:card.querySelector('input[name="vendType"]:checked')?.value||'SUPPLIER',
+      cardName:v('f-cardName'),foreignName:v('f-foreignName'),
+      typeOfBusiness:card.querySelector('#f-typeOfBusiness')?.value||'',
+      industry:card.querySelector('#f-industry')?.value||'',
+      contactFirst:v('f-contactFirst'),contactLast:v('f-contactLast'),contactTitle:v('f-contactTitle'),
+      mobile:mob,email:emailVal,altContact:(card.querySelector('#f-altContact')?.value||'').trim(),
+      billAddressName:pb.addrName||'',billStreet:pb.street||'',billBlock:pb.block||'',billCity:pb.city||'',billZip:pb.zip||'',billState:pb.state||'',billCountry:pb.country||'India',
+      sameAsBill,
+      shipAddressName:ps.addrName||'',shipStreet:ps.street||'',shipBlock:ps.block||'',shipCity:ps.city||'',shipZip:ps.zip||'',shipState:ps.state||'',shipCountry:ps.country||'India',
+      allBillAddresses:allBill,allShipAddresses:sameAsBill?allBill:allShip,
+      gstin,pan,tan:v('f-tan'),currency:card.querySelector('#f-currency')?.value||'Indian Rupee',
+      hasMsme:hasMsme||false,
+      msmeNo:hasMsme?v('f-msmeNo'):'',
+      msmeType:hasMsme?card.querySelector('#f-msmeType')?.value||'':'',
+      msmeBType:hasMsme?card.querySelector('#f-msmeBType')?.value||'':'',  // ← NEW
+      fssaiNo:v('f-fssaiNo'),  // ← NEW
+      remarks:v('f-remarks'),bankAccounts,attachments:S.fd.attachments||{},
+    };
+    S.step=2;window.scrollTo(0,0);render();
+  };
+
+  return card;
+}
+
+function buildBankBlockHTML(idx,saved={},removable=false){
+  return `<div class="bank-block" id="bank-block-${idx}">
+    <div class="bank-block-hdr">
+      <div class="bank-block-lbl"><span class="bank-block-num">${idx}</span>Bank Account ${idx>1?'#'+idx:''}</div>
+      ${removable?`<button type="button" class="bank-remove-btn" onclick="document.getElementById('bank-block-${idx}').remove()">✗ Remove</button>`:''}
+    </div>
+    <div class="grid g2" style="gap:13px">
+      <div class="field"><label class="label">Bank Name <span class="req">*</span></label><input id="bank-name-${idx}" placeholder="E.G. STATE BANK OF INDIA" value="${esc((saved.bankName||'').toUpperCase())}"/></div>
+      <div class="field"><label class="label">Branch Name</label><input id="bank-branch-${idx}" placeholder="E.G. NEHRU PLACE BRANCH" value="${esc((saved.branch||'').toUpperCase())}"/></div>
+      <div class="field"><label class="label">Account Number <span class="req">*</span></label><input id="bank-accNo-${idx}" placeholder="ACCOUNT NUMBER" value="${esc((saved.accNo||'').toUpperCase())}" style="font-family:var(--mono);font-size:12px"/></div>
+      <div class="field">
+        <label class="label">IFSC Code <span class="req">*</span>
+          <span style="font-size:9px;color:var(--text3);text-transform:none;font-weight:400;margin-left:4px">→ SAP SwiftNum (OCRB)</span>
+        </label>
+        <input id="bank-ifsc-${idx}" placeholder="SBIN0001234" value="${esc((saved.ifsc||'').toUpperCase())}" maxlength="11" style="font-family:var(--mono);font-size:12px"/>
+      </div>
+      <div class="field"><label class="label">Account Type</label>
+        <select id="bank-type-${idx}">${['Current','Savings','Cash Credit','Overdraft'].map(v=>`<option value="${v}" ${(saved.accountType||'Current')===v?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label class="label">SWIFT Code <span style="font-size:9.5px;color:var(--text3);text-transform:none;font-weight:400">(for foreign payments)</span></label>
+        <input id="bank-swift-${idx}" placeholder="SBININBB" value="${esc((saved.swiftCode||'').toUpperCase())}" maxlength="11" style="font-family:var(--mono);font-size:12px"/></div>
+    </div>
+  </div>`;
+}
+
+function renderAttachPreview(container,key,att){
+  const el=container.querySelector('#ap-'+key);if(!el)return;
+  const arr=Array.isArray(att)?att:[att];
+  el.innerHTML=arr.map((a,i)=>`<div class="attach-preview">
+    <div class="ap-thumb">${a.type?.startsWith('image/')?`<img src="${a.data}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`:a.type==='application/pdf'?'📄':'📎'}</div>
+    <div class="ap-info"><div class="ap-name">${esc(a.name)}</div><div class="ap-size">${(a.size/1024).toFixed(1)} KB · ${a.type||'file'}</div></div>
+    <button class="ap-rm" onclick="removeAttach('${key}',${i},this.closest('.attach-preview'))">✗</button>
+  </div>`).join('');
+}
+
+window.removeAttach=function(key,idx,el){
+  if(!S.fd.attachments)return;
+  const arr=Array.isArray(S.fd.attachments[key])?S.fd.attachments[key]:[S.fd.attachments[key]];
+  arr.splice(idx,1);S.fd.attachments[key]=arr.length?(key==='other'||key==='fssai'?arr:arr[0]):null;
+  if(el)el.remove();
+};
+
+window.handleAttach=function(key,input){
+  Array.from(input.files||[]).forEach(file=>{
+    if(file.size>5*1024*1024){toast(file.name+' exceeds 5MB','err');return;}
+    const r=new FileReader();
+    r.onload=e=>{
+      const obj={name:file.name,size:file.size,type:file.type,data:e.target.result};
+      if(!S.fd.attachments)S.fd.attachments={};
+      if(key==='other'||key==='fssai'){
+        if(!Array.isArray(S.fd.attachments[key]))S.fd.attachments[key]=[];
+        S.fd.attachments[key].push(obj);
+        const previewEl=document.querySelector('#ap-'+key);
+        if(previewEl)renderAttachPreviewDirect(previewEl,S.fd.attachments[key]);
+      }else{
+        S.fd.attachments[key]=obj;
+        const previewEl=document.querySelector('#ap-'+key);
+        if(previewEl)renderAttachPreviewDirect(previewEl,[obj]);
+      }
+    };
+    r.readAsDataURL(file);
+  });
+  input.value='';
+};
+
+function renderAttachPreviewDirect(el,arr){
+  el.innerHTML=arr.map((a,i)=>`<div class="attach-preview">
+    <div class="ap-thumb">${a.type?.startsWith('image/')?`<img src="${a.data}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">`:a.type==='application/pdf'?'📄':'📎'}</div>
+    <div class="ap-info"><div class="ap-name">${esc(a.name)}</div><div class="ap-size">${(a.size/1024).toFixed(1)} KB</div></div>
+    <button class="ap-rm" onclick="this.closest('.attach-preview').remove()">✗</button>
+  </div>`).join('');
+}
+
+// ── STEP 2: REVIEW ────────────────────────────────────────
+function renderStep2(){
+  const fd=S.fd;const card=document.createElement('div');card.className='card';
+  const vtLabel={SUPPLIER:'Supplier',SERVICE:'Service Provider',BOTH:'Supplier + Service'}[fd.vendorType]||fd.vendorType;
+  const vtBadge={SUPPLIER:'b-sup',SERVICE:'b-serv',BOTH:'b-both'}[fd.vendorType]||'b-sup';
+  const billHtml=(fd.allBillAddresses||[]).map((a,i)=>`<tr><td>Billing${i>0?' #'+(i+1):''}</td><td class="val"><strong>${esc(a.addrName||'—')}</strong><br/><span style="font-size:12px;color:var(--text2)">${esc(a.street||'')}${a.block?', '+esc(a.block):''}, ${esc(a.city||'')} ${esc(a.state||'')} ${esc(a.zip||'')}, ${esc(a.country||'')}</span>${a.gstin?`<br/><span style="font-size:11px;color:var(--text3)">GSTIN: ${esc(a.gstin)}</span>`:''}</td></tr>`).join('');
+  const shipHtml=fd.sameAsBill?'<tr><td>Shipping</td><td class="val" style="color:var(--text3)">Same as Billing Address</td></tr>':(fd.allShipAddresses||[]).map((a,i)=>`<tr><td>Shipping${i>0?' #'+(i+1):''}</td><td class="val"><strong>${esc(a.addrName||'—')}</strong><br/><span style="font-size:12px;color:var(--text2)">${esc(a.street||'')}${a.block?', '+esc(a.block):''}, ${esc(a.city||'')} ${esc(a.state||'')} ${esc(a.zip||'')}</span></td></tr>`).join('');
+  const banksHtml=(fd.bankAccounts||[]).map((b,i)=>`<tr><td>Bank A/C ${i+1}</td><td class="val"><strong>${esc(b.bankName)}</strong>${b.branch?`, ${esc(b.branch)}`:''}<br/><span style="font-family:var(--mono);font-size:12px">${esc(b.accNo)}</span> · IFSC: <span style="font-family:var(--mono);font-size:12px">${esc(b.ifsc)}</span> · ${esc(b.accountType)}${b.swiftCode?` · SWIFT: <span style="font-family:var(--mono);font-size:12px">${esc(b.swiftCode)}</span>`:''}</td></tr>`).join('');
+
+  card.innerHTML=`
+    <div class="card-title">Review Your Details</div>
+    <div class="card-sub">Please review all information carefully before submitting.</div>
+    <div class="alert a-info">ℹ After submission, our purchase/accounts team will verify and create vendor code <code style="font-family:var(--mono);color:var(--accent)">VENDA*</code> in SAP B1.</div>
+    <table class="rev-table">
+      <tr><td>Vendor Type</td><td class="val"><span class="badge ${vtBadge}">${vtLabel}</span></td></tr>
+      <tr><td>Vendor Name</td><td class="val"><strong>${esc(fd.cardName)}</strong>${fd.foreignName?` <span style="font-size:12px;color:var(--text2)">(${esc(fd.foreignName)})</span>`:''}</td></tr>
+      <tr><td>Business Type</td><td class="val">${esc(fd.typeOfBusiness)}</td></tr>
+      <tr><td>Industry</td><td class="val">${esc(fd.industry)}</td></tr>
+      <tr><td>Contact</td><td class="val">${esc(fd.contactFirst+' '+fd.contactLast)}${fd.contactTitle?` <span style="font-size:12px;color:var(--text2)">(${esc(fd.contactTitle)})</span>`:''}</td></tr>
+      <tr><td>Mobile</td><td class="val">${esc(fd.mobile)}${fd.altContact?` / ${esc(fd.altContact)}`:''}</td></tr>
+      <tr><td>Email</td><td class="val">${esc(fd.email)}</td></tr>
+      ${billHtml}${shipHtml}
+      <tr><td>GSTIN</td><td class="val"><code style="font-family:var(--mono);font-size:12px">${esc(fd.gstin)}</code></td></tr>
+      <tr><td>PAN (TaxId0)</td><td class="val"><code style="font-family:var(--mono);font-size:12px">${esc(fd.pan)}</code>${fd.panAutoFetched?'&nbsp;<span style="background:rgba(16,185,129,.1);color:var(--green);font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700">AUTO</span>':''}</td></tr>
+      ${fd.tan?`<tr><td>TAN</td><td class="val"><code style="font-family:var(--mono);font-size:12px">${esc(fd.tan)}</code></td></tr>`:''}
+      <tr><td>Currency</td><td class="val">${esc(fd.currency)}</td></tr>
+      ${fd.hasMsme?`<tr><td>MSME</td><td class="val">✓ <span style="font-family:var(--mono);font-size:12px">${esc(fd.msmeNo)}</span><br/><span style="font-size:12px;color:var(--text2)">Type: ${esc(fd.msmeType)} &nbsp;·&nbsp; Business: ${esc(fd.msmeBType)}</span></td></tr>`:''}
+      ${fd.fssaiNo?`<tr><td>FSSAI (U_Fssai)</td><td class="val"><code style="font-family:var(--mono);font-size:12px">${esc(fd.fssaiNo)}</code></td></tr>`:''}
+      ${banksHtml}
+      <tr><td>Documents</td><td class="val">${Object.entries(fd.attachments||{}).filter(([,v])=>v&&(Array.isArray(v)?v.length:true)).map(([k,v])=>{const arr=Array.isArray(v)?v:[v];return arr.map(a=>`<span style="display:inline-flex;background:rgba(232,168,32,.1);color:var(--accent);padding:2px 9px;border-radius:4px;font-size:11px;font-weight:600;margin:2px 3px 2px 0">${k.toUpperCase()}: ${esc(a.name)}</span>`).join('');}).join('')||'<span style="color:var(--text3)">None</span>'}</td></tr>
+      <tr><td>Remarks</td><td class="val" style="color:var(--text2)">${esc(fd.remarks)}</td></tr>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="s2-back">← Edit Details</button>
+      <button class="btn btn-primary" id="s2-submit"><span id="s2-sp" style="display:none" class="sp"></span>✓ Confirm & Submit</button>
+    </div>`;
+
+  card.querySelector('#s2-back').onclick=()=>{S.step=1;window.scrollTo(0,0);render();};
+  card.querySelector('#s2-submit').onclick=async()=>{
+    const btn=card.querySelector('#s2-submit'),sp=card.querySelector('#s2-sp');
+    btn.disabled=true;sp.style.display='inline-block';
+    try{const r=await api('POST','/vendors/submit',S.fd);S.submissionId=r.id;toast('Vendor application submitted successfully!');S.step=3;window.scrollTo(0,0);render();}
+    catch(e){toast(e.message,'err');btn.disabled=false;sp.style.display='none';}
+  };
+  return card;
+}
+
+// ── STEP 3: SUCCESS ───────────────────────────────────────
+function renderStep3(){
+  const card=document.createElement('div');card.className='card';
+  const refNo=S.submissionId?`VEND-${String(S.submissionId).padStart(5,'0')}`:'Submitted';
+  card.innerHTML=`<div class="success-wrap">
+    <div class="success-icon">🎉</div>
+    <h2>Application Received!</h2>
+    <p>Thank you, <strong>${esc((S.fd.contactFirst||'')+' '+(S.fd.contactLast||''))}</strong>!<br/>Your vendor registration for <strong>${esc(S.fd.cardName)}</strong> has been submitted successfully.</p>
+    <div class="ref-box">${esc(refNo)}</div>
+    <p>Our purchase / accounts team will verify your documents and contact you at<br/>
+    <strong>${esc(S.fd.mobile)}</strong> or <strong>${esc(S.fd.email)}</strong>.<br/>
+    Your vendor code will be assigned as <code style="font-family:var(--mono);color:var(--accent)">VENDA*</code> in SAP B1.</p>
+    <p style="font-size:11.5px;color:var(--text3);margin-top:12px">Keep reference <strong style="color:var(--accent)">${esc(refNo)}</strong> for follow-up.</p>
+    <div style="margin-top:32px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-secondary" id="new-app">+ Register Another Vendor</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print Confirmation</button>
+    </div>
+  </div>`;
+  card.querySelector('#new-app').onclick=()=>{S.fd={};S.step=1;S.submissionId=null;window.scrollTo(0,0);render();};
+  return card;
+}
+
+render();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

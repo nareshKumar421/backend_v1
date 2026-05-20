@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>BOM — SAP B1 Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#080e18;--ink2:#0d1626;--ink3:#111f35;--blue:#1a6fff;--amber:#f5a623;--green:#0dbb8a;--red:#e53e3e;--border:#1c2e48;--border2:#243650;--text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;--surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;--radius:10px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+main{padding:12px;max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--surface3);border-radius:var(--radius);padding:4px}
+.tab{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font);text-align:center;transition:all .15s}.tab:hover{color:var(--text2)}.tab.on{background:var(--surface);color:var(--blue);border:1px solid var(--border2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px}
+.card-hd{background:var(--surface3);padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.card-hd .right{margin-left:auto;font-size:11px;color:var(--text3);font-weight:400}
+.card-bd{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:4px;display:block}
+.fi{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;height:36px}.fi:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,111,255,.15)}.fi::placeholder{color:var(--text3)}
+select.fi{cursor:pointer;appearance:none;background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233d5470'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:26px}
+select.fi option{background:var(--surface2)}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:420px){.fi-row{grid-template-columns:1fr}}
+.fi-mono{font-family:var(--mono);font-size:12px;text-transform:uppercase}
+.search-wrap{position:relative}
+.search-dd{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--blue);border-radius:7px;box-shadow:0 12px 40px rgba(0,0,0,.7);z-index:300;max-height:200px;overflow-y:auto;display:none;margin-top:4px}
+.sd-row{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center}.sd-row:hover{background:rgba(26,111,255,.1)}
+.sd-code{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600;min-width:90px}.sd-name{font-size:11px;color:var(--text2)}
+.comp-card{background:var(--ink2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative}
+.comp-card:hover{border-color:var(--border2)}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+@media(max-width:420px){.comp-grid{grid-template-columns:1fr 1fr}}
+.comp-inp{width:100%;padding:4px 6px;border:1px solid var(--border2);border-radius:5px;font-size:12px;font-family:var(--mono);background:var(--surface2);color:var(--text);outline:none;height:28px}.comp-inp:focus{border-color:var(--blue)}
+.btn-bar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;justify-content:center}.btn:disabled{opacity:.4;cursor:not-allowed}
+.b-primary{background:var(--blue);color:#fff;flex:1}.b-primary:hover:not(:disabled){background:#0d4fd4}
+.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}.b-cancel:hover{border-color:var(--text2)}
+.b-add{background:rgba(26,111,255,.1);color:var(--blue);border:1px solid rgba(26,111,255,.3)}.b-add:hover{background:rgba(26,111,255,.2)}
+.b-del{padding:3px 10px;font-size:10px;background:rgba(229,62,62,.06);color:var(--red);border:1px solid rgba(229,62,62,.2);border-radius:5px;cursor:pointer}
+.alert{padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;line-height:1.5}
+.al-info{background:rgba(26,111,255,.08);border:1px solid rgba(26,111,255,.2);color:#60a5fa}
+.al-green{background:rgba(13,187,138,.08);border:1px solid rgba(13,187,138,.2);color:#6ee7b7}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:56px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;max-width:280px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-msg{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.suc-box{text-align:center;padding:28px 16px}
+.suc-title{font-family:var(--display);font-size:26px;color:var(--green);margin-bottom:6px}
+.suc-pill{display:inline-block;font-family:var(--mono);font-size:13px;padding:5px 16px;border-radius:6px;background:rgba(26,111,255,.12);color:var(--blue);border:1px solid rgba(26,111,255,.25);margin:8px 0 12px}
+.req-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.req-card:hover{border-color:var(--border2)}
+.po-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer}.po-card:hover{border-color:var(--blue)}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<main id="app"></main>
+
+<script>
+'use strict';
+let _tok=null,_user=null,_cfg=null,_wh=[];
+const BE=`${window.location.origin}/api`;
+const ISSUE_LIST=['Manual','Backflush'];
+const BOM_TYPES=['Production','Sales','Template','Assembly'];
+
+(function(){try{_tok=sessionStorage.getItem('portal_token')||localStorage.getItem('token');const u=sessionStorage.getItem('portal_user');if(u)_user=JSON.parse(u);}catch(_e){}})();
+if(!_tok)window.location.href='/';
+
+let _co='JIVO_OIL_HANADB';
+let _tab='create'; // create|update|my
+let _createH={productNo:'',qty:1,productDesc:'',bomType:'Production',warehouse:'BH-PF',distrRule:'',project:''};
+let _createRows=[];
+let _updateH={};
+let _updateRows=[];
+let _updateLoaded=null;
+let _searchResults=[];
+let _searchQ='';
+let _myRequests=[];
+let _createSuccess=false;
+let _updateSuccess=false;
+let _submitting=false;
+
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function q(s){return document.querySelector(s);}
+function mk(c){const d=document.createElement('div');d.className=c;return d;}
+function mkRow(){return{id:Date.now()+Math.random(),type:'Item',itemType:'pit_Item',no:'',desc:'',qty:1,uom:'PCS',warehouse:'BH-PC',issueMethod:'Manual',comment:'',unitCost:0};}
+
+async function api(m,p,b=null){
+  const h={'Content-Type':'application/json'};if(_tok)h['Authorization']='Bearer '+_tok;
+  const o={method:m.toUpperCase(),headers:h};if(b)o.body=JSON.stringify(b);
+  let r,d;try{r=await fetch(BE+p,o);d=await r.json();}catch(_e){throw new Error('Cannot reach server');}
+  if(r.status===401){window.location.href='/';throw new Error('Session expired');}
+  if(!r.ok)throw new Error(d?.message||'HTTP '+r.status);return d;
+}
+function toast(msg,type='ok'){const tc=document.getElementById('toast-c');const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=(type==='ok'?'OK ':'ERR ')+msg;tc.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+async function loadWH(){try{const r=await api('GET',`/sap/lookup/warehouses?company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)_wh=r.data;}catch(_e){}}
+async function fetchItems(v){try{const r=await api('GET',`/sap/lookup/items?q=${encodeURIComponent(v)}&company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)return r.data;}catch(_e){}return[];}
+async function fetchResources(v){try{const r=await api('GET',`/sap/lookup/resources?q=${encodeURIComponent(v)}&company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)return r.data;}catch(_e){}return[];}
+async function fetchBOM(code){try{const r=await api('GET',`/sap/bom/${encodeURIComponent(code)}?company=${encodeURIComponent(_co)}`);if(r.success&&r.data)return r.data;}catch(_e){}return null;}
+async function loadMyRequests(){try{const r=await api('GET','/bom-requests?mine=true');_myRequests=r.data||[];}catch(_e){}}
+
+async function init(){
+  try{const r=await api('GET','/config');_cfg=r;}catch(_e){}
+  await loadWH();
+  await loadMyRequests();
+  render();
+}
+
+// ═══════════════════════════════════════
+function render(){
+  try{_doRender();}catch(e){console.error(e);document.getElementById('app').innerHTML=`<div style="padding:20px;color:var(--red)">Error: ${e.message}</div>`;}
+}
+function _doRender(){
+  const app=document.getElementById('app');app.innerHTML='';
+  // Tabs
+  const tb=mk('tabs');
+  [{id:'create',l:'+ Create BOM'},{id:'update',l:'Update BOM'},{id:'my',l:'My Requests'}].forEach(t=>{
+    const b=document.createElement('button');b.className=`tab${_tab===t.id?' on':''}`;b.textContent=t.l;
+    b.onclick=()=>{_tab=t.id;render();};tb.appendChild(b);
+  });
+  app.appendChild(tb);
+
+  if(_tab==='create') renderCreate(app);
+  else if(_tab==='update') renderUpdate(app);
+  else renderMyRequests(app);
+}
+
+// ═══════════════════════════════════════
+//  CREATE BOM
+// ═══════════════════════════════════════
+function renderCreate(app){
+  if(_createSuccess){renderCreateSuccess(app);return;}
+  const levels=_cfg?.approvalLevels||3;
+  app.appendChild(mkAlert(`BOM Create requests go through <strong>${levels}-level approval</strong> before being pushed to SAP B1.`));
+
+  // Header card
+  const c1=mk('card');
+  const whOpts=_wh.map(w=>`<option value="${esc(w.code)}" ${_createH.warehouse===w.code?'selected':''}>${esc(w.code)} - ${esc(w.name)}</option>`).join('');
+  c1.innerHTML=`<div class="card-hd">&#8862; Create New BOM</div>
+  <div class="card-bd">
+    <div class="fi-row"><div class="fg"><label class="fl">Company</label><select class="fi" id="c-company">
+      <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+      <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+      <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+    </select></div>
+    <div class="fg"><label class="fl">BOM Type</label><select class="fi" id="c-type">${BOM_TYPES.map(t=>`<option ${_createH.bomType===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
+    <div class="fg"><label class="fl">Product No. *</label><div class="search-wrap"><input class="fi fi-mono" id="c-item" value="${esc(_createH.productNo)}" placeholder="Search item..." autocomplete="off"/><div class="search-dd" id="c-item-dd"></div></div></div>
+    <div class="fg"><label class="fl">Description</label><input class="fi" id="c-desc" value="${esc(_createH.productDesc)}" readonly style="opacity:.7"/></div>
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Quantity</label><input class="fi fi-mono" id="c-qty" type="number" min="1" step="1" value="${_createH.qty}" style="text-align:right"/></div>
+      <div class="fg"><label class="fl">Warehouse</label><select class="fi" id="c-wh">${whOpts}</select></div>
+    </div>
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Distr. Rule</label><input class="fi" id="c-dr" value="${esc(_createH.distrRule)}"/></div>
+      <div class="fg"><label class="fl">Project</label><input class="fi" id="c-proj" value="${esc(_createH.project)}"/></div>
+    </div>
+  </div>`;
+  app.appendChild(c1);
+
+  // Components card
+  app.appendChild(buildComponentsCard('create',_createRows));
+
+  // Actions
+  const c3=mk('card');
+  c3.innerHTML=`<div class="card-bd"><div class="btn-bar">
+    <button class="btn b-primary" id="c-submit" ${_submitting?'disabled':''}><span id="c-sp" style="display:${_submitting?'inline-block':'none'}" class="sp"></span> Submit for Approval</button>
+    <button class="btn b-cancel" id="c-reset">Reset</button>
+  </div></div>`;
+  app.appendChild(c3);
+
+  setTimeout(()=>{wireCreateEvents();},0);
+}
+
+function wireCreateEvents(){
+  q('#c-company')&&(q('#c-company').onchange=async function(){_co=this.value;_createRows=[];await loadWH();render();});
+  q('#c-type')&&(q('#c-type').onchange=function(){_createH.bomType=this.value;});
+  q('#c-qty')&&(q('#c-qty').onchange=function(){_createH.qty=parseFloat(this.value)||1;});
+  q('#c-wh')&&(q('#c-wh').onchange=function(){_createH.warehouse=this.value;});
+  q('#c-dr')&&(q('#c-dr').oninput=function(){_createH.distrRule=this.value;});
+  q('#c-proj')&&(q('#c-proj').oninput=function(){_createH.project=this.value;});
+  q('#c-submit')&&(q('#c-submit').onclick=doSubmitCreate);
+  q('#c-reset')&&(q('#c-reset').onclick=()=>{if(!confirm('Reset?'))return;_createH={productNo:'',qty:1,productDesc:'',bomType:'Production',warehouse:'BH-PF',distrRule:'',project:''};_createRows=[];render();});
+  wireItemSearch('c-item','c-item-dd',_createH,'create');
+  wireCompEvents('create');
+}
+
+// ═══════════════════════════════════════
+//  UPDATE BOM
+// ═══════════════════════════════════════
+function renderUpdate(app){
+  if(_updateSuccess){renderUpdateSuccess(app);return;}
+  // Search
+  const c1=mk('card');
+  const coVal=_co;
+  c1.innerHTML=`<div class="card-hd">&#9998; Update BOM</div>
+  <div class="card-bd">
+    <div class="fg"><label class="fl">Company</label><select class="fi" id="u-company">
+      <option value="JIVO_OIL_HANADB" ${coVal==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+      <option value="JIVO_BEVERAGES_HANADB" ${coVal==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+      <option value="JIVO_MART_HANADB" ${coVal==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+    </select></div>
+    <div class="fg"><label class="fl">Search BOM * <span style="font-weight:400;text-transform:none;color:var(--text3)">(type item code or name)</span></label>
+      <div style="display:flex;gap:6px;margin-bottom:4px">
+        <div class="search-wrap" style="flex:1">
+          <input class="fi fi-mono" id="u-search" value="${esc(_searchQ)}" placeholder="Type FG, RM, PM..." autocomplete="off"/>
+          <div class="search-dd" id="u-search-dd" style="z-index:500"></div>
+        </div>
+        <button class="btn b-add" id="u-sbtn" style="white-space:nowrap;height:36px">Load</button>
+        <button class="btn b-cancel" id="u-listall" style="white-space:nowrap;font-size:11px;height:36px">List All</button>
+      </div>
+    </div>
+    ${_searchResults.length?`<div style="margin-top:8px;font-size:10px;color:var(--text3);margin-bottom:6px">${_searchResults.length} result${_searchResults.length!==1?'s':''}</div>`+_searchResults.map(r=>`<div class="po-card" data-bom="${esc(r.TreeCode)}"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:11px;color:#0a6ed1;font-weight:600">${esc(r.TreeCode)}</span><span style="font-size:12px;color:var(--text);flex:1">${esc(r.ProductDescription||'')}</span><span style="font-size:10px;color:var(--text3)">Qty:${r.Quantity||1}</span></div></div>`).join(''):''}
+    ${_updateLoaded?`<div style="margin-top:6px;padding:8px 10px;background:var(--surface2);border:1px solid #0a6ed1;border-radius:8px"><div style="display:flex;gap:8px;align-items:center"><span style="font-family:var(--mono);font-size:12px;color:#0a6ed1;font-weight:600">${esc(_updateLoaded.TreeCode)}</span><span style="font-size:12px;color:var(--text)">${esc(_updateLoaded.ProductDescription||'')}</span></div></div>`:''}
+  </div>`;
+  app.appendChild(c1);
+
+  if(_updateLoaded){
+    // Header
+    const c2=mk('card');
+    const whOpts=_wh.map(w=>`<option value="${esc(w.code)}" ${_updateH.warehouse===w.code?'selected':''}>${esc(w.code)} - ${esc(w.name)}</option>`).join('');
+    c2.innerHTML=`<div class="card-hd">Editing: ${esc(_updateLoaded.TreeCode)}</div>
+    <div class="card-bd">
+      <div class="fg"><label class="fl">Description</label><input class="fi" id="u-desc" value="${esc(_updateH.productDesc)}" style="text-transform:uppercase"/></div>
+      <div class="fi-row">
+        <div class="fg"><label class="fl">Quantity</label><input class="fi fi-mono" id="u-qty" type="number" min="1" step="1" value="${_updateH.qty}" style="text-align:right"/></div>
+        <div class="fg"><label class="fl">Warehouse</label><select class="fi" id="u-wh">${whOpts}</select></div>
+      </div>
+    </div>`;
+    app.appendChild(c2);
+    app.appendChild(buildComponentsCard('update',_updateRows));
+    const c4=mk('card');
+    c4.innerHTML=`<div class="card-bd"><div class="btn-bar">
+      <button class="btn b-primary" id="u-submit" ${_submitting?'disabled':''}><span id="u-sp" style="display:${_submitting?'inline-block':'none'}" class="sp"></span> Submit Update</button>
+      <button class="btn b-cancel" id="u-clear">Clear</button>
+    </div></div>`;
+    app.appendChild(c4);
+  }
+
+  setTimeout(()=>{wireUpdateEvents();},0);
+}
+
+function wireUpdateEvents(){
+  q('#u-company')&&(q('#u-company').onchange=async function(){_co=this.value;_searchResults=[];_updateLoaded=null;_updateRows=[];await loadWH();render();});
+  // Live search dropdown — same as Create BOM item search
+  let _ust=null;
+  const inp=q('#u-search'),dd=q('#u-search-dd');
+  if(inp){
+    inp.oninput=function(){
+      _searchQ=this.value.toUpperCase();
+      const v=this.value.trim();
+      if(v.length<2){if(dd)dd.style.display='none';return;}
+      clearTimeout(_ust);
+      _ust=setTimeout(async()=>{
+        if(!dd)return;
+        dd.innerHTML='<div style="padding:12px;text-align:center;color:var(--text3);font-size:11px"><span class="sp" style="width:12px;height:12px"></span> Searching...</div>';
+        dd.style.display='block';
+        const items=await fetchItems(v);
+        if(!items.length){dd.innerHTML='<div style="padding:12px;text-align:center;color:var(--text3);font-size:11px">No items found</div>';return;}
+        dd.innerHTML='';
+        items.forEach(it=>{
+          const row=document.createElement('div');row.className='sd-row';
+          row.innerHTML='<span class="sd-code">'+esc(it.ItemCode)+'</span><span class="sd-name">'+esc(it.ItemName)+'</span>';
+          row.onclick=()=>{dd.style.display='none';inp.value=it.ItemCode;_searchQ=it.ItemCode;doLoadBom(it.ItemCode);};
+          dd.appendChild(row);
+        });
+      },250);
+    };
+    if(dd)document.addEventListener('click',e=>{if(!inp.parentElement.contains(e.target))dd.style.display='none';});
+  }
+  q('#u-sbtn')&&(q('#u-sbtn').onclick=function(){const v=(q('#u-search')?.value||'').trim();if(v)doLoadBom(v.toUpperCase());else toast('Enter item code','err');});
+  q('#u-listall')&&(q('#u-listall').onclick=doListAll);
+  q('#u-search')&&(q('#u-search').onkeydown=function(e){if(e.key==='Enter'){const v=this.value.trim();if(v)doLoadBom(v.toUpperCase());}});
+  document.querySelectorAll('[data-bom]').forEach(c=>{c.onclick=function(){doLoadBom(this.dataset.bom);};});
+  q('#u-desc')&&(q('#u-desc').oninput=function(){_updateH.productDesc=this.value.toUpperCase();});
+  q('#u-qty')&&(q('#u-qty').onchange=function(){_updateH.qty=parseFloat(this.value)||1;});
+  q('#u-wh')&&(q('#u-wh').onchange=function(){_updateH.warehouse=this.value;});
+  q('#u-submit')&&(q('#u-submit').onclick=doSubmitUpdate);
+  q('#u-clear')&&(q('#u-clear').onclick=()=>{_updateLoaded=null;_updateRows=[];render();});
+  wireCompEvents('update');
+}
+
+// ═══════════════════════════════════════
+//  SHARED: Components Card
+// ═══════════════════════════════════════
+function buildComponentsCard(ns,rows){
+  const c=mk('card');
+  let html='';
+  if(!rows.length) html='<div class="empty-msg">No components added</div>';
+  else html=rows.map((r,i)=>{
+    const whOpts=_wh.map(w=>`<option value="${esc(w.code)}" ${r.warehouse===w.code?'selected':''}>${esc(w.code)}</option>`).join('');
+    return`<div class="comp-card">
+      <span style="position:absolute;top:6px;right:8px;font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--surface3);padding:1px 6px;border-radius:4px">#${i+1}</span>
+      <div class="fg"><div class="search-wrap"><input class="fi fi-mono comp-no" data-i="${i}" data-ns="${ns}" value="${esc(r.no)}" placeholder="Search item code..." style="height:32px;font-size:11px" autocomplete="off"/><div class="search-dd comp-dd" id="${ns}-rdd-${i}"></div></div></div>
+      ${r.desc?`<div style="font-size:12px;color:var(--text);margin-bottom:6px;font-weight:600">${esc(r.desc)}</div>`:''}
+      <div class="comp-grid">
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">Qty</label><input class="comp-inp" data-i="${i}" data-f="qty" data-ns="${ns}" type="number" min="0" step="0.001" value="${r.qty}" style="text-align:right"/></div>
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">UoM</label><input class="comp-inp" data-i="${i}" data-f="uom" data-ns="${ns}" value="${esc(r.uom)}" style="text-transform:uppercase"/></div>
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">Warehouse</label><select class="comp-inp" data-i="${i}" data-f="warehouse" data-ns="${ns}" style="padding:2px 4px">${whOpts}</select></div>
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">Issue</label><select class="comp-inp" data-i="${i}" data-f="issueMethod" data-ns="${ns}" style="padding:2px 4px">${ISSUE_LIST.map(m=>`<option ${r.issueMethod===m?'selected':''}>${m}</option>`).join('')}</select></div>
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">Type</label><select class="comp-inp" data-i="${i}" data-f="type" data-ns="${ns}" style="padding:2px 4px"><option ${r.type==='Item'?'selected':''}>Item</option><option ${r.type==='Resource'?'selected':''}>Resource</option></select></div>
+        <div><label style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">Cost</label><div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:5px 0">${r.unitCost>0?'INR '+parseFloat(r.unitCost).toFixed(2):'-'}</div></div>
+      </div>
+      <div style="margin-top:6px;text-align:right"><button class="b-del" data-rm="${i}" data-ns="${ns}">Remove</button></div>
+    </div>`;
+  }).join('');
+  const total=rows.reduce((s,r)=>s+(parseFloat(r.qty)||0)*(parseFloat(r.unitCost)||0),0);
+  c.innerHTML=`<div class="card-hd">Components<span class="right">${rows.length} line${rows.length!==1?'s':''}</span></div>
+  <div class="card-bd">${html}
+    <button class="btn b-add" id="${ns}-add" style="width:100%;padding:8px;font-size:11px;margin-top:4px">+ Add Component</button>
+    ${rows.length?`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:11px;color:var(--text3);margin-top:4px;border-top:1px solid var(--border)"><span>Total Cost</span><strong style="font-family:var(--mono);color:var(--text)">INR ${total.toFixed(4)}</strong></div>`:''}
+  </div>`;
+  return c;
+}
+
+function wireCompEvents(ns){
+  const rows=ns==='create'?_createRows:_updateRows;
+  q(`#${ns}-add`)&&(q(`#${ns}-add`).onclick=()=>{rows.push(mkRow());render();});
+  document.querySelectorAll(`[data-rm][data-ns="${ns}"]`).forEach(b=>{b.onclick=function(){rows.splice(parseInt(this.dataset.rm),1);if(!rows.length)rows.push(mkRow());render();};});
+  document.querySelectorAll(`.comp-inp[data-ns="${ns}"]`).forEach(el=>{
+    const handler=function(){const i=parseInt(this.dataset.i),f=this.dataset.f;
+      if(f==='qty')rows[i][f]=parseFloat(this.value)||0;
+      else if(f==='type'){rows[i][f]=this.value;rows[i].itemType=this.value==='Resource'?'pit_Resource':'pit_Item';rows[i].no='';rows[i].desc='';render();return;}
+      else rows[i][f]=this.value;
+    };el.oninput=handler;el.onchange=handler;
+  });
+  // Item search on comp cards
+  let _cst={};
+  document.querySelectorAll(`.comp-no[data-ns="${ns}"]`).forEach(inp=>{
+    inp.oninput=function(){
+      const i=parseInt(this.dataset.i),v=this.value.trim();
+      rows[i].no=this.value.toUpperCase();
+      const dd=document.getElementById(`${ns}-rdd-${i}`);if(!dd)return;
+      if(v.length<2){dd.style.display='none';return;}
+      clearTimeout(_cst[ns+i]);
+      _cst[ns+i]=setTimeout(async()=>{
+        dd.innerHTML='<div style="padding:10px;text-align:center;color:var(--text3);font-size:11px"><span class="sp" style="width:12px;height:12px"></span></div>';dd.style.display='block';
+        const isResource=rows[i].type==='Resource';
+        const items=isResource?await fetchResources(v):await fetchItems(v);
+        if(!items.length){dd.innerHTML='<div style="padding:10px;text-align:center;color:var(--text3);font-size:11px">No '+(isResource?'resources':'items')+'</div>';return;}
+        dd.innerHTML='';items.forEach(it=>{
+          const code=isResource?it.ResCode:it.ItemCode;
+          const name=isResource?it.ResName:it.ItemName;
+          const r=document.createElement('div');r.className='sd-row';
+          r.innerHTML=`<span class="sd-code">${esc(code)}</span><span class="sd-name">${esc(name)}</span>`;
+          r.onclick=()=>{rows[i].no=code;rows[i].desc=name;rows[i].uom=isResource?'':it.UoM||'PCS';rows[i].unitCost=isResource?0:parseFloat(it.Price)||0;rows[i].itemType=isResource?'pit_Resource':'pit_Item';dd.style.display='none';render();};
+          dd.appendChild(r);
+        });
+      },250);
+    };
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))document.querySelectorAll('.comp-dd').forEach(d=>d.style.display='none');});
+}
+
+// ═══════════════════════════════════════
+//  SHARED: Item Search (header)
+// ═══════════════════════════════════════
+let _hst=null;
+function wireItemSearch(inpId,ddId,hdr,ns){
+  const inp=q('#'+inpId),dd=q('#'+ddId);if(!inp||!dd)return;
+  inp.oninput=function(){
+    hdr.productNo=this.value.toUpperCase();const v=this.value.trim();
+    if(v.length<2){dd.style.display='none';return;}
+    clearTimeout(_hst);
+    _hst=setTimeout(async()=>{
+      dd.innerHTML='<div style="padding:10px;text-align:center;color:var(--text3);font-size:11px"><span class="sp" style="width:12px;height:12px"></span></div>';dd.style.display='block';
+      const items=await fetchItems(v);
+      if(!items.length){dd.innerHTML='<div style="padding:10px;text-align:center;color:var(--text3);font-size:11px">No items</div>';return;}
+      dd.innerHTML='';items.forEach(it=>{
+        const r=document.createElement('div');r.className='sd-row';
+        r.innerHTML=`<span class="sd-code">${esc(it.ItemCode)}</span><span class="sd-name">${esc(it.ItemName)}</span>`;
+        r.onclick=()=>{hdr.productNo=it.ItemCode;hdr.productDesc=it.ItemName;dd.style.display='none';render();};
+        dd.appendChild(r);
+      });
+    },250);
+  };
+}
+
+// ═══════════════════════════════════════
+//  SEARCH + LOAD BOM (Update tab)
+// ═══════════════════════════════════════
+async function doSearch(){
+  const v=(q('#u-search')?.value||'').trim().toUpperCase();_searchQ=v;
+  if(!v){toast('Enter search term','err');return;}
+  const btn=q('#u-sbtn');if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    // Try exact match
+    try{const d=await api('GET',`/sap/bom/${encodeURIComponent(v)}?company=${encodeURIComponent(_co)}`);if(d.success&&d.data){_searchResults=[d.data];render();return;}}catch(_e){}
+    // Search via backend
+    const r=await api('GET',`/sap/bom/search?q=${encodeURIComponent(v)}&company=${encodeURIComponent(_co)}`);
+    _searchResults=r.data||[];
+    if(!_searchResults.length)toast('No BOM found','err');
+    render();
+  }catch(e){toast(e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Search';}}
+}
+
+async function doListAll(){
+  const btn=q('#u-listall');if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    const r=await api('GET',`/sap/bom/search?q=&company=${encodeURIComponent(_co)}`);
+    _searchResults=r.data||[];_searchQ='(all)';
+    if(!_searchResults.length)toast('No BOMs found','err');
+    render();
+  }catch(e){toast(e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='List All';}}
+}
+
+async function doLoadBom(code){
+  try{
+    const r=await api('GET',`/sap/bom/${encodeURIComponent(code)}?company=${encodeURIComponent(_co)}`);
+    const d=r.data||{};
+    _updateLoaded=d;
+    _updateH={company:_co,productNo:d.TreeCode||code,qty:d.Quantity||1,productDesc:d.ProductDescription||'',bomType:{iProductionTree:'Production',iSalesTree:'Sales',iAssemblyTree:'Assembly',iTemplateTree:'Template'}[d.TreeType]||'Production',warehouse:d.Warehouse||'',distrRule:d.DistributionRule||'',project:d.Project||''};
+    _updateRows=(d.ProductTreeLines||[]).map(l=>({
+      id:Date.now()+Math.random(),type:l.ItemType==='pit_Resource'?'Resource':'Item',itemType:l.ItemType||'pit_Item',
+      no:l.ItemCode||'',desc:l.ItemName||l.ItemDescription||'',qty:l.Quantity||1,uom:l.UnitOfMeasurement||'PCS',
+      warehouse:l.Warehouse||d.Warehouse||'',issueMethod:l.IssueMethod==='im_Backflush'?'Backflush':'Manual',comment:'',unitCost:l.Price||0
+    }));
+    if(!_updateRows.length)_updateRows.push(mkRow());
+    toast('Loaded: '+code);render();
+  }catch(e){toast(e.message,'err');}
+}
+
+// ═══════════════════════════════════════
+//  SUBMIT
+// ═══════════════════════════════════════
+async function doSubmitCreate(){
+  const prodNo=(_createH.productNo||'').trim().toUpperCase();
+  const prodDesc=(_createH.productDesc||'').trim().toUpperCase();
+  if(!prodNo){toast('Product No. required','err');return;}
+  if(!prodDesc){toast('Description required','err');return;}
+  const valid=_createRows.filter(r=>r.no.trim()&&parseFloat(r.qty)>0);
+  if(!valid.length){toast('Add at least one component','err');return;}
+  _submitting=true;render();
+  try{
+    await api('POST','/bom-requests/create',{
+      company:_co,itemCode:prodNo,itemName:prodDesc,qty:_createH.qty,bomType:_createH.bomType,
+      warehouse:_createH.warehouse,distrRule:_createH.distrRule,project:_createH.project,
+      components:valid.map(r=>({itemCode:r.no.trim().toUpperCase(),itemName:r.desc,qty:parseFloat(r.qty)||1,uom:r.uom,warehouse:r.warehouse,issueMethod:r.issueMethod,unitCost:parseFloat(r.unitCost)||0,itemType:r.itemType||'pit_Item'}))
+    });
+    _createSuccess=true;toast('BOM submitted for approval!');await loadMyRequests();
+  }catch(e){toast(e.message,'err');}
+  _submitting=false;render();
+}
+
+async function doSubmitUpdate(){
+  if(!_updateLoaded)return;
+  const valid=_updateRows.filter(r=>r.no.trim()&&parseFloat(r.qty)>0);
+  if(!valid.length){toast('Add at least one component','err');return;}
+  _submitting=true;render();
+  try{
+    await api('POST','/bom-requests/update',{
+      company:_co,treeCode:_updateLoaded.TreeCode,itemName:(_updateH.productDesc||'').toUpperCase(),
+      qty:_updateH.qty,bomType:_updateH.bomType||'Production',warehouse:_updateH.warehouse,
+      components:valid.map((r,i)=>({itemCode:r.no.trim().toUpperCase(),qty:parseFloat(r.qty)||1,issueMethod:r.issueMethod,warehouse:r.warehouse,itemType:r.itemType||'pit_Item',visualOrder:i})),
+      originalData:{treeCode:_updateLoaded.TreeCode,description:_updateLoaded.ProductDescription}
+    });
+    _updateSuccess=true;toast('Update submitted!');await loadMyRequests();
+  }catch(e){toast(e.message,'err');}
+  _submitting=false;render();
+}
+
+// ═══════════════════════════════════════
+//  MY REQUESTS
+// ═══════════════════════════════════════
+function renderMyRequests(app){
+  const c=mk('card');
+  let html='';
+  if(!_myRequests.length) html='<div class="empty-msg">No requests yet. Create a BOM request to get started.</div>';
+  else html=_myRequests.map(r=>{
+    const stCls={PENDING:'color:var(--blue)',L1_APPROVED:'color:var(--amber)',L2_APPROVED:'color:#9f5afd',SAP_PUSHED:'color:var(--green)',REJECTED:'color:var(--red)',CANCELLED:'color:var(--text3)'}[r.status]||'';
+    const stLbl={PENDING:'Pending',L1_APPROVED:'L1 Approved',L2_APPROVED:'L2 Approved',SAP_PUSHED:'In SAP B1',REJECTED:'Rejected',CANCELLED:'Cancelled'}[r.status]||r.status;
+    return`<div class="req-card"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600">${esc(r.itemCode)}</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;${stCls};background:rgba(255,255,255,.05)">${stLbl}</span><span style="font-size:10px;color:var(--text3)">${r.type}</span></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin:4px 0">${esc(r.itemName||'-')}</div>
+    <div style="font-size:10px;color:var(--text3)">${new Date(r.submittedAt||Date.now()).toLocaleDateString('en-IN')} | ${(r.components||[]).length} components</div></div>`;
+  }).join('');
+  c.innerHTML=`<div class="card-hd">My Requests<span class="right"><button class="btn b-add" id="my-refresh" style="padding:4px 10px;font-size:10px">Refresh</button></span></div><div class="card-bd">${html}</div>`;
+  app.appendChild(c);
+  setTimeout(()=>{q('#my-refresh')&&(q('#my-refresh').onclick=async()=>{await loadMyRequests();render();});},0);
+}
+
+// ═══════════════════════════════════════
+//  SUCCESS
+// ═══════════════════════════════════════
+function renderCreateSuccess(app){
+  const c=mk('card');
+  c.innerHTML=`<div class="card-hd">BOM Request Submitted</div><div class="card-bd"><div class="suc-box">
+    <div style="font-size:44px;margin-bottom:10px">&#128228;</div>
+    <div class="suc-title">Submitted!</div>
+    <p style="font-size:13px;color:var(--text3)">${esc(_createH.productDesc||_createH.productNo)}</p>
+    <div class="suc-pill">${esc(_createH.productNo)}</div>
+    <div class="alert al-info" style="max-width:400px;margin:10px auto;text-align:left">Requires <strong>${_cfg?.approvalLevels||3}-level approval</strong> before being pushed to SAP B1.</div>
+    <div class="btn-bar" style="justify-content:center"><button class="btn b-add" id="suc-new">+ New BOM</button><button class="btn b-primary" onclick="window.location.href='/approvals'">Approvals</button></div>
+  </div></div>`;
+  app.appendChild(c);
+  setTimeout(()=>{q('#suc-new')&&(q('#suc-new').onclick=()=>{_createSuccess=false;_createH={productNo:'',qty:1,productDesc:'',bomType:'Production',warehouse:'BH-PF',distrRule:'',project:''};_createRows=[];render();});},0);
+}
+function renderUpdateSuccess(app){
+  const c=mk('card');
+  c.innerHTML=`<div class="card-hd">Update Submitted</div><div class="card-bd"><div class="suc-box">
+    <div style="font-size:44px;margin-bottom:10px">&#9998;</div>
+    <div class="suc-title">Update Submitted!</div>
+    <p style="font-size:13px;color:var(--text3)">${esc(_updateLoaded?.TreeCode||'')}</p>
+    <div class="btn-bar" style="justify-content:center"><button class="btn b-add" onclick="_updateSuccess=false;_updateLoaded=null;_updateRows=[];render();">Update Another</button><button class="btn b-primary" onclick="window.location.href='/approvals'">Approvals</button></div>
+  </div></div>`;
+  app.appendChild(c);
+}
+
+// ═══════════════════════════════════════
+function mkAlert(msg){const d=mk('alert al-info');d.innerHTML=msg;return d;}
+
+init();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

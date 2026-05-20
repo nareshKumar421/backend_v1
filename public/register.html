@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Customer Registration — SAP B1 Portal</title>
+<meta name="description" content="Register as a new customer. Fill in your business details, addresses and upload required documents."/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blue:#0070f2;--dark:#0f1923;--light:#f4f6fb;--border:#d1d7e0;
+  --green:#00b96b;--orange:#f59e0b;--red:#ef4444;--white:#fff;
+  --radius:10px;--shadow:0 4px 24px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#edf1f7;color:#1a2535;min-height:100vh}
+.topbar{background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.25)}
+.topbar-brand{display:flex;align-items:center;gap:12px}
+.sap-logo{background:var(--blue);color:#fff;font-family:'Sora',sans-serif;font-weight:800;font-size:13px;padding:5px 11px;border-radius:6px;letter-spacing:1.5px}
+.topbar-title{font-size:14px;font-weight:500;color:#94a3b8}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-badge{background:rgba(0,112,242,.15);color:#60a5fa;border:1px solid rgba(0,112,242,.25);padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px}
+.page{max-width:820px;margin:0 auto;padding:32px 20px 60px}
+.steps{display:flex;align-items:center;margin-bottom:32px}
+.step{display:flex;align-items:center;gap:9px}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 8px;transition:background .3s}
+.step-line.done{background:var(--green)}
+.step-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fa3bc;background:#fff;flex-shrink:0;transition:all .3s}
+.step.active .step-circle{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 4px #d0e5fc}
+.step.done .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+.step-label{font-size:12px;font-weight:600;color:#8fa3bc;white-space:nowrap}
+.step.active .step-label{color:var(--blue)}
+.step.done .step-label{color:var(--green)}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:28px 32px;margin-bottom:20px;overflow:hidden}
+.card-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:13px;color:#6b7a8d;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid #e8eef6}
+.grid{display:grid;gap:16px;width:100%}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#3d4f61}
+.label .req{color:var(--red);margin-left:2px}
+.label .auto-tag{color:var(--green);margin-left:4px;font-size:10px;font-weight:600;background:#e6f4eb;padding:1px 5px;border-radius:3px}
+input,select,textarea{
+  padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius);
+  font-size:13.5px;font-family:inherit;background:#fff;color:#1a2535;
+  transition:border .2s,box-shadow .2s;outline:none;
+  text-transform:uppercase;width:100%
+}
+select,input[type=email],input[type=password],.no-upper{text-transform:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,112,242,.1)}
+input[readonly],select[disabled]{background:#f4f6fb;color:#8fa3bc;cursor:not-allowed}
+textarea{resize:vertical;min-height:80px;text-transform:uppercase}
+.ferr{font-size:11px;color:var(--red);margin-top:2px}
+.btn-row{display:flex;gap:12px;margin-top:28px;justify-content:flex-end}
+.btn{padding:11px 26px;border-radius:var(--radius);border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0057c2;box-shadow:0 4px 16px rgba(0,112,242,.35);transform:translateY(-1px)}
+.btn-secondary{background:#fff;color:#1a2535;border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* ── ADDRESS BLOCK ── */
+.addr-block{padding:18px 20px;background:#f8f9fc;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.addr-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.addr-block-label{font-size:12px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:6px}
+.addr-block-num{background:var(--blue);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.addr-remove-btn{padding:4px 12px;font-size:12px;border:1.5px solid var(--red);color:var(--red);border-radius:6px;cursor:pointer;background:none;font-weight:600;transition:all .2s}
+.addr-remove-btn:hover{background:var(--red);color:#fff}
+.add-addr-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;font-size:12px;font-weight:600;border:1.5px solid var(--blue);color:var(--blue);border-radius:var(--radius);cursor:pointer;background:#fff;transition:all .2s;margin-bottom:16px}
+.add-addr-btn:hover{background:#e8f1fd}
+
+/* ── FROZEN ADDRESS NAME (matches vendor) ── */
+.addr-name-wrap{position:relative}
+.addr-name-frozen{background:#f4f6fb!important;color:#8fa3bc!important;cursor:not-allowed!important;border-color:rgba(0,112,242,.25)!important;padding-right:120px!important}
+.addr-name-frozen:focus{box-shadow:none!important;border-color:rgba(0,112,242,.25)!important}
+.addr-name-badges{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
+.badge-autofill{background:#e6f4eb;color:var(--green);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.4px;white-space:nowrap}
+.badge-frozen{background:#e8eef6;color:#8fa3bc;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.badge-frozen svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.badge{display:inline-flex;align-items:center;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700}
+.b-b2b{background:#e8f1fd;color:var(--blue)}
+.b-b2c{background:#e6f4eb;color:var(--green)}
+.alert{padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;line-height:1.5}
+.a-info{background:#e8f1fd;border:1px solid #b3d0fa;color:#003f8a}
+.a-warn{background:#fff9ed;border:1px solid #fcd98a;color:#7a4f00}
+.a-ok{background:#e6f4eb;border:1px solid #b7dfc5;color:#0e5027}
+.a-err{background:#fce8e8;border:1px solid #f5b8b8;color:#700000}
+
+/* ── ATTACHMENTS ── */
+.attach-zone{
+  border:2px dashed var(--border);border-radius:var(--radius);
+  padding:20px 16px;background:#f8f9fc;text-align:center;
+  cursor:pointer;transition:all .2s;position:relative;
+  min-height:110px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center
+}
+.attach-zone:hover,.attach-zone.drag{border-color:var(--blue);background:#e8f1fd}
+.attach-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+.attach-zone .az-icon{font-size:28px;margin-bottom:8px;line-height:1}
+.attach-zone .az-label{font-size:12px;font-weight:600;color:#3d4f61}
+.attach-zone .az-sub{font-size:11px;color:#8fa3bc;margin-top:4px}
+.attach-preview{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-top:8px;word-break:break-all}
+.attach-preview .ap-thumb{width:38px;height:38px;border-radius:6px;background:#e8f1fd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.attach-preview .ap-info{flex:1;min-width:0}
+.attach-preview .ap-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attach-preview .ap-size{font-size:11px;color:#8fa3bc;margin-top:2px}
+.attach-preview .ap-rm{padding:3px 9px;font-size:11px;border:1.5px solid var(--red);color:var(--red);border-radius:4px;cursor:pointer;background:none;flex-shrink:0;font-weight:600;transition:all .15s}
+.attach-preview .ap-rm:hover{background:var(--red);color:#fff}
+
+/* ── MSME ── */
+.msme-toggle{padding:16px 20px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;background:#fff;width:100%;transition:all .25s}
+.msme-toggle.active{border-color:var(--green);background:#f0fdf6}
+
+/* ── REVIEW TABLE ── */
+.dtable{width:100%;border-collapse:collapse;font-size:13.5px}
+.dtable tr{border-bottom:1px solid #f0f2f5}
+.dtable tr:last-child{border:none}
+.dtable td{padding:10px 6px;vertical-align:top}
+.dtable td:first-child{color:#6b7a8d;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:38%;padding-top:12px}
+.dtable td.val{font-weight:500}
+
+/* ── SUCCESS ── */
+.success-wrap{text-align:center;padding:52px 24px}
+.success-icon{font-size:60px;margin-bottom:20px}
+.success-wrap h2{font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--green);margin-bottom:10px}
+.success-wrap p{font-size:14px;color:#6b7a8d;max-width:440px;margin:0 auto 18px;line-height:1.6}
+.ref-box{display:inline-block;background:#f4f6fb;border:1px solid var(--border);border-radius:8px;padding:10px 24px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:#0070f2;margin:16px 0}
+.sp{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:66px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:var(--radius);font-size:13.5px;font-weight:500;box-shadow:var(--shadow);animation:slin .3s ease;display:flex;align-items:center;gap:10px;max-width:380px;line-height:1.4}
+.t-ok{background:var(--green);color:#fff}
+.t-err{background:var(--red);color:#fff}
+@keyframes slin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.type-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px}
+.type-card{display:flex;align-items:center;gap:12px;padding:16px 20px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;background:#fff;user-select:none}
+.type-card.selected{border-color:var(--blue);background:#e8f1fd}
+.type-card input[type=radio]{width:18px;height:18px;accent-color:var(--blue);flex-shrink:0}
+.type-card-title{font-weight:700;font-size:14px;color:#1a2535;margin-bottom:3px}
+.type-card.selected .type-card-title{color:var(--blue)}
+.type-card-desc{font-size:12px;color:#8fa3bc}
+.progress-bar-wrap{background:#e8eef6;border-radius:4px;height:4px;margin-bottom:32px;overflow:hidden}
+.progress-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .4s ease}
+@media(max-width:640px){
+  .g2,.g3{grid-template-columns:1fr}
+  .span2,.span3{grid-column:span 1}
+  .type-cards{grid-template-columns:1fr}
+  .card{padding:20px 16px}
+  .topbar{padding:0 16px}
+  .topbar-title{display:none}
+}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div id="root"></div>
+<script>
+'use strict';
+
+const BACKEND = (() => {
+  return localStorage.getItem('BACKEND_URL') || `${window.location.origin}/api`;
+})();
+
+let S = { step: 1, fd: {}, toasts: [] };
+
+const STATES_LIST = ['','Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
+const COUNTRIES_LIST = ['India','United States','United Kingdom','UAE','Singapore','Germany','Japan','Australia'];
+const STATE_SHORT = {'Andhra Pradesh':'AP','Arunachal Pradesh':'AR','Assam':'AS','Bihar':'BH','Chandigarh':'CH','Chhattisgarh':'CG','Delhi':'DL','Goa':'GA','Gujarat':'GJ','Haryana':'HR','Himachal Pradesh':'HP','Jammu & Kashmir':'JK','Jharkhand':'JH','Karnataka':'KA','Kerala':'KL','Madhya Pradesh':'MP','Maharashtra':'MH','Manipur':'MN','Meghalaya':'ML','Mizoram':'MZ','Nagaland':'NL','Odisha':'OD','Punjab':'PB','Rajasthan':'RJ','Sikkim':'SK','Tamil Nadu':'TN','Telangana':'TG','Tripura':'TR','Uttar Pradesh':'UP','Uttarakhand':'UK','West Bengal':'WB'};
+
+// ── Helpers ─────────────────────────────────────────────
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function mkEl(tag,cls=''){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+
+function toast(msg,type='ok'){
+  const id=Date.now();
+  S.toasts.push({id,msg,type});
+  renderToasts();
+  setTimeout(()=>{S.toasts=S.toasts.filter(t=>t.id!==id);renderToasts();},4500);
+}
+function renderToasts(){
+  let tc=document.querySelector('.toast-c');
+  if(!tc){tc=document.createElement('div');tc.className='toast-c';document.body.appendChild(tc);}
+  tc.innerHTML=S.toasts.map(t=>`<div class="toast t-${t.type==='ok'?'ok':'err'}">${t.type==='ok'?'✓':'✗'}  ${esc(t.msg)}</div>`).join('');
+}
+
+async function api(method,path,body=null){
+  const h={'Content-Type':'application/json'};
+  const opt={method:method.toUpperCase(),headers:h};
+  if(body) opt.body=JSON.stringify(body);
+  let r;
+  try{ r=await fetch(BACKEND+path,opt); }
+  catch(e){ throw new Error('Cannot reach server. Please check your connection or contact support.'); }
+  let d;
+  try{ d=await r.json(); }catch{ throw new Error('Server error ('+r.status+')'); }
+  if(!r.ok){ throw new Error(d?.message||d?.errors?.[0]?.msg||'Error '+r.status); }
+  return d;
+}
+
+// ── Address auto-fill (FROZEN — read-only, auto-updates) ──
+// Mirrors vendor form: addrName is always computed, never user-editable
+function wireAddrAutoFill(container, prefix, idx, cardNameInputId){
+  const addrNameEl=container.querySelector(`#${prefix}-addrName-${idx}`);
+  const stateEl=container.querySelector(`#${prefix}-state-${idx}`);
+  if(!addrNameEl||!stateEl) return;
+
+  function autoFill(){
+    const cardNameEl=cardNameInputId?document.getElementById(cardNameInputId):null;
+    const bizName=((cardNameEl?cardNameEl.value:'')||S?.fd?.cardName||'').toUpperCase().trim();
+    const stateFull=stateEl.value||'';
+    const stateShort=STATE_SHORT[stateFull]||stateFull.toUpperCase().substring(0,2);
+    addrNameEl.value=bizName?(stateShort?`${bizName} - ${stateShort}`:bizName).substring(0,50).toUpperCase():'';
+  }
+
+  stateEl.addEventListener('change',autoFill);
+  if(cardNameInputId){
+    const cn=document.getElementById(cardNameInputId);
+    if(cn) cn.addEventListener('input',autoFill);
+  }
+  if(stateEl.value) autoFill();
+}
+
+function wireAddrBlock(container,prefix,idx,cardNameInputId){
+  const block=container.querySelector(`#${prefix}-block-wrap-${idx}`);
+  if(!block) return;
+  // Only uppercase non-readonly inputs
+  block.querySelectorAll('input:not([readonly])').forEach(inp=>makeUpperCase(inp));
+  wireAddrAutoFill(container,prefix,idx,cardNameInputId);
+}
+
+function makeUpperCase(el){
+  if(!el||el.readOnly) return;
+  el.addEventListener('input',function(){
+    const p=this.selectionStart;
+    this.value=this.value.toUpperCase();
+    try{this.setSelectionRange(p,p);}catch{}
+  });
+  if(el.value) el.value=el.value.toUpperCase();
+}
+
+// ── Address block HTML — FROZEN address name (matches vendor style) ──
+function buildAddrBlockHTML(prefix,label,idx,saved,opts={}){
+  const{removable=false}=opts;
+  const savedState=saved?.state||'';
+  const savedCountry=saved?.country||'India';
+  const savedAddr=(saved?.addrName||'').toUpperCase();
+  const STATES_OPTS=STATES_LIST.map(v=>`<option value="${esc(v)}" ${savedState===v?'selected':''}>${v||'-- Select State --'}</option>`).join('');
+  const COUNTRY_OPTS=COUNTRIES_LIST.map(v=>`<option value="${esc(v)}" ${savedCountry===v?'selected':''}>${v}</option>`).join('');
+  return `
+    <div class="addr-block" id="${prefix}-block-wrap-${idx}">
+      <div class="addr-block-header">
+        <span class="addr-block-label">
+          <span class="addr-block-num">${idx}</span>
+          ${label}${idx>1?' Address #'+idx:''}
+        </span>
+        ${removable?`<button type="button" class="addr-remove-btn" onclick="document.getElementById('${prefix}-block-wrap-${idx}').remove()">✗ Remove</button>`:''}
+      </div>
+      <div class="grid g2" style="gap:14px">
+        <div class="field span2">
+          <label class="label">Address Name <span class="req">*</span>
+            <span style="font-size:9px;color:#8fa3bc;text-transform:none;font-weight:400;margin-left:4px">(auto-filled · read-only)</span>
+          </label>
+          <div class="addr-name-wrap">
+            <input id="${prefix}-addrName-${idx}"
+                   class="addr-name-frozen"
+                   value="${esc(savedAddr)}"
+                   placeholder="AUTO-FILLED: BUSINESS NAME - STATE CODE"
+                   readonly tabindex="-1" style="user-select:none"/>
+            <div class="addr-name-badges">
+              <span class="badge-autofill">AUTO-FILL</span>
+              <span class="badge-frozen">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>FROZEN
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="field span2">
+          <label class="label">Street / PO Box <span class="req">*</span></label>
+          <input id="${prefix}-street-${idx}" value="${esc((saved?.street||'').toUpperCase())}" placeholder="HOUSE/PLOT NO, STREET NAME"/>
+        </div>
+        <div class="field span2">
+          <label class="label">Block / Area</label>
+          <input id="${prefix}-block-${idx}" value="${esc((saved?.block||'').toUpperCase())}" placeholder="BLOCK / AREA / LOCALITY"/>
+        </div>
+        <div class="field">
+          <label class="label">City <span class="req">*</span></label>
+          <input id="${prefix}-city-${idx}" value="${esc((saved?.city||'').toUpperCase())}" placeholder="CITY NAME"/>
+        </div>
+        <div class="field">
+          <label class="label">Pin Code</label>
+          <input id="${prefix}-zip-${idx}" value="${esc((saved?.zip||'').toUpperCase())}" placeholder="PIN CODE"/>
+        </div>
+        <div class="field">
+          <label class="label">State <span class="req">*</span></label>
+          <select id="${prefix}-state-${idx}" style="text-transform:none">${STATES_OPTS}</select>
+        </div>
+        <div class="field">
+          <label class="label">Country</label>
+          <select id="${prefix}-country-${idx}" style="text-transform:none">${COUNTRY_OPTS}</select>
+        </div>
+        <div class="field span2">
+          <label class="label">GSTIN <span style="font-size:10px;color:#6b7a8d;font-weight:400;text-transform:none">(State-wise GSTIN for this address — optional)</span></label>
+          <input id="${prefix}-gstin-${idx}" value="${esc((saved?.gstin||'').toUpperCase())}" placeholder="E.G. 06ABCDE1234F1Z5" maxlength="15"/>
+        </div>
+      </div>
+    </div>`;
+}
+
+function collectAddrBlocks(container,prefix){
+  const addrs=[];
+  container.querySelectorAll(`[id^="${prefix}-block-wrap-"]`).forEach(div=>{
+    const n=div.id.replace(`${prefix}-block-wrap-`,'');
+    if(isNaN(n)) return;
+    const addrName=(div.querySelector(`#${prefix}-addrName-${n}`)?.value||'').trim().toUpperCase();
+    const street=(div.querySelector(`#${prefix}-street-${n}`)?.value||'').trim().toUpperCase();
+    if(!addrName&&!street) return;
+    addrs.push({
+      addrName, street,
+      block:(div.querySelector(`#${prefix}-block-${n}`)?.value||'').trim().toUpperCase(),
+      city:(div.querySelector(`#${prefix}-city-${n}`)?.value||'').trim().toUpperCase(),
+      zip:(div.querySelector(`#${prefix}-zip-${n}`)?.value||'').trim().toUpperCase(),
+      state:div.querySelector(`#${prefix}-state-${n}`)?.value||'',
+      country:div.querySelector(`#${prefix}-country-${n}`)?.value||'India',
+      gstin:(div.querySelector(`#${prefix}-gstin-${n}`)?.value||'').trim().toUpperCase(),
+    });
+  });
+  return addrs;
+}
+
+// ── ATTACHMENT HELPERS (matches vendor pattern exactly) ──
+
+function renderAttachPreviewDirect(el, arr){
+  if(!el) return;
+  el.innerHTML = arr.map((a,i) => `
+    <div class="attach-preview">
+      <div class="ap-thumb">${a.type?.startsWith('image/') ? `<img src="${a.data}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">` : a.type==='application/pdf' ? '📄' : '📎'}</div>
+      <div class="ap-info">
+        <div class="ap-name">${esc(a.name)}</div>
+        <div class="ap-size">${(a.size/1024).toFixed(1)} KB · ${a.type||'file'}</div>
+      </div>
+      <button class="ap-rm" onclick="removeAttach('${el.id.replace('ap-','')}',${i},this.closest('.attach-preview'))">✗ Remove</button>
+    </div>`).join('');
+}
+
+window.removeAttach = function(key, idx, el){
+  if(!S.fd.attachments) return;
+  const arr = Array.isArray(S.fd.attachments[key]) ? S.fd.attachments[key] : [S.fd.attachments[key]];
+  arr.splice(idx,1);
+  S.fd.attachments[key] = arr.length ? (key==='other' ? arr : arr[0]) : null;
+  if(el) el.remove();
+};
+
+// Mirrors vendor: handleAttach is global, uses document.querySelector directly
+window.handleAttach = function(key, input){
+  Array.from(input.files||[]).forEach(file=>{
+    if(file.size > 5*1024*1024){ toast(file.name+' is too large (max 5MB)','err'); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      const obj = {name:file.name, size:file.size, type:file.type, data:e.target.result};
+      if(!S.fd.attachments) S.fd.attachments = {};
+      const previewEl = document.querySelector('#ap-'+key);
+      if(key==='other'){
+        if(!Array.isArray(S.fd.attachments.other)) S.fd.attachments.other = [];
+        S.fd.attachments.other.push(obj);
+        renderAttachPreviewDirect(previewEl, S.fd.attachments.other);
+      } else {
+        S.fd.attachments[key] = obj;
+        renderAttachPreviewDirect(previewEl, [obj]);
+      }
+    };
+    r.readAsDataURL(file);
+  });
+  input.value = '';
+};
+
+// ── MAIN RENDER ──────────────────────────────────────────
+function render(){
+  const root=document.getElementById('root');
+  root.innerHTML='';
+  root.appendChild(renderTopbar());
+  const pg=mkEl('div','page');
+  const pct=S.step===1?33:S.step===2?66:100;
+  pg.innerHTML=`<div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>`;
+  pg.appendChild(buildSteps());
+  if(S.step===1) pg.appendChild(renderStep1());
+  else if(S.step===2) pg.appendChild(renderStep2());
+  else pg.appendChild(renderStep3());
+  root.appendChild(pg);
+}
+
+function renderTopbar(){
+  const tb=mkEl('div','topbar');
+  tb.innerHTML=`
+    <div class="topbar-brand">
+      <span class="sap-logo">SAP</span>
+      <span class="topbar-title">Business One — Customer Registration</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge">CUSTOMER FORM</span>
+    </div>`;
+  return tb;
+}
+
+function buildSteps(){
+  const labels=['Your Details','Review','Confirmation'];
+  const wrap=mkEl('div','steps');
+  labels.forEach((lb,i)=>{
+    const n=i+1;
+    const s=mkEl('div','step'+(n<S.step?' done':n===S.step?' active':''));
+    s.innerHTML=`<div class="step-circle">${n<S.step?'✓':n}</div><span class="step-label">${lb}</span>`;
+    wrap.appendChild(s);
+    if(i<labels.length-1){
+      const line=document.createElement('div');
+      line.className='step-line'+(n<S.step?' done':'');
+      wrap.appendChild(line);
+    }
+  });
+  return wrap;
+}
+
+// ── STEP 1: THE FORM ────────────────────────────────────
+function renderStep1(){
+  const card=mkEl('div','card');
+  const isB2B=(S.fd.customerType||'B2B')==='B2B';
+  const savedBill=S.fd.allBillAddresses?.length?S.fd.allBillAddresses:[{addrName:S.fd.billAddressName||'',street:S.fd.billStreet||'',block:S.fd.billBlock||'',city:S.fd.billCity||'',zip:S.fd.billZip||'',state:S.fd.billState||'',country:S.fd.billCountry||'India',gstin:S.fd.gstin||''}];
+  const savedShip=S.fd.allShipAddresses?.length?S.fd.allShipAddresses:[{addrName:S.fd.shipAddressName||'',street:S.fd.shipStreet||'',block:S.fd.shipBlock||'',city:S.fd.shipCity||'',zip:S.fd.shipZip||'',state:S.fd.shipState||'',country:S.fd.shipCountry||'India'}];
+
+  card.innerHTML=`
+    <div class="card-title">Customer Registration Form</div>
+    <div class="card-sub">Fill in your business details below. All fields marked <span style="color:var(--red)">*</span> are required.</div>
+
+    <div class="sec">🏢 Company / Database</div>
+    <div class="grid g2" style="margin-bottom:8px">
+      <div class="field">
+        <label class="label">Submit to Company <span class="req">*</span></label>
+        <select id="f-company">
+          <option value="JIVO_OIL_HANADB" ${(S.fd.company||'JIVO_OIL_HANADB')==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil (JIVO_OIL_HANADB)</option>
+          <option value="JIVO_BEVERAGES_HANADB" ${(S.fd.company||'')==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages (JIVO_BEVERAGES_HANADB)</option>
+          <option value="JIVO_MART_HANADB" ${(S.fd.company||'')==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart (JIVO_MART_HANADB)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec">🏷️ Customer Type</div>
+    <div class="type-cards">
+      <label class="type-card ${isB2B?'selected':''}">
+        <input type="radio" name="custType" value="B2B" ${isB2B?'checked':''}/>
+        <div><div class="type-card-title">B2B — Business</div><div class="type-card-desc">Company, Firm, LLP, Partnership</div></div>
+      </label>
+      <label class="type-card ${!isB2B?'selected':''}">
+        <input type="radio" name="custType" value="B2C" ${!isB2B?'checked':''}/>
+        <div><div class="type-card-title">B2C — Individual</div><div class="type-card-desc">Individual / Retail Customer</div></div>
+      </label>
+    </div>
+
+    <div class="sec">📋 Business Information</div>
+    <div class="grid g2">
+      <div class="field">
+        <label class="label">Company / Customer Name <span class="req">*</span></label>
+        <input id="f-cardName" placeholder="${isB2B?'E.G. MAHAVIR TRANSPORT PVT LTD':'E.G. RAJESH KUMAR'}" value="${esc((S.fd.cardName||'').toUpperCase())}"/>
+        <span class="ferr" id="e-cardName"></span>
+      </div>
+      <div class="field">
+        <label class="label">Foreign / Alternate Name <span style="font-size:10px;color:#8fa3bc;font-weight:400;text-transform:none">(optional)</span></label>
+        <input id="f-foreignName" placeholder="FOREIGN / ALTERNATE NAME" value="${esc((S.fd.foreignName||'').toUpperCase())}"/>
+      </div>
+      <div class="field">
+        <label class="label">Type of Business</label>
+        <select id="f-typeOfBusiness" style="text-transform:none">
+          ${['Company','Individual','Partnership','LLP','Proprietorship'].map(v=>`<option value="${v}" ${(S.fd.typeOfBusiness||(isB2B?'Company':'Individual'))===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">Industry <span class="req">*</span></label>
+        <select id="f-industry" style="text-transform:none">
+          ${['','Transport','Manufacturing','Trading','Retail','Distribution','FMCG','Healthcare','Construction','IT Services','Others'].map(v=>`<option value="${v}" ${(S.fd.industry||'')===v?'selected':''}>${v||'-- Select Industry --'}</option>`).join('')}
+        </select>
+        <span class="ferr" id="e-industry"></span>
+      </div>
+    </div>
+
+    <div class="sec">👤 Primary Contact Person</div>
+    <div class="grid g3">
+      <div class="field">
+        <label class="label">First Name <span class="req">*</span></label>
+        <input id="f-contactFirst" placeholder="FIRST NAME" value="${esc((S.fd.contactFirst||'').toUpperCase())}"/>
+        <span class="ferr" id="e-contactFirst"></span>
+      </div>
+      <div class="field">
+        <label class="label">Last Name <span class="req">*</span></label>
+        <input id="f-contactLast" placeholder="LAST NAME" value="${esc((S.fd.contactLast||'').toUpperCase())}"/>
+        <span class="ferr" id="e-contactLast"></span>
+      </div>
+      <div class="field">
+        <label class="label">Title / Position</label>
+        <input id="f-contactTitle" placeholder="E.G. OWNER / MANAGER" value="${esc((S.fd.contactTitle||'').toUpperCase())}"/>
+      </div>
+      <div class="field">
+        <label class="label">Mobile Number <span class="req">*</span></label>
+        <input id="f-mobile" placeholder="+91 99999 99999" value="${esc(S.fd.mobile||'')}" style="text-transform:none" class="no-upper"/>
+        <span class="ferr" id="e-mobile"></span>
+      </div>
+      <div class="field">
+        <label class="label">Email Address <span class="req">*</span></label>
+        <input id="f-email" type="email" placeholder="contact@company.com" value="${esc(S.fd.email||'')}" style="text-transform:none"/>
+        <span class="ferr" id="e-email"></span>
+      </div>
+      <div class="field">
+        <label class="label">Alternate Email <span style="font-size:10px;color:#8fa3bc;font-weight:400;text-transform:none">(optional)</span></label>
+        <input id="f-contactEmail" type="email" placeholder="alt@company.com" value="${esc(S.fd.contactEmail||'')}" style="text-transform:none"/>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px">
+      <div class="sec" style="margin:0;flex:1">🏠 Billing Address(es)</div>
+    </div>
+    <div class="alert a-info" style="margin-top:12px;margin-bottom:10px">
+      ℹ <strong>Address Name</strong> is auto-filled as <strong>BUSINESS NAME - STATE CODE</strong> and is read-only.
+    </div>
+    <div id="bill-addr-container" style="margin-top:4px">
+      ${savedBill.map((a,i)=>buildAddrBlockHTML('fb','Billing',i+1,a,{removable:i>0})).join('')}
+    </div>
+    <button type="button" class="add-addr-btn" id="add-bill-addr">+ Add Another Billing Address</button>
+
+    <div class="sec" style="margin-top:8px">🚚 Shipping Address(es)</div>
+    <div style="margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 16px;background:#f8f9fc;border:1.5px solid var(--border);border-radius:8px;width:fit-content">
+        <input type="checkbox" id="sameAsBill" ${S.fd.sameAsBill!==false?'checked':''} style="width:18px;height:18px;padding:0;accent-color:var(--blue)"/>
+        <span style="font-size:13px;font-weight:600">Same as first Billing Address</span>
+      </label>
+    </div>
+    <div id="ship-addr-section" style="${S.fd.sameAsBill!==false?'display:none':''}">
+      <div id="ship-addr-container">
+        ${savedShip.map((a,i)=>buildAddrBlockHTML('fs','Shipping',i+1,a,{removable:i>0})).join('')}
+      </div>
+      <button type="button" class="add-addr-btn" id="add-ship-addr">+ Add Another Shipping Address</button>
+    </div>
+
+    <div class="sec">💰 Financial & Tax Information</div>
+    <div style="display:grid;grid-template-columns:160px 1fr 200px;gap:16px;width:100%">
+      <div class="field">
+        <label class="label">Currency</label>
+        <select id="f-currency" style="text-transform:none">
+          ${['Indian Rupee','US Dollar','Euro','British Pound','UAE Dirham'].map(v=>`<option ${(S.fd.currency||'Indian Rupee')===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label class="label">GSTIN ${isB2B?'<span class="req">*</span>':''} ${!isB2B?'<span style="font-size:10px;color:#8fa3bc;font-weight:400;text-transform:none">(optional for B2C)</span>':''}</label>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input id="f-gstin" placeholder="E.G. 06ABCDE1234F1Z5" value="${esc((S.fd.gstin||'').toUpperCase())}" style="flex:1;min-width:0" maxlength="15"/>
+          <button type="button" id="gstin-fetch" style="padding:0 14px;height:41px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:5px">
+            <span id="gstin-sp" style="display:none" class="sp"></span>Fetch PAN
+          </button>
+        </div>
+        <span style="font-size:11px;color:#8fa3bc;margin-top:3px">Auto-extracts PAN from GSTIN</span>
+        <span class="ferr" id="e-gstin"></span>
+      </div>
+      <div class="field">
+        <label class="label">PAN Number <span class="req">*</span></label>
+        <div style="position:relative">
+          <input id="f-pan" placeholder="E.G. ABCDE1234F" value="${esc((S.fd.pan||'').toUpperCase())}" maxlength="10" style="padding-right:58px"/>
+          <span id="pan-badge" style="display:${S.fd.panAutoFetched?'flex':'none'};position:absolute;right:9px;top:50%;transform:translateY(-50%);background:#e6f4eb;color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;align-items:center;pointer-events:none">AUTO</span>
+        </div>
+        <span class="ferr" id="e-pan"></span>
+      </div>
+    </div>
+
+    <div class="sec">🏭 MSME / Udyam Registration</div>
+    <div class="msme-toggle ${S.fd.hasMsme?'active':''}" id="msme-wrap">
+      <label style="display:flex;align-items:center;gap:12px;cursor:pointer">
+        <input type="checkbox" id="f-hasMsme" ${S.fd.hasMsme?'checked':''} style="width:20px;height:20px;accent-color:var(--green)"/>
+        <div>
+          <div style="font-weight:700;font-size:14px">Registered under MSME / Udyam Scheme</div>
+          <div style="font-size:12px;color:#6b7a8d;margin-top:3px">Check this if your business has an MSME / Udyam registration certificate</div>
+        </div>
+      </label>
+      <div id="msme-fields" style="${S.fd.hasMsme?'':'display:none'}">
+        <div class="grid g3" style="margin-top:16px">
+          <div class="field span2">
+            <label class="label">Udyam Registration Number <span class="req">*</span></label>
+            <input id="f-msmeNo" placeholder="E.G. UDYAM-HR-18-0040140" value="${esc((S.fd.msmeNo||'').toUpperCase())}" maxlength="19"/>
+            <span class="ferr" id="e-msmeNo"></span>
+          </div>
+          <div class="field">
+            <label class="label">MSME Type <span class="req">*</span></label>
+            <select id="f-msmeType" style="text-transform:none">${['','MICRO','SMALL','MEDIUM','LARGE'].map(v=>`<option value="${v}" ${(S.fd.msmeType||'')===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label class="label">Enterprise Type</label>
+            <select id="f-msmeBType" style="text-transform:none">${['','MANUFACTURING','SERVICES','TRADING'].map(v=>`<option value="${v}" ${(S.fd.msmeBType||'')===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}</select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">📎 Required Documents</div>
+    <div class="alert a-warn" style="margin-bottom:16px">
+      ⚠ Please upload <strong>clear scanned copies</strong> or photos. Max <strong>5MB</strong> per file. Accepted formats: <strong>PDF, JPG, PNG</strong>.
+    </div>
+    <div class="grid g2" style="align-items:start">
+      <div class="field">
+        <label class="label">PAN Card <span class="req">*</span></label>
+        <div class="attach-zone" id="az-pan">
+          <input type="file" id="f-att-pan" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('pan',this)"/>
+          <div class="az-icon">🪪</div>
+          <div class="az-label">Click or drag to upload PAN Card</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-pan"></div>
+        <span class="ferr" id="e-att-pan"></span>
+      </div>
+      <div class="field">
+        <label class="label">Aadhaar Card <span class="req">*</span></label>
+        <div class="attach-zone" id="az-aadhaar">
+          <input type="file" id="f-att-aadhaar" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('aadhaar',this)"/>
+          <div class="az-icon">🪪</div>
+          <div class="az-label">Click or drag to upload Aadhaar Card</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-aadhaar"></div>
+        <span class="ferr" id="e-att-aadhaar"></span>
+      </div>
+      <div class="field">
+        <label class="label">Cancelled Cheque / Bank Proof <span class="req">*</span></label>
+        <div class="attach-zone" id="az-cheque">
+          <input type="file" id="f-att-cheque" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('cheque',this)"/>
+          <div class="az-icon">🏦</div>
+          <div class="az-label">Click or drag to upload Cancelled Cheque</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-cheque"></div>
+        <span class="ferr" id="e-att-cheque"></span>
+      </div>
+      <div class="field" id="az-msme-wrap" style="${S.fd.hasMsme?'':'display:none'}">
+        <label class="label">MSME / Udyam Certificate <span class="req">*</span></label>
+        <div class="attach-zone" id="az-msme">
+          <input type="file" id="f-att-msme" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAttach('msme',this)"/>
+          <div class="az-icon">🏭</div>
+          <div class="az-label">Click or drag MSME Certificate</div>
+          <div class="az-sub">PDF, JPG, PNG — max 5MB</div>
+        </div>
+        <div id="ap-msme"></div>
+        <span class="ferr" id="e-att-msme"></span>
+      </div>
+      <div class="field">
+        <label class="label">Other Documents <span style="font-size:10px;color:#8fa3bc;font-weight:400;text-transform:none">(optional)</span></label>
+        <div class="attach-zone" id="az-other">
+          <input type="file" id="f-att-other" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleAttach('other',this)"/>
+          <div class="az-icon">📄</div>
+          <div class="az-label">Click or drag Other Documents</div>
+          <div class="az-sub">Multiple files allowed — PDF, JPG, PNG</div>
+        </div>
+        <div id="ap-other"></div>
+      </div>
+    </div>
+
+    <div class="sec">📝 Additional Remarks</div>
+    <div class="field">
+      <label class="label">Remarks <span class="req">*</span></label>
+      <textarea id="f-remarks" placeholder="ANY ADDITIONAL INFORMATION ABOUT YOUR BUSINESS...">${esc((S.fd.remarks||'').toUpperCase())}</textarea>
+      <span class="ferr" id="e-remarks"></span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="next1">Review Details →</button>
+    </div>`;
+
+  let billCount=savedBill.length, shipCount=savedShip.length;
+
+  // Wire address blocks
+  savedBill.forEach((_,i)=>wireAddrBlock(card.querySelector('#bill-addr-container'),'fb',i+1,'f-cardName'));
+  savedShip.forEach((_,i)=>wireAddrBlock(card.querySelector('#ship-addr-container'),'fs',i+1,'f-cardName'));
+
+  // Customer type toggle
+  card.querySelectorAll('input[name="custType"]').forEach(r=>{
+    r.onchange=function(){
+      S.fd.customerType=this.value;
+      document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));
+      this.closest('.type-card').classList.add('selected');
+      render();
+    };
+  });
+
+  // Same as billing
+  card.querySelector('#sameAsBill').onchange=function(){
+    card.querySelector('#ship-addr-section').style.display=this.checked?'none':'';
+    S.fd.sameAsBill=!this.checked;
+  };
+
+  // Add address buttons
+  card.querySelector('#add-bill-addr').onclick=()=>{
+    billCount++;
+    const c=card.querySelector('#bill-addr-container');
+    const d=document.createElement('div');
+    d.innerHTML=buildAddrBlockHTML('fb','Billing',billCount,{},{removable:true});
+    c.appendChild(d.firstElementChild);
+    wireAddrBlock(c,'fb',billCount,'f-cardName');
+  };
+  card.querySelector('#add-ship-addr').onclick=()=>{
+    shipCount++;
+    const c=card.querySelector('#ship-addr-container');
+    const d=document.createElement('div');
+    d.innerHTML=buildAddrBlockHTML('fs','Shipping',shipCount,{},{removable:true});
+    c.appendChild(d.firstElementChild);
+    wireAddrBlock(c,'fs',shipCount,'f-cardName');
+  };
+
+  // GSTIN → PAN
+  const gEl=card.querySelector('#f-gstin'),pEl=card.querySelector('#f-pan');
+  const pBadge=card.querySelector('#pan-badge'),fBtn=card.querySelector('#gstin-fetch');
+  function extractPan(g){return(g||'').length===15?g.substring(2,12):null;}
+  gEl.oninput=function(){
+    this.value=this.value.toUpperCase();
+    const p=extractPan(this.value);
+    if(p&&this.value.length===15){pEl.value=p;pBadge.style.display='flex';S.fd.pan=p;S.fd.panAutoFetched=true;}
+    else if(S.fd.panAutoFetched){pEl.value='';pBadge.style.display='none';S.fd.panAutoFetched=false;}
+  };
+  pEl.oninput=function(){this.value=this.value.toUpperCase();if(S.fd.panAutoFetched){pBadge.style.display='none';S.fd.panAutoFetched=false;}};
+  fBtn.onclick=()=>{
+    const g=(gEl.value||'').trim().toUpperCase();
+    if(g.length!==15){card.querySelector('#e-gstin').textContent='Enter a valid 15-digit GSTIN first';return;}
+    card.querySelector('#e-gstin').textContent='';
+    const p=extractPan(g);
+    pEl.value=p;pBadge.style.display='flex';S.fd.pan=p;S.fd.panAutoFetched=true;
+    toast('PAN extracted: '+p);
+  };
+
+  // MSME toggle
+  const mCk=card.querySelector('#f-hasMsme'),mF=card.querySelector('#msme-fields');
+  const mW=card.querySelector('#msme-wrap'),mA=card.querySelector('#az-msme-wrap');
+  mCk.onchange=function(){
+    mF.style.display=this.checked?'':'none';
+    mA&&(mA.style.display=this.checked?'':'none');
+    mW.classList.toggle('active',this.checked);
+    S.fd.hasMsme=this.checked;
+  };
+
+  // Restore existing attachment previews on re-render
+  if(!S.fd.attachments) S.fd.attachments={};
+  ['pan','aadhaar','cheque','msme','other'].forEach(key=>{
+    const att=S.fd.attachments[key];
+    if(!att) return;
+    const el=document.querySelector('#ap-'+key);
+    if(el) renderAttachPreviewDirect(el, Array.isArray(att)?att:[att]);
+  });
+
+  // Drag-drop on attach zones
+  card.querySelectorAll('.attach-zone').forEach(z=>{
+    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag');});
+    z.addEventListener('dragleave',()=>z.classList.remove('drag'));
+    z.addEventListener('drop',e=>{
+      e.preventDefault();z.classList.remove('drag');
+      const k=z.id.replace('az-','');
+      const inp=z.querySelector('input[type=file]');
+      if(inp&&e.dataTransfer.files.length){inp.files=e.dataTransfer.files;window.handleAttach(k,inp);}
+    });
+  });
+
+  // ── FIX: Validation — removed userId/userType checks (fields not in form)
+  card.querySelector('#next1').onclick=()=>{
+    const v=id=>(card.querySelector('#'+id)?.value||'').trim().toUpperCase();
+    const err=(id,msg)=>{const el=card.querySelector('#e-'+id);if(el)el.textContent=msg;};
+    const clr=id=>{const el=card.querySelector('#e-'+id);if(el)el.textContent='';};
+    const custType=card.querySelector('input[name="custType"]:checked')?.value||'B2B';
+    const sameAsBill=card.querySelector('#sameAsBill').checked;
+    let ok=true;
+
+    // Force uppercase on all text inputs
+    card.querySelectorAll('input:not([type=email]):not([type=file]):not([type=checkbox]):not([type=radio]):not([readonly])').forEach(inp=>{
+      if(inp.value) inp.value=inp.value.toUpperCase();
+    });
+    const remarksEl=card.querySelector('#f-remarks');
+    if(remarksEl) remarksEl.value=remarksEl.value.toUpperCase();
+
+    // Required business fields
+    if(!v('f-cardName')){err('cardName','Company / Customer Name is required');ok=false;}else clr('cardName');
+    if(!card.querySelector('#f-industry')?.value){err('industry','Industry is required');ok=false;}else clr('industry');
+    if(!v('f-contactFirst')){err('contactFirst','First Name is required');ok=false;}else clr('contactFirst');
+    if(!v('f-contactLast')){err('contactLast','Last Name is required');ok=false;}else clr('contactLast');
+    if(!v('f-remarks')){err('remarks','Remarks are required');ok=false;}else clr('remarks');
+
+    const mob=(card.querySelector('#f-mobile')?.value||'').trim();
+    if(!mob){err('mobile','Mobile Number is required');ok=false;}
+    else if(!/^[0-9+\s\-]{8,15}$/.test(mob)){err('mobile','Please enter a valid mobile number');ok=false;}
+    else clr('mobile');
+
+    const emailVal=(card.querySelector('#f-email')?.value||'').trim();
+    if(!emailVal){err('email','Email address is required');ok=false;}
+    else if(!/\S+@\S+\.\S+/.test(emailVal)){err('email','Please enter a valid email address');ok=false;}
+    else clr('email');
+
+    const panVal=v('f-pan');
+    if(!panVal){err('pan','PAN Number is required');ok=false;}
+    else if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panVal)){err('pan','Invalid PAN format (e.g. ABCDE1234F)');ok=false;}
+    else clr('pan');
+
+    if(custType==='B2B'){
+      const g=v('f-gstin');
+      if(!g){err('gstin','GSTIN is required for B2B customers');ok=false;}
+      else if(!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)){err('gstin','Please enter a valid GSTIN (e.g. 06ABCDE1234F1Z5)');ok=false;}
+      else clr('gstin');
+    } else {
+      clr('gstin');
+    }
+
+    const hasMsme=card.querySelector('#f-hasMsme')?.checked;
+    if(hasMsme){
+      if(!v('f-msmeNo')){err('msmeNo','Udyam Registration Number is required');ok=false;}
+      else if(!/^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/.test(v('f-msmeNo'))){err('msmeNo','Format: UDYAM-HR-18-0040140');ok=false;}
+      else clr('msmeNo');
+      if(!S.fd.attachments?.msme){err('att-msme','Please upload your MSME certificate');ok=false;}
+    }
+
+    if(!S.fd.attachments?.pan){err('att-pan','PAN card document is required');ok=false;}
+    if(!S.fd.attachments?.aadhaar){err('att-aadhaar','Aadhaar card document is required');ok=false;}
+    if(!S.fd.attachments?.cheque){err('att-cheque','Cancelled cheque is required');ok=false;}
+
+    const firstBill=card.querySelector('#fb-block-wrap-1');
+    if(firstBill){
+      if(!firstBill.querySelector('#fb-street-1')?.value?.trim()){toast('Please fill Street in the billing address','err');ok=false;}
+      if(!firstBill.querySelector('#fb-city-1')?.value?.trim()){toast('Please fill City in the billing address','err');ok=false;}
+      if(!firstBill.querySelector('#fb-state-1')?.value){toast('Please select State in the billing address','err');ok=false;}
+    }
+
+    if(!ok){
+      const fe=card.querySelector('.ferr:not(:empty)');
+      if(fe) fe.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+
+    const allBill=collectAddrBlocks(card.querySelector('#bill-addr-container'),'fb');
+    const allShip=sameAsBill?[]:collectAddrBlocks(card.querySelector('#ship-addr-container'),'fs');
+    const pb=allBill[0]||{},ps=sameAsBill?pb:(allShip[0]||pb);
+
+    S.fd={
+      company:card.querySelector('#f-company')?.value||'JIVO_OIL_HANADB',
+      customerType:custType,
+      cardName:v('f-cardName'),foreignName:v('f-foreignName'),
+      typeOfBusiness:card.querySelector('#f-typeOfBusiness')?.value||'',
+      industry:card.querySelector('#f-industry')?.value||'',
+      contactFirst:v('f-contactFirst'),contactLast:v('f-contactLast'),contactTitle:v('f-contactTitle'),
+      contactEmail:(card.querySelector('#f-contactEmail')?.value||'').trim(),
+      mobile:mob,email:emailVal,
+      billAddressName:pb.addrName||'',billStreet:pb.street||'',billBlock:pb.block||'',
+      billCity:pb.city||'',billZip:pb.zip||'',billState:pb.state||'',billCountry:pb.country||'India',
+      sameAsBill,
+      shipAddressName:ps.addrName||'',shipStreet:ps.street||'',shipBlock:ps.block||'',
+      shipCity:ps.city||'',shipZip:ps.zip||'',shipState:ps.state||'',shipCountry:ps.country||'India',
+      allBillAddresses:allBill,allShipAddresses:sameAsBill?allBill:allShip,
+      currency:card.querySelector('#f-currency')?.value||'Indian Rupee',
+      gstin:v('f-gstin'),pan:v('f-pan'),panAutoFetched:S.fd.panAutoFetched||false,
+      remarks:v('f-remarks'),
+      hasMsme:hasMsme||false,
+      msmeNo:hasMsme?v('f-msmeNo'):'',
+      msmeType:hasMsme?card.querySelector('#f-msmeType')?.value||'':'',
+      msmeBType:hasMsme?card.querySelector('#f-msmeBType')?.value||'':'',
+      attachments:S.fd.attachments||{},
+    };
+    S.step=2;window.scrollTo(0,0);render();
+  };
+
+  return card;
+}
+
+// ── STEP 2: REVIEW ──────────────────────────────────────
+function renderStep2(){
+  const fd=S.fd;
+  const card=mkEl('div','card');
+  const billHtml=(fd.allBillAddresses||[]).map((a,i)=>`
+    <tr><td>Billing${i>0?' #'+(i+1):''}</td>
+    <td class="val">${esc(a.addrName||'—')}<br/>
+    <span style="font-size:12px;color:#6b7a8d">${esc(a.street||'')}${a.block?', '+esc(a.block):''}, ${esc(a.city||'')} ${esc(a.state||'')} ${esc(a.zip||'')}, ${esc(a.country||'')}</span>
+    ${a.gstin?`<br/><span style="font-size:11px;color:#6b7a8d">GSTIN: ${esc(a.gstin)}</span>`:''}
+    </td></tr>`).join('');
+  const shipHtml=fd.sameAsBill
+    ?'<tr><td>Shipping</td><td class="val" style="color:#6b7a8d">Same as Billing Address</td></tr>'
+    :(fd.allShipAddresses||[]).map((a,i)=>`
+      <tr><td>Shipping${i>0?' #'+(i+1):''}</td>
+      <td class="val">${esc(a.addrName||'—')}<br/>
+      <span style="font-size:12px;color:#6b7a8d">${esc(a.street||'')}${a.block?', '+esc(a.block):''}, ${esc(a.city||'')} ${esc(a.state||'')} ${esc(a.zip||'')}</span></td></tr>`).join('');
+
+  card.innerHTML=`
+    <div class="card-title">Review Your Details</div>
+    <div class="card-sub">Please review carefully before submitting. Once submitted, our team will contact you.</div>
+    <div class="alert a-info">ℹ After submission, our staff will verify your details and create your account in SAP B1. You will be contacted once approved.</div>
+
+    <table class="dtable">
+      <tr><td>Customer Type</td><td class="val"><span class="badge ${fd.customerType==='B2B'?'b-b2b':'b-b2c'}">${esc(fd.customerType)}</span></td></tr>
+      <tr><td>Company Name</td><td class="val"><strong>${esc(fd.cardName)}</strong></td></tr>
+      ${fd.foreignName?`<tr><td>Foreign Name</td><td class="val">${esc(fd.foreignName)}</td></tr>`:''}
+      <tr><td>Industry</td><td class="val">${esc(fd.industry||'—')}</td></tr>
+      <tr><td>Type of Business</td><td class="val">${esc(fd.typeOfBusiness)}</td></tr>
+      <tr><td>Contact Person</td><td class="val">${esc(fd.contactFirst+' '+fd.contactLast)}${fd.contactTitle?` <span style="color:#6b7a8d;font-size:12px">(${esc(fd.contactTitle)})</span>`:''}</td></tr>
+      <tr><td>Mobile</td><td class="val">${esc(fd.mobile)}</td></tr>
+      <tr><td>Email</td><td class="val">${esc(fd.email)}</td></tr>
+      ${fd.contactEmail?`<tr><td>Alt Email</td><td class="val">${esc(fd.contactEmail)}</td></tr>`:''}
+      ${billHtml}${shipHtml}
+      <tr><td>Currency</td><td class="val">${esc(fd.currency)}</td></tr>
+      <tr><td>GSTIN</td><td class="val">${fd.gstin?`<code style="background:#f4f6fb;padding:2px 10px;border-radius:5px;font-family:'IBM Plex Mono'">${esc(fd.gstin)}</code>`:'— (B2C Customer)'}</td></tr>
+      <tr><td>PAN Number</td><td class="val"><code style="background:#f4f6fb;padding:2px 10px;border-radius:5px;font-family:'IBM Plex Mono'">${esc(fd.pan)}</code>${fd.panAutoFetched?' <span style="background:#e6f4eb;color:var(--green);font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px">AUTO</span>':''}</td></tr>
+      <tr><td>MSME</td><td class="val">${fd.hasMsme?`<span style="color:var(--green);font-weight:600">✓ ${esc(fd.msmeNo)}</span> <span style="font-size:12px;color:#6b7a8d">${fd.msmeType}${fd.msmeBType?' / '+fd.msmeBType:''}</span>`:'Not registered'}</td></tr>
+      <tr><td>Documents</td><td class="val">${Object.entries(fd.attachments||{}).filter(([,v])=>v&&(Array.isArray(v)?v.length:true)).map(([k,v])=>{const arr=Array.isArray(v)?v:[v];return arr.map(a=>`<span style="display:inline-flex;background:#e8f1fd;color:var(--blue);padding:2px 9px;border-radius:4px;font-size:11px;font-weight:600;margin:2px 3px 2px 0">${k.toUpperCase()}: ${esc(a.name)}</span>`).join('');}).join('')||'<span style="color:#8fa3bc">None uploaded</span>'}</td></tr>
+      <tr><td>Remarks</td><td class="val" style="font-size:13px;color:#475569">${esc(fd.remarks||'—')}</td></tr>
+    </table>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="s2back">← Edit Details</button>
+      <button class="btn btn-primary" id="s2submit">
+        <span id="s2sp" style="display:none" class="sp"></span>
+        ✓ Confirm & Submit Application
+      </button>
+    </div>`;
+
+  card.querySelector('#s2back').onclick=()=>{S.step=1;window.scrollTo(0,0);render();};
+  card.querySelector('#s2submit').onclick=async()=>{
+    const btn=card.querySelector('#s2submit'),sp=card.querySelector('#s2sp');
+    btn.disabled=true;sp.style.display='inline-block';
+    try{
+      const r=await api('POST','/customers/submit',S.fd);
+      S.submissionId=r.id;
+      toast('Application submitted successfully!');
+      S.step=3;window.scrollTo(0,0);render();
+    }catch(e){
+      toast(e.message,'err');
+      btn.disabled=false;sp.style.display='none';
+    }
+  };
+  return card;
+}
+
+// ── STEP 3: SUCCESS ─────────────────────────────────────
+function renderStep3(){
+  const card=mkEl('div','card');
+  const refNo=S.submissionId?`REG-${String(S.submissionId).padStart(5,'0')}`:'Submitted';
+  card.innerHTML=`
+    <div class="success-wrap">
+      <div class="success-icon">🎉</div>
+      <h2>Application Submitted!</h2>
+      <p>Thank you, <strong>${esc((S.fd.contactFirst||'')+' '+(S.fd.contactLast||''))}</strong>!
+         Your customer registration for <strong>${esc(S.fd.cardName)}</strong> has been received.</p>
+      <div class="ref-box">${esc(refNo)}</div>
+      <p>Our team will review your details and contact you at <strong>${esc(S.fd.mobile)}</strong> or <strong>${esc(S.fd.email)}</strong> once your account is created in SAP B1.</p>
+      <p style="font-size:12px;color:#94a3b8;margin-top:12px">Please keep your reference number for follow-up.</p>
+      <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-secondary" id="newapp">+ Register Another Customer</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Print Confirmation</button>
+      </div>
+    </div>`;
+  card.querySelector('#newapp').onclick=()=>{S.fd={};S.step=1;S.submissionId=null;window.scrollTo(0,0);render();};
+  return card;
+}
+
+render();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

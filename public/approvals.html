@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Approvals — SAP B1 Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#080e18;--ink2:#0d1626;--ink3:#111f35;
+  --blue:#1a6fff;--blue2:#0d4fd4;--blue-glow:rgba(26,111,255,.2);
+  --amber:#f5a623;--amber2:#d4891b;--green:#0dbb8a;--red:#e53e3e;--purple:#9f5afd;--teal:#06b6d4;--gold:#f59e0b;--orange:#f97316;
+  --border:#1c2e48;--border2:#243650;
+  --text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;
+  --surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;
+  --radius:8px;--radius-lg:14px;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");opacity:.4;pointer-events:none;z-index:0}
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 20% 30%,rgba(245,166,35,.05) 0%,transparent 60%)}
+
+nav{position:sticky;top:0;z-index:200;background:rgba(8,14,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-logo{background:var(--blue);color:#fff;font-family:var(--display);font-size:17px;letter-spacing:2px;padding:4px 9px;border-radius:6px}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:center}
+.nav-link{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap;border:none;background:none;font-family:var(--font)}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nav-link.active{color:var(--amber);background:rgba(245,166,35,.1)}
+.nav-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-sm{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--border2);color:var(--text3);background:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-sm:hover{border-color:var(--red);color:var(--red)}
+.role-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(26,111,255,.1);border:1px solid rgba(26,111,255,.25);color:var(--blue)}
+.role-badge.manager{background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.25);color:var(--amber)}
+.role-badge.sr_manager{background:rgba(159,90,253,.1);border-color:rgba(159,90,253,.25);color:var(--purple)}
+.role-badge.sap_adder{background:rgba(13,187,138,.1);border-color:rgba(13,187,138,.25);color:var(--green)}
+.role-badge.admin{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:var(--gold)}
+
+main{position:relative;z-index:1;padding:16px;max-width:1400px;margin:0 auto}
+
+.module-tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:2px solid var(--border);padding-bottom:0}
+.module-tab{padding:10px 20px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:7px}
+.module-tab:hover{color:var(--text2)}
+.module-tab.on.bom{color:var(--amber);border-bottom-color:var(--amber)}
+.module-tab.on.cust{color:var(--teal);border-bottom-color:var(--teal)}
+.module-tab.on.vend{color:var(--orange);border-bottom-color:var(--orange)}
+.module-tab .mt-count{padding:1px 7px;border-radius:8px;font-size:9px;font-weight:700}
+.module-tab.on.bom .mt-count{background:rgba(245,166,35,.15);color:var(--amber)}
+.module-tab.on.cust .mt-count{background:rgba(6,182,212,.15);color:var(--teal)}
+.module-tab.on.vend .mt-count{background:rgba(249,115,22,.15);color:var(--orange)}
+.module-tab:not(.on) .mt-count{background:rgba(61,84,112,.2);color:var(--text3)}
+
+.page-header{margin-bottom:14px}
+.page-title{font-family:var(--display);font-size:26px;letter-spacing:1px;color:var(--text);margin-bottom:2px}
+.page-sub{font-size:11px;color:var(--text3)}
+
+.pipeline-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ph-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);white-space:nowrap}
+.ph-steps{display:flex;align-items:center;gap:0;flex:1;overflow-x:auto}
+.ph-step{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px;flex-shrink:0}
+.ph-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);background:var(--ink3)}
+.ph-circle.mine-bom{background:var(--amber);border-color:var(--amber);color:#fff;box-shadow:0 0 0 3px rgba(245,166,35,.2)}
+.ph-circle.mine-cust{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 0 0 3px rgba(6,182,212,.2)}
+.ph-circle.mine-vend{background:var(--orange);border-color:var(--orange);color:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.2)}
+.ph-circle.mine-admin{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 0 0 3px rgba(245,158,11,.2)}
+.ph-circle.done{background:var(--green);border-color:var(--green);color:#fff}
+.ph-step-label{font-size:8px;color:var(--text3);text-align:center;max-width:56px;line-height:1.3}
+.ph-step-label.mine-bom{color:var(--amber);font-weight:700}
+.ph-step-label.mine-cust{color:var(--teal);font-weight:700}
+.ph-step-label.mine-vend{color:var(--orange);font-weight:700}
+.ph-step-label.mine-admin{color:var(--gold);font-weight:700}
+.ph-arrow{width:20px;height:2px;background:var(--border);flex-shrink:0;margin-top:-13px}
+
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-tab{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;border:1px solid var(--border2);background:none;transition:all .15s;text-transform:uppercase;letter-spacing:.3px;font-family:var(--font);white-space:nowrap}
+.filter-tab:hover{color:var(--text2)}
+.filter-tab.on.bom{color:var(--amber);border-color:var(--amber);background:rgba(245,166,35,.08)}
+.filter-tab.on.cust{color:var(--teal);border-color:var(--teal);background:rgba(6,182,212,.08)}
+.filter-tab.on.vend{color:var(--orange);border-color:var(--orange);background:rgba(249,115,22,.08)}
+.filter-tab.my-turn-bom{color:var(--green);border-color:var(--green);background:rgba(13,187,138,.08)}
+.filter-tab.my-turn-cust{color:var(--green);border-color:var(--green);background:rgba(13,187,138,.08)}
+.filter-tab.my-turn-vend{color:var(--green);border-color:var(--green);background:rgba(13,187,138,.08)}
+.refresh-btn{margin-left:auto;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border2);color:var(--text2);background:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+.stats-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.stat-pill{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:6px}
+.stat-n{font-family:var(--mono);font-weight:700;font-size:13px}
+.stat-n.blue{color:var(--blue)}.stat-n.amber{color:var(--amber)}.stat-n.green{color:var(--green)}.stat-n.red{color:var(--red)}.stat-n.teal{color:var(--teal)}.stat-n.gold{color:var(--gold)}.stat-n.orange{color:var(--orange)}
+
+.req-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:900px){.req-grid{grid-template-columns:1fr 1fr}}
+.req-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.req-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.req-card.border-PENDING::before{background:var(--blue)}
+.req-card.border-L1_APPROVED::before{background:var(--amber)}
+.req-card.border-L2_APPROVED::before{background:var(--purple)}
+.req-card.border-L3_APPROVED::before{background:#f5641a}
+.req-card.border-SAP_PUSHED::before{background:var(--green)}
+.req-card.border-REJECTED::before{background:var(--red)}
+.req-card.border-CUST_PENDING::before{background:var(--teal)}
+.req-card.border-CUST_VERIFIED::before{background:var(--amber)}
+.req-card.border-CUST_APPROVED::before{background:var(--green)}
+.req-card.border-CUST_REJECTED::before{background:var(--red)}
+.req-card.border-VEND_PENDING::before{background:var(--orange)}
+.req-card.border-VEND_VERIFIED::before{background:var(--amber)}
+.req-card.border-VEND_APPROVED::before{background:var(--green)}
+.req-card.border-VEND_REJECTED::before{background:var(--red)}
+.req-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.req-card.my-turn-card-bom{border-color:rgba(13,187,138,.3);box-shadow:0 0 0 1px rgba(13,187,138,.15)}
+.req-card.my-turn-card-cust{border-color:rgba(6,182,212,.3);box-shadow:0 0 0 1px rgba(6,182,212,.15)}
+.req-card.my-turn-card-vend{border-color:rgba(249,115,22,.3);box-shadow:0 0 0 1px rgba(249,115,22,.15)}
+.req-card.my-turn-card-admin{border-color:rgba(245,158,11,.3);box-shadow:0 0 0 1px rgba(245,158,11,.15)}
+
+.rc-code{font-family:var(--mono);font-size:10.5px;color:var(--blue);font-weight:600}
+.rc-code.orange{color:var(--orange)}
+.rc-id{font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:6px}
+.rc-badges{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap}
+.rc-type-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.rc-type-badge.CREATE{background:rgba(13,187,138,.15);color:var(--green)}
+.rc-type-badge.UPDATE{background:rgba(245,166,35,.15);color:var(--amber)}
+.rc-type-badge.CUSTOMER{background:rgba(6,182,212,.15);color:var(--teal)}
+.rc-type-badge.VENDOR{background:rgba(249,115,22,.15);color:var(--orange)}
+.rc-name{font-size:13px;font-weight:700;color:var(--text);margin:6px 0 4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-meta{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rc-dot{width:3px;height:3px;border-radius:50%;background:var(--text3)}
+
+.req-progress{margin:10px 0 8px;display:flex;align-items:center;gap:3px}
+.rp-step{height:4px;flex:1;border-radius:2px;background:var(--border);min-width:16px}
+.rp-step.done{background:var(--green)}
+.rp-step.current-bom{background:var(--amber)}
+.rp-step.current-cust{background:var(--teal)}
+.rp-step.current-vend{background:var(--orange)}
+.rp-step.rejected{background:var(--red)}
+.rp-label{font-size:9px;color:var(--text3);margin-left:6px;white-space:nowrap;font-family:var(--mono)}
+
+.status-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.sb-PENDING{background:rgba(26,111,255,.15);color:var(--blue);border:1px solid rgba(26,111,255,.25)}
+.sb-L1_APPROVED{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.sb-L2_APPROVED{background:rgba(159,90,253,.15);color:var(--purple);border:1px solid rgba(159,90,253,.25)}
+.sb-L3_APPROVED{background:rgba(245,100,35,.15);color:#f5641a;border:1px solid rgba(245,100,35,.25)}
+.sb-SAP_PUSHED{background:rgba(13,187,138,.15);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+.sb-REJECTED{background:rgba(229,62,62,.15);color:var(--red);border:1px solid rgba(229,62,62,.25)}
+.sb-CANCELLED{background:rgba(61,84,112,.15);color:var(--text3);border:1px solid rgba(61,84,112,.25)}
+.sb-CUST_PENDING{background:rgba(6,182,212,.15);color:var(--teal);border:1px solid rgba(6,182,212,.25)}
+.sb-CUST_VERIFIED{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.sb-CUST_APPROVED,.sb-APPROVED{background:rgba(13,187,138,.15);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+.sb-CUST_REJECTED,.sb-VERIFIED{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.sb-VEND_PENDING{background:rgba(249,115,22,.15);color:var(--orange);border:1px solid rgba(249,115,22,.25)}
+.sb-VEND_VERIFIED{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.sb-VEND_APPROVED{background:rgba(13,187,138,.15);color:var(--green);border:1px solid rgba(13,187,138,.25)}
+.sb-VEND_REJECTED{background:rgba(229,62,62,.15);color:var(--red);border:1px solid rgba(229,62,62,.25)}
+
+.can-approve-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(13,187,138,.1);border:1px solid rgba(13,187,138,.3);border-radius:20px;font-size:10px;font-weight:700;color:var(--green)}
+.admin-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:20px;font-size:10px;font-weight:700;color:var(--gold)}
+.waiting-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(61,84,112,.1);border:1px solid rgba(61,84,112,.3);border-radius:20px;font-size:10px;font-weight:600;color:var(--text3)}
+.already-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(13,187,138,.06);border:1px solid rgba(13,187,138,.2);border-radius:20px;font-size:10px;font-weight:600;color:var(--green)}
+
+.rc-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
+.btn{padding:6px 13px;border-radius:6px;border:none;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.b-approve{background:rgba(13,187,138,.1);color:var(--green);border:1px solid rgba(13,187,138,.3)}
+.b-approve:hover:not(:disabled){background:rgba(13,187,138,.2)}
+.b-approve.final{background:var(--green);color:#fff;border-color:var(--green)}
+.b-approve.final:hover:not(:disabled){background:#09a077;box-shadow:0 3px 14px rgba(13,187,138,.4)}
+.b-approve.admin-direct{background:var(--gold);color:#fff;border-color:var(--gold)}
+.b-approve.admin-direct:hover:not(:disabled){background:#d97706;box-shadow:0 3px 14px rgba(245,158,11,.4)}
+.b-reject{background:rgba(229,62,62,.08);color:var(--red);border:1px solid rgba(229,62,62,.25)}
+.b-reject:hover:not(:disabled){background:rgba(229,62,62,.18)}
+.b-detail{background:rgba(26,111,255,.08);color:var(--blue);border:1px solid rgba(26,111,255,.2)}
+.b-detail:hover{background:rgba(26,111,255,.15)}
+.b-teal{background:rgba(6,182,212,.08);color:var(--teal);border:1px solid rgba(6,182,212,.2)}
+.b-teal:hover{background:rgba(6,182,212,.15)}
+.b-orange{background:rgba(249,115,22,.08);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+.b-orange:hover{background:rgba(249,115,22,.15)}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.modal{background:var(--ink2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:860px;margin:auto;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:mIn .2s ease}
+@keyframes mIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.modal-title{font-weight:700;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0}
+.modal-close:hover{background:var(--red);border-color:var(--red);color:#fff}
+.modal-body{padding:18px;max-height:82vh;overflow-y:auto}
+.modal-body::-webkit-scrollbar{width:4px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.modal-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--surface3);border-radius:var(--radius);padding:4px;flex-wrap:wrap}
+.modal-tab{flex:1;padding:7px 10px;border-radius:6px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font);transition:all .15s;text-align:center;white-space:nowrap}
+.modal-tab:hover{color:var(--text2)}
+.modal-tab.active{background:var(--surface2);color:var(--teal);border:1px solid var(--border2)}
+.modal-tab.active.orange{color:var(--orange)}
+.modal-tab-pane{display:none}
+.modal-tab-pane.active{display:block}
+
+/* ── Attachment tab styles ──────────────────────────────── */
+.attach-file-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:border-color .15s}
+.attach-file-row:hover{border-color:var(--border2)}
+.attach-file-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center}
+.attach-file-info{flex:1;min-width:0}
+.attach-file-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.attach-file-name{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attach-file-meta{margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.attach-ext-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.06);font-family:var(--mono);text-transform:uppercase;border:1px solid currentColor}
+.attach-view-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid rgba(26,111,255,.3);background:rgba(26,111,255,.08);color:var(--blue);font-family:var(--font);white-space:nowrap}
+.attach-view-btn:hover{background:rgba(26,111,255,.2);box-shadow:0 2px 8px rgba(26,111,255,.2)}
+.attach-view-btn.orange-btn{border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.08);color:var(--orange)}
+.attach-view-btn.orange-btn:hover{background:rgba(249,115,22,.2)}
+.attach-view-btn.teal-btn{border-color:rgba(6,182,212,.3);background:rgba(6,182,212,.08);color:var(--teal)}
+.attach-view-btn.teal-btn:hover{background:rgba(6,182,212,.2)}
+.attach-sap-box{padding:10px 14px;background:var(--surface3);border:1px solid rgba(13,187,138,.2);border-radius:var(--radius);font-size:11px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.attach-tip{margin-top:10px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text3);line-height:1.6}
+/* ─────────────────────────────────────────────────────── */
+
+.mgr-section{margin-bottom:18px}
+.mgr-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(245,158,11,.2);display:flex;align-items:center;gap:6px}
+.mgr-section-title.blue{color:var(--blue);border-bottom-color:rgba(26,111,255,.2)}
+.mgr-section-title.orange{color:var(--orange);border-bottom-color:rgba(249,115,22,.2)}
+.mgr-section-title.teal{color:var(--teal);border-bottom-color:rgba(6,182,212,.2)}
+.mgr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.mgr-grid{grid-template-columns:1fr}}
+.mgr-grid.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.mgr-grid.g3{grid-template-columns:1fr 1fr}}
+.form-row{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.form-input{width:100%;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;transition:border .15s}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+.form-input::placeholder{color:var(--text3)}
+.form-select{width:100%;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;cursor:pointer;height:34px}
+.form-select:focus{border-color:var(--blue)}
+.form-select option{background:var(--surface2)}
+.form-select.orange-field,.form-input.orange-field{border-color:rgba(249,115,22,.3)}
+.form-select.orange-field:focus,.form-input.orange-field:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(249,115,22,.15)}
+
+.bank-approval-block{background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.bank-approval-title{font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.bank-code-badge{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:var(--orange);padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:var(--mono)}
+.bank-code-badge.resolved{background:rgba(13,187,138,.12);border-color:rgba(13,187,138,.3);color:var(--green)}
+.bank-code-badge.missing{background:rgba(229,62,62,.12);border-color:rgba(229,62,62,.3);color:var(--red)}
+
+.detail-sec{margin-bottom:18px}
+.detail-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.detail-grid{grid-template-columns:1fr}}
+.detail-row{display:flex;flex-direction:column;gap:3px}
+.detail-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.detail-val{font-size:12px;color:var(--text);word-break:break-all}
+.detail-val.mono{font-family:var(--mono);color:var(--blue)}
+.detail-val.green{color:var(--green)}
+
+.pipeline-mini{display:flex;align-items:center;gap:0;overflow-x:auto;margin-bottom:14px;padding:10px 0 4px}
+.pm-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.pm-circle{width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);background:var(--ink3);transition:all .3s}
+.pm-circle.done{background:var(--green);border-color:var(--green);color:#fff}
+.pm-circle.current-bom{background:var(--amber);border-color:var(--amber);color:#fff;box-shadow:0 0 0 3px rgba(245,166,35,.2)}
+.pm-circle.current-cust{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 0 0 3px rgba(6,182,212,.2)}
+.pm-circle.current-vend{background:var(--orange);border-color:var(--orange);color:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.2)}
+.pm-circle.rejected-step{background:var(--red);border-color:var(--red);color:#fff}
+.pm-label{font-size:8px;color:var(--text3);text-align:center;max-width:52px;line-height:1.3;font-weight:500}
+.pm-label.mine-bom{color:var(--amber);font-weight:700}
+.pm-label.mine-cust{color:var(--teal);font-weight:700}
+.pm-label.mine-vend{color:var(--orange);font-weight:700}
+.pm-label.mine-admin{color:var(--gold);font-weight:700}
+.pm-label.done{color:var(--green)}
+.pm-arrow{width:18px;height:2px;flex-shrink:0;background:var(--border);margin-top:-14px;transition:background .3s}
+.pm-arrow.done{background:var(--green)}
+
+.comment-area{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;resize:vertical;min-height:70px;transition:border .15s}
+.comment-area:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-glow)}
+
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.al-info{background:rgba(26,111,255,.08);border:1px solid rgba(26,111,255,.2);color:#60a5fa}
+.al-amber{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:#fcd34d}
+.al-green{background:rgba(13,187,138,.08);border:1px solid rgba(13,187,138,.2);color:#6ee7b7}
+.al-red{background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.2);color:#fc8181}
+.al-teal{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);color:#67e8f9}
+.al-gold{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fcd34d}
+.al-orange{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:#fdba74}
+
+.comp-table{width:100%;border-collapse:collapse;font-size:11px}
+.comp-table th{background:var(--surface3);padding:5px 8px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--border);white-space:nowrap}
+.comp-table td{padding:5px 8px;border-bottom:1px solid rgba(28,46,72,.5);color:var(--text2);font-size:11px}
+
+.vend-detail-table{width:100%;border-collapse:collapse;font-size:12px}
+.vend-detail-table tr{border-bottom:1px solid var(--border)}
+.vend-detail-table td{padding:7px 8px;vertical-align:top}
+.vend-detail-table td:first-child{color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:35%}
+
+.cust-detail-table{width:100%;border-collapse:collapse;font-size:12px}
+.cust-detail-table tr{border-bottom:1px solid var(--border)}
+.cust-detail-table td{padding:7px 8px;vertical-align:top}
+.cust-detail-table td:first-child{color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:35%}
+
+.bank-block-mini{background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.bank-block-mini-title{font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+.sp{width:12px;height:12px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:62px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:var(--radius);font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;display:flex;align-items:center;gap:7px;max-width:300px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}.t-warn{background:var(--amber);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius);height:120px;margin-bottom:10px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.log-entry{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.log-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.log-dot.approve{background:rgba(13,187,138,.2);color:var(--green)}
+.log-dot.reject{background:rgba(229,62,62,.2);color:var(--red)}
+.log-dot.submit{background:rgba(26,111,255,.2);color:var(--blue)}
+.log-dot.push{background:rgba(13,187,138,.3);color:var(--green)}
+.log-info{flex:1}
+.log-who{font-size:12px;font-weight:600;color:var(--text)}
+.log-role{font-size:10px;color:var(--text3);font-weight:500}
+.log-what{font-size:11px;color:var(--text3);margin-top:2px}
+.log-comment{font-size:11px;color:var(--text2);margin-top:5px;padding:7px 10px;background:var(--surface2);border-radius:5px;border-left:2px solid var(--border2);font-style:italic}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="toast-c" id="toast-c"></div>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">SAP</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">⌂ Home</a>
+    <a href="/bom" class="nav-link">⊞ BOM</a>
+    <a href="/approvals" class="nav-link active">✅ Approvals</a>
+    <a href="/register" class="nav-link">◧ Customers</a>
+    <a href="/admin" class="nav-link" id="admin-link" style="display:none">⚙ Admin</a>
+  </div>
+  <div class="nav-right">
+    <span class="role-badge" id="role-badge">...</span>
+    <button class="btn-sm" id="btn-logout">Logout</button>
+  </div>
+</nav>
+
+<main>
+  <div id="page-content">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="height:80px"></div>
+    <div class="skeleton"></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="detail-modal" style="display:none">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+'use strict';
+
+let _tok = null, _user = null, _cfg = null;
+let _approvalMap = {}, _statusFlow = [], _levelLabels = {}, _approvalLevels = 3;
+let _custApprovalLevels = 2;
+
+const CUST_STATUS_FLOW = {
+  2: ['PENDING', 'VERIFIED', 'APPROVED'],
+  3: ['PENDING', 'VERIFIED', 'REVIEWED', 'APPROVED'],
+};
+const CUST_APPROVAL_MAP = {
+  2: { PENDING: 'manager', VERIFIED: 'sap_adder' },
+  3: { PENDING: 'manager', VERIFIED: 'sr_manager', REVIEWED: 'sap_adder' },
+};
+const CUST_LEVEL_LABELS = {
+  2: { PENDING: 'Awaiting Manager Verification', VERIFIED: 'Awaiting SAP Adder Approval' },
+  3: { PENDING: 'Awaiting Manager Verification', VERIFIED: 'Awaiting Sr. Manager Review', REVIEWED: 'Awaiting SAP Adder Approval' },
+};
+
+const VEND_STATUS_FLOW  = ['PENDING', 'VERIFIED', 'APPROVED'];
+const VEND_APPROVAL_MAP = { PENDING: 'manager', VERIFIED: 'sap_adder' };
+const VEND_LEVEL_LABELS = { PENDING: 'Awaiting Manager Verification', VERIFIED: 'Awaiting SAP Adder Approval' };
+
+let _bomRequests = [], _custRequests = [], _vendRequests = [];
+let _activeModule = 'bom';
+let _bomFilter = 'MY_TURN', _custFilter = 'MY_TURN', _vendFilter = 'MY_TURN';
+let _bomTypeFilter = 'ALL';
+let _activeCompany = 'JIVO_OIL_HANADB';
+const COMPANIES = [
+  { value:'ALL',                    label:'All Companies' },
+  { value:'JIVO_OIL_HANADB',       label:'Jivo Oil' },
+  { value:'JIVO_BEVERAGES_HANADB', label:'Jivo Beverages' },
+  { value:'JIVO_MART_HANADB',      label:'Jivo Mart' },
+];
+
+let _lookupCache = {
+  bpGroups: [], payTerms: [], salesEmployees: [], arAccounts: [], mainGroups: [], chains: [],
+  vendBpGroups: [], vendPayTerms: [], apAccounts: [],
+  banks: [],
+  vendMainGroups: [],
+  vendChains: [],
+  vendSalesEmployees: [],
+};
+
+(function(){
+  try {
+    _tok  = sessionStorage.getItem('portal_token') || localStorage.getItem('token') || null;
+    const u = sessionStorage.getItem('portal_user');
+    if (u) _user = JSON.parse(u);
+  } catch {}
+})();
+
+if (!_tok) { window.location.href = '/'; }
+
+document.getElementById('btn-logout').onclick = () => {
+  sessionStorage.clear(); localStorage.removeItem('token');
+  window.location.href = '/';
+};
+
+const BACKEND = `${window.location.origin}/api`;
+
+async function api(method, path, body = null) {
+  const h = { 'Content-Type': 'application/json' };
+  if (_tok) h['Authorization'] = 'Bearer ' + _tok;
+  const opt = { method: method.toUpperCase(), headers: h };
+  if (body) opt.body = JSON.stringify(body);
+  let r, d;
+  try { r = await fetch(BACKEND + path, opt); d = await r.json(); }
+  catch (e) { throw new Error('Cannot reach server'); }
+  if (r.status === 401) { window.location.href = '/'; throw new Error('Session expired'); }
+  if (!r.ok) throw new Error(d?.message || 'HTTP ' + r.status);
+  return d;
+}
+
+function toast(msg, type = 'ok') {
+  const tc = document.getElementById('toast-c');
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.textContent = (type === 'ok' ? '✓  ' : type === 'err' ? '✗  ' : '⚠  ') + msg;
+  tc.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function esc(v) {
+  return (v || '').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const isAdmin = () => _user?.role === 'admin';
+function coLabel(company){const m={'JIVO_OIL_HANADB':'Oil','JIVO_BEVERAGES_HANADB':'Bev','JIVO_MART_HANADB':'Mart'};return m[company]||'';}
+function coBadge(company){const l=coLabel(company);return l&&_activeCompany==='ALL'?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(159,90,253,.1);color:#9f5afd;border:1px solid rgba(159,90,253,.25)">${l}</span>`:'';}
+
+
+const BOM_STATUS_LABELS = {
+  DRAFT:'Draft', PENDING:'Pending', SAP_PUSHED:'In SAP B1',
+  REJECTED:'Rejected', CANCELLED:'Cancelled',
+  L1_APPROVED:'L1 Approved', L2_APPROVED:'L2 Approved', L3_APPROVED:'L3 Approved',
+};
+const CUST_STATUS_LABELS = { PENDING:'Pending Review', VERIFIED:'Verified', REVIEWED:'Sr. Reviewed', APPROVED:'Approved → SAP', REJECTED:'Rejected' };
+const VEND_STATUS_LABELS = { PENDING:'Pending Review', VERIFIED:'Verified', APPROVED:'Approved → SAP', REJECTED:'Rejected' };
+
+function getBomStatusLabel(s) { return BOM_STATUS_LABELS[s] || s; }
+function getCustStatusLabel(s) { return CUST_STATUS_LABELS[s] || s; }
+function getVendStatusLabel(s) { return VEND_STATUS_LABELS[s] || s; }
+
+function canApproveBom(status) { if (isAdmin()) return true; return _approvalMap[status] === _user?.role; }
+function alreadyApprovedBomByMe(req) { if (isAdmin()) return false; return (req.approvalLog||[]).some(l=>l.username===_user?.username&&l.action==='approve'); }
+function isFinalBomApproval(status) { if (isAdmin()) return true; const fm={2:'L1_APPROVED',3:'L2_APPROVED',4:'L3_APPROVED'}; return fm[_approvalLevels]===status; }
+function canApproveCust(status) { if (isAdmin()) return true; const map=CUST_APPROVAL_MAP[_custApprovalLevels]||CUST_APPROVAL_MAP[2]; return map[status]===_user?.role; }
+function isFinalCustApproval(status) { if (isAdmin()) return true; const flow=CUST_STATUS_FLOW[_custApprovalLevels]||CUST_STATUS_FLOW[2]; return flow[flow.length-2]===status; }
+function canApproveVend(status) { if (isAdmin()) return true; return VEND_APPROVAL_MAP[status]===_user?.role; }
+function isFinalVendApproval(status) { if (isAdmin()) return true; return VEND_STATUS_FLOW[VEND_STATUS_FLOW.length-2]===status; }
+function getCustDisplayFlow() { return CUST_STATUS_FLOW[_custApprovalLevels]||CUST_STATUS_FLOW[2]; }
+function getBomDisplayFlow() { return (_statusFlow||[]).filter(s=>s!=='DRAFT'&&s!=='REJECTED'&&s!=='CANCELLED'); }
+
+function countMyTurnBom() { return _bomRequests.filter(r=>canApproveBom(r.status)&&!alreadyApprovedBomByMe(r)&&r.status!=='SAP_PUSHED'&&r.status!=='REJECTED').length; }
+function countMyTurnCust() { return _custRequests.filter(r=>canApproveCust(r.status)&&r.status!=='APPROVED'&&r.status!=='REJECTED').length; }
+function countMyTurnVend() { return _vendRequests.filter(r=>canApproveVend(r.status)&&r.status!=='APPROVED'&&r.status!=='REJECTED').length; }
+
+async function loadLookups() {
+  const safe = async (path, key, map) => {
+    try { const r = await api('GET', path); _lookupCache[key] = (r.data||[]).map(map); }
+    catch(e) { console.warn('Lookup failed:', path, e.message); }
+  };
+  await Promise.all([
+    safe('/customers/lookup/bp-groups',       'bpGroups',           r=>({ code:r.GroupCode, name:r.GroupName })),
+    safe('/customers/lookup/payment-terms',    'payTerms',           r=>({ code:r.Code,      name:r.Name })),
+    safe('/customers/lookup/sales-employees',  'salesEmployees',     r=>({ code:r.SlpCode,   name:r.SlpName })),
+    safe('/customers/lookup/ar-accounts',      'arAccounts',         r=>({ code:r.AcctCode,  name:r.AcctName })),
+    safe('/customers/lookup/main-group',       'mainGroups',         r=>({ code:r.Code,      name:r.Name })),
+    safe('/customers/lookup/chain',            'chains',             r=>({ code:r.Code,      name:r.Name })),
+    safe('/vendors/lookup/bp-groups',          'vendBpGroups',       r=>({ code:r.GroupCode, name:r.GroupName })),
+    safe('/vendors/lookup/payment-terms',      'vendPayTerms',       r=>({ code:r.Code,      name:r.Name })),
+    safe('/vendors/lookup/ap-accounts',        'apAccounts',         r=>({ code:r.AcctCode,  name:r.AcctName })),
+    safe('/vendors/lookup/banks',              'banks',              r=>({ code:r.BankCode,  name:r.BankName, swift:r.SwiftNo||'' })),
+    safe('/vendors/lookup/main-group',         'vendMainGroups',     r=>({ code:r.Code,      name:r.Name })),
+    safe('/vendors/lookup/chain',              'vendChains',         r=>({ code:r.Code,      name:r.Name })),
+    safe('/vendors/lookup/sales-employees',    'vendSalesEmployees', r=>({ code:r.SlpCode,   name:r.SlpName })),
+  ]);
+  console.log(`[LOOKUPS] banks:${_lookupCache.banks.length} vendBpGroups:${_lookupCache.vendBpGroups.length} apAccounts:${_lookupCache.apAccounts.length} vendSalesEmployees:${_lookupCache.vendSalesEmployees.length}`);
+}
+
+async function init() {
+  if (_user) {
+    const rb = document.getElementById('role-badge');
+    rb.textContent = (_user.role||'').replace('_',' ').toUpperCase();
+    rb.className = 'role-badge ' + (_user.role||'');
+    if (_user.role==='sap_adder'||_user.role==='admin') document.getElementById('admin-link').style.display='';
+  }
+  try {
+    const r = await api('GET', '/config');
+    _cfg = r; _approvalMap=r.approvalMap||{}; _statusFlow=r.statusFlow||['PENDING','L1_APPROVED','L2_APPROVED','SAP_PUSHED','REJECTED'];
+    _levelLabels=r.levelLabels||{}; _approvalLevels=r.approvalLevels||3; _custApprovalLevels=r.custApprovalLevels||2;
+  } catch(e) {
+    _approvalMap={PENDING:'manager',L1_APPROVED:'sr_manager',L2_APPROVED:'sap_adder'};
+    _statusFlow=['PENDING','L1_APPROVED','L2_APPROVED','SAP_PUSHED','REJECTED'];
+    _approvalLevels=3; _custApprovalLevels=2;
+  }
+  render(); // show UI immediately
+  await Promise.all([loadBomRequests(), loadCustRequests(), loadVendRequests(), loadLookups()]);
+  render(); // update with data
+}
+
+function _companyList(){
+  return _activeCompany==='ALL'
+    ? COMPANIES.filter(c=>c.value!=='ALL').map(c=>c.value)
+    : [_activeCompany];
+}
+async function loadBomRequests() {
+  try {
+    const cos=_companyList();
+    const results=await Promise.all(cos.map(co=>api('GET',`/bom-requests?status=ALL&company=${encodeURIComponent(co)}`).catch(()=>({data:[]}))));
+    const all=results.flatMap(r=>r.data||[]);
+    const seen=new Set(); _bomRequests=all.filter(r=>{const k=r.id;if(seen.has(k))return false;seen.add(k);return true;});
+  } catch(e) { toast(e.message,'err'); }
+}
+async function loadCustRequests() {
+  try {
+    const statuses=['PENDING','VERIFIED','REVIEWED','APPROVED','REJECTED'];
+    const cos=_companyList();
+    const calls=[];
+    for(const co of cos)for(const st of statuses)calls.push(api('GET',`/customers?status=${st}&company=${encodeURIComponent(co)}`).catch(()=>({success:true,data:[]})));
+    const results=await Promise.all(calls);
+    const all=results.flatMap(r=>(r.success?r.data:[])||[]);
+    const seen=new Set(); _custRequests=all.filter(c=>{if(seen.has(c.id))return false;seen.add(c.id);return true;});
+  } catch(e){console.warn('Customer load failed:',e.message);}
+}
+async function loadVendRequests() {
+  try {
+    const statuses=['PENDING','VERIFIED','APPROVED','REJECTED'];
+    const cos=_companyList();
+    const calls=[];
+    for(const co of cos)for(const st of statuses)calls.push(api('GET',`/vendors?status=${st}&company=${encodeURIComponent(co)}`).catch(()=>({success:true,data:[]})));
+    const results=await Promise.all(calls);
+    const all=results.flatMap(r=>(r.success?r.data:[])||[]);
+    const seen=new Set(); _vendRequests=all.filter(v=>{if(seen.has(v.id))return false;seen.add(v.id);return true;});
+  } catch(e){console.warn('Vendor load failed:',e.message);}
+}
+
+// ════════════════════════════════════════
+//  ATTACHMENT TAB BUILDER
+// ════════════════════════════════════════
+function buildAttachmentTabHTML(attachments, sapAttachmentEntry, sapCardCode, accentClass) {
+  accentClass = accentClass || 'orange'; // 'orange' for vendors, 'teal' for customers
+
+  const KEY_LABELS = {
+    pan:       { label: 'PAN Card',          icon: '🪪' },
+    cheque:    { label: 'Cancelled Cheque',  icon: '🏦' },
+    gst:       { label: 'GST Certificate',   icon: '📄' },
+    msme:      { label: 'MSME / Udyam Cert', icon: '🏭' },
+    other:     { label: 'Other Document',    icon: '📎' },
+    pan_card:  { label: 'PAN Card',          icon: '🪪' },
+    gst_cert:  { label: 'GST Certificate',   icon: '📄' },
+    bank_proof:{ label: 'Bank Proof',        icon: '🏦' },
+    id_proof:  { label: 'ID Proof',          icon: '🪪' },
+  };
+
+  // Flatten all attachment keys into a single ordered list
+  const files = [];
+  if (attachments && typeof attachments === 'object') {
+    Object.entries(attachments).forEach(([key, val]) => {
+      const arr = Array.isArray(val) ? val : (val ? [val] : []);
+      arr.forEach((f) => {
+        if (!f) return;
+        const meta = KEY_LABELS[key] || { label: key.replace(/_/g,' ').toUpperCase(), icon: '📎' };
+        files.push({ key, label: meta.label, icon: meta.icon,
+          name: f.name || f.fileName || `${key}`, type: f.type || f.mimeType || '', data: f.data || null });
+      });
+    });
+  }
+
+  // Store globally so onclick can access without inline data URI injection risk
+  window._attachRegistry = files;
+
+  if (!files.length) {
+    return `<div class="alert al-amber">⚠ No attachments were uploaded with this registration.</div>`;
+  }
+
+  function getExt(f) {
+    if (f.name && f.name.includes('.')) return f.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'');
+    const m={'application/pdf':'pdf','image/jpeg':'jpg','image/jpg':'jpg','image/png':'png',
+             'image/gif':'gif','image/tiff':'tif','application/msword':'doc',
+             'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'docx'};
+    return m[f.type] || 'pdf';
+  }
+
+  const sapBanner = sapAttachmentEntry
+    ? `<div class="attach-sap-box"><span style="color:var(--green);font-size:16px">✓</span>
+         <div>Uploaded to SAP B1 — <strong style="color:var(--green)">Attachment Entry #${esc(String(sapAttachmentEntry))}</strong>
+         ${sapCardCode ? ` · linked to card <strong style="color:var(--green)">${esc(sapCardCode)}</strong>` : ''}
+         <div style="font-size:10px;color:var(--text3);margin-top:2px">Files are stored at the SAP attachment path and visible in SAP B1 → Attachments tab.</div></div></div>`
+    : `<div class="alert al-amber">⚠ Not yet synced to SAP B1 Attachments2. The files below are the original uploaded documents from the registration form.</div>`;
+
+  const fileRows = files.map((f, i) => {
+    const ext = getExt(f);
+    const isPdf = ext === 'pdf' || f.type === 'application/pdf';
+    const isImg = ['jpg','jpeg','png','gif','tif','tiff','webp','bmp'].includes(ext);
+    const extColor = isPdf ? 'var(--red)' : isImg ? 'var(--teal)' : 'var(--text3)';
+    const hasData = !!f.data;
+    const btnCls = accentClass === 'teal' ? 'teal-btn' : 'orange-btn';
+    return `
+      <div class="attach-file-row">
+        <div class="attach-file-icon">${f.icon}</div>
+        <div class="attach-file-info">
+          <div class="attach-file-label" style="color:var(--${accentClass})">${esc(f.label)}</div>
+          <div class="attach-file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+          <div class="attach-file-meta">
+            <span class="attach-ext-badge" style="color:${extColor};border-color:${extColor}">.${ext}</span>
+            ${isPdf ? '<span style="font-size:9px;color:var(--text3)">PDF Document</span>' : ''}
+            ${isImg ? '<span style="font-size:9px;color:var(--teal)">Image</span>' : ''}
+            ${!hasData ? '<span style="font-size:9px;color:var(--text3)">📁 On server share</span>' : ''}
+          </div>
+        </div>
+        ${hasData
+          ? `<button class="attach-view-btn ${btnCls}" onclick="openAttachment(${i})">👁 View</button>`
+          : `<span style="font-size:10px;color:var(--text3);padding:4px 8px">Stored on<br/>server</span>`
+        }
+      </div>`;
+  }).join('');
+
+  return `
+    ${sapBanner}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px">
+      ${files.length} Document${files.length !== 1 ? 's' : ''} Attached
+    </div>
+    ${fileRows}
+    <div class="attach-tip">
+      💡 <strong style="color:var(--text2)">View</strong> opens the document in a new tab (PDF or image).
+      Files marked <em>"On server share"</em> were saved directly to the SAP attachment folder
+      (e.g. <code style="font-family:var(--mono);font-size:10px">C:\\SAP Attachments\\...</code>) — 
+      open them in SAP B1 via the <strong>Attachments tab → Display button</strong>.
+      The [40003-12] error means a file has no extension — re-upload via the form to fix.
+    </div>`;
+}
+
+// Global file opener called by attachment view buttons
+window.openAttachment = function(idx) {
+  const file = (window._attachRegistry || [])[idx];
+  if (!file || !file.data) { alert('No inline file data available. Check the server share.'); return; }
+  const raw = file.data.includes(',') ? file.data : null;
+  const mime = file.type || 'application/octet-stream';
+  const src  = raw || `data:${mime};base64,${file.data}`;
+  const ext  = file.name?.split('.').pop()?.toLowerCase() || 'pdf';
+  const isPdf = ext === 'pdf' || mime === 'application/pdf';
+  const isImg = ['jpg','jpeg','png','gif','tif','tiff','webp','bmp'].includes(ext);
+  const w = window.open('', '_blank');
+  if (!w) { alert('Popup blocked — please allow popups for this site.'); return; }
+  if (isPdf) {
+    w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#111">
+      <embed src="${src}" type="application/pdf" width="100%" height="100%" style="height:100vh"/>
+    </body></html>`);
+  } else if (isImg) {
+    w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh">
+      <img src="${src}" style="max-width:100%;max-height:100vh;object-fit:contain"/>
+    </body></html>`);
+  } else {
+    const a = w.document.createElement('a');
+    a.href = src; a.download = file.name || `document.${ext}`;
+    w.document.body.appendChild(a); a.click(); w.close();
+  }
+};
+
+// ════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════
+function render() {
+  const container = document.getElementById('page-content');
+  container.innerHTML = '';
+  const ph = document.createElement('div');
+  ph.className = 'page-header';
+  const adminBadge = isAdmin() ? ' <span style="background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;vertical-align:middle">⚡ ADMIN — Direct SAP Push</span>' : '';
+  const coOpts = COMPANIES.map(c=>`<option value="${c.value}"${_activeCompany===c.value?' selected':''}>${c.label}</option>`).join('');
+  ph.innerHTML = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+    <div class="page-title" style="margin-bottom:0">APPROVAL QUEUE${adminBadge}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Company</span>
+      <select id="company-sel" style="height:30px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font);cursor:pointer">${coOpts}</select>
+    </div>
+  </div>
+  <div class="page-sub">BOM ${_approvalLevels}-Level · Customer ${_custApprovalLevels}-Level · Vendor 2-Level Approval System</div>`;
+  container.appendChild(ph);
+  container.querySelector('#company-sel').addEventListener('change', async e => {
+    _activeCompany = e.target.value;
+    const rb = e.target;rb.disabled=true;
+    await Promise.all([loadBomRequests(), loadCustRequests(), loadVendRequests()]);
+    rb.disabled=false;
+    render();
+    toast(`Switched to ${COMPANIES.find(c=>c.value===_activeCompany)?.label}`);
+  });
+  container.appendChild(buildModuleTabs());
+  if (_activeModule==='bom') renderBomSection(container);
+  else if (_activeModule==='cust') renderCustSection(container);
+  else renderVendSection(container);
+}
+
+function buildModuleTabs() {
+  const bar=document.createElement('div'); bar.className='module-tabs';
+  const tabs=[
+    {id:'bom',icon:'⊞',label:'BOM Approvals',count:countMyTurnBom(),cls:'bom'},
+    {id:'cust',icon:'◧',label:'Customer Approvals',count:countMyTurnCust(),cls:'cust'},
+    {id:'vend',icon:'🏭',label:'Vendor Approvals',count:countMyTurnVend(),cls:'vend'},
+  ];
+  tabs.forEach(tab=>{
+    const btn=document.createElement('button');
+    btn.className=`module-tab ${tab.cls}${_activeModule===tab.id?' on':''}`;
+    btn.innerHTML=`${tab.icon} ${tab.label}<span class="mt-count">${tab.count>0?tab.count+(isAdmin()?' actions':' my turn'):''}</span>`;
+    btn.onclick=()=>{_activeModule=tab.id;render();};
+    bar.appendChild(btn);
+  });
+  return bar;
+}
+
+// ════════════════════════════════════════
+//  BOM SECTION  (unchanged from original)
+// ════════════════════════════════════════
+function renderBomSection(container){
+  container.appendChild(buildBomPipeline());
+  const myTurn=countMyTurnBom(),pending=_bomRequests.filter(r=>r.status==='PENDING').length;
+  const inProg=_bomRequests.filter(r=>['L1_APPROVED','L2_APPROVED','L3_APPROVED'].includes(r.status)).length;
+  const pushed=_bomRequests.filter(r=>r.status==='SAP_PUSHED').length;
+  const rejected=_bomRequests.filter(r=>r.status==='REJECTED').length;
+  const sr=document.createElement('div'); sr.className='stats-row';
+  sr.innerHTML=`<div class="stat-pill"><span class="stat-n ${isAdmin()?'gold':'green'}">${myTurn}</span><span style="font-size:11px;color:var(--text3)">${isAdmin()?'All Actionable':'My Turn'}</span></div>
+    <div class="stat-pill"><span class="stat-n blue">${pending}</span><span style="font-size:11px;color:var(--text3)">Pending</span></div>
+    <div class="stat-pill"><span class="stat-n amber">${inProg}</span><span style="font-size:11px;color:var(--text3)">In Progress</span></div>
+    <div class="stat-pill"><span class="stat-n green">${pushed}</span><span style="font-size:11px;color:var(--text3)">In SAP</span></div>
+    <div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
+  container.appendChild(sr);
+  container.appendChild(buildBomFilterBar());
+  const filtered=getBomFiltered();
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_bomFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px">${_bomFilter==='MY_TURN'?'All caught up!':'No BOM requests'}</p>`;container.appendChild(e);return;}
+  const grid=document.createElement('div');grid.className='req-grid';
+  filtered.forEach(req=>grid.appendChild(buildBomCard(req)));
+  container.appendChild(grid);
+}
+function buildBomPipeline(){
+  const div=document.createElement('div');div.className='pipeline-header';
+  const label=document.createElement('span');label.className='ph-label';label.textContent=isAdmin()?'Admin — Direct Push':`BOM ${_approvalLevels}-Level`;div.appendChild(label);
+  const steps=document.createElement('div');steps.className='ph-steps';
+  const displayFlow=getBomDisplayFlow();
+  const myStatuses=isAdmin()?displayFlow.filter(s=>s!=='SAP_PUSHED'):Object.entries(_approvalMap).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  displayFlow.forEach((status,idx)=>{
+    const isMine=isAdmin()||myStatuses.includes(status)||(status==='SAP_PUSHED'&&_user?.role==='sap_adder');
+    const sd=document.createElement('div');sd.className='ph-step';
+    const sl={PENDING:'Submit',L1_APPROVED:'L1\nMgr',L2_APPROVED:'L2\nSr.Mgr',L3_APPROVED:'L3\nSAP',SAP_PUSHED:'SAP B1'}[status]||status;
+    const cc=isAdmin()?'mine-admin':isMine?'mine-bom':'';
+    sd.innerHTML=`<div class="ph-circle ${cc}">${idx+1}</div><div class="ph-step-label ${isAdmin()?'mine-admin':isMine?'mine-bom':''}">${sl.replace(/\n/g,'<br/>')}</div>`;
+    steps.appendChild(sd);
+    if(idx<displayFlow.length-1){const a=document.createElement('div');a.className='ph-arrow';steps.appendChild(a);}
+  });
+  div.appendChild(steps);return div;
+}
+function buildBomFilterBar(){
+  const fb=document.createElement('div');fb.className='filter-bar';
+  const mtc=countMyTurnBom();
+  const mb=document.createElement('button');mb.className=`filter-tab my-turn-bom${_bomFilter==='MY_TURN'?' on bom':''}`;
+  mb.innerHTML=`✓ ${isAdmin()?'Actionable':'My Turn'}${mtc>0?` <span style="background:var(--green);color:#fff;border-radius:8px;padding:1px 6px;font-size:9px">${mtc}</span>`:''}`;
+  mb.onclick=()=>{_bomFilter='MY_TURN';render();};fb.appendChild(mb);
+  const df=getBomDisplayFlow();
+  ['ALL',...df,'REJECTED'].forEach(s=>{const b=document.createElement('button');b.className=`filter-tab${s===_bomFilter?' on bom':''}`;b.textContent=s==='ALL'?'All':getBomStatusLabel(s);b.onclick=()=>{_bomFilter=s;render();};fb.appendChild(b);});
+  const ts=document.createElement('select');ts.className='form-select';ts.style.cssText='width:120px;height:32px;font-size:11px;padding:4px 8px';
+  ts.innerHTML=`<option value="ALL">All Types</option><option value="CREATE">Create</option><option value="UPDATE">Update</option>`;
+  ts.value=_bomTypeFilter;ts.onchange=()=>{_bomTypeFilter=ts.value;render();};fb.appendChild(ts);
+  const rb=document.createElement('button');rb.className='refresh-btn';rb.innerHTML='↻ Refresh';
+  rb.onclick=async()=>{rb.textContent='...';await Promise.all([loadBomRequests(),loadCustRequests(),loadVendRequests()]);render();toast('Refreshed');};fb.appendChild(rb);
+  return fb;
+}
+function getBomFiltered(){
+  return _bomRequests.filter(req=>{
+    if(_bomTypeFilter!=='ALL'&&req.type!==_bomTypeFilter)return false;
+    if(_bomFilter==='MY_TURN'){const ia=req.status!=='SAP_PUSHED'&&req.status!=='REJECTED'&&req.status!=='CANCELLED';return canApproveBom(req.status)&&!alreadyApprovedBomByMe(req)&&ia;}
+    if(_bomFilter==='ALL')return true;
+    return req.status===_bomFilter;
+  });
+}
+function buildBomCard(req){
+  const card=document.createElement('div');
+  const isActive=req.status!=='SAP_PUSHED'&&req.status!=='REJECTED'&&req.status!=='CANCELLED';
+  const canApprove=canApproveBom(req.status)&&isActive;
+  const alreadyMine=alreadyApprovedBomByMe(req);
+  const isFinal=isFinalBomApproval(req.status);
+  const isMyTurn=canApprove&&!alreadyMine;
+  card.className=`req-card border-${req.status}${isMyTurn?(isAdmin()?' my-turn-card-admin':' my-turn-card-bom'):''}`;
+  const displayFlow=getBomDisplayFlow();const currentIdx=displayFlow.indexOf(req.status);
+  const progressHtml=displayFlow.map((s,i)=>{let cls='';if(req.status==='REJECTED')cls=i<currentIdx?'done':i===currentIdx?'rejected':'';else if(req.status==='SAP_PUSHED')cls='done';else if(i<currentIdx)cls='done';else if(i===currentIdx)cls='current-bom';return`<div class="rp-step ${cls}"></div>`;}).join('');
+  const si=_levelLabels[req.status]?`<div style="font-size:10px;color:var(--text3);margin-top:3px">${esc(_levelLabels[req.status])}</div>`:'';
+  const tc=isMyTurn?(isAdmin()?'<span class="admin-chip">⚡ Admin Push</span>':'<span class="can-approve-chip">✓ Your Turn</span>'):alreadyMine?'<span class="already-chip">✓ Approved</span>':req.status!=='SAP_PUSHED'&&req.status!=='REJECTED'&&req.status!=='CANCELLED'?'<span class="waiting-chip">⏳ Waiting</span>':'';
+  card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><div><span class="rc-code">${esc(req.itemCode)}</span><span class="rc-id">#${req.id}</span></div><div class="rc-badges"><span class="rc-type-badge ${req.type}">${req.type}</span><span class="status-badge sb-${req.status}">${getBomStatusLabel(req.status)}</span>${tc}</div>${si}</div></div><div class="rc-name">${esc(req.itemName||'—')}</div><div class="rc-meta"><span>By ${esc(req.submittedByName||req.submittedBy)}</span><span class="rc-dot"></span><span>${new Date(req.submittedAt||Date.now()).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span><span class="rc-dot"></span><span>${(req.components||[]).length} components</span></div><div class="req-progress">${progressHtml}<span class="rp-label">${Math.max(0,currentIdx)}/${displayFlow.length-1}</span></div><div class="rc-actions" id="brc-${req.id}"></div>`;
+  const actDiv=card.querySelector(`#brc-${req.id}`);
+  const db=document.createElement('button');db.className='btn b-detail';db.innerHTML='👁 Details';db.onclick=()=>openBomDetail(req.id);actDiv.appendChild(db);
+  if(isMyTurn){const ab=document.createElement('button');ab.className=`btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}`;ab.innerHTML=isAdmin()?'⚡ Push to SAP':isFinal?'🚀 Approve & Push to SAP':'✓ Approve';ab.onclick=e=>{e.stopPropagation();quickBomAction(req.id,'approve',isFinal);};actDiv.appendChild(ab);const rb=document.createElement('button');rb.className='btn b-reject';rb.innerHTML='✗ Reject';rb.onclick=e=>{e.stopPropagation();quickBomAction(req.id,'reject',false);};actDiv.appendChild(rb);}
+  return card;
+}
+async function quickBomAction(id,action,isFinal){
+  let comment='';
+  if(action==='reject'){comment=window.prompt('Reason for rejection (optional):');if(comment===null)return;}
+  else if(isFinal||isAdmin()){comment=window.prompt((isAdmin()?'Admin: ':'')+'Push to SAP B1 — comment (optional):')||'';if(comment===null)return;}
+  try{const r=await api('PATCH',`/bom-requests/${id}/action`,{action,comment:comment||''});toast(r.message||(action==='approve'?'✓ Approved!':'✗ Rejected'));await loadBomRequests();render();}
+  catch(e){toast(e.message,'err');}
+}
+async function openBomDetail(id){
+  const overlay=document.getElementById('detail-modal'),inner=document.getElementById('modal-inner');
+  overlay.style.display='flex';inner.innerHTML='<div style="padding:60px;text-align:center;color:var(--text3)"><span class="sp"></span></div>';
+  try{const r=await api('GET',`/bom-requests/${id}`);buildBomDetailModal(inner,r.data);}
+  catch(e){inner.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${esc(e.message)}</div>`;}
+}
+function buildBomDetailModal(container,req){
+  const isActive=req.status!=='SAP_PUSHED'&&req.status!=='REJECTED'&&req.status!=='CANCELLED';
+  const canApprove=canApproveBom(req.status)&&isActive;
+  const alreadyMine=alreadyApprovedBomByMe(req);
+  const isFinal=isFinalBomApproval(req.status);
+  const isMyTurn=canApprove&&!alreadyMine;
+  const displayFlow=getBomDisplayFlow();
+  const currentIdx=displayFlow.indexOf(req.status);
+  const myStatuses=isAdmin()?[]:Object.entries(_approvalMap).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  container.innerHTML=`<div class="modal-header"><div class="modal-title"><span class="rc-type-badge ${req.type}">${req.type}</span><code style="font-family:var(--mono);color:var(--blue);font-size:12px">${esc(req.itemCode)}</code><span style="font-size:11px;color:var(--text3)">#${req.id}</span><span class="status-badge sb-${req.status}">${getBomStatusLabel(req.status)}</span>${isAdmin()&&isActive?'<span class="admin-chip">⚡ Admin</span>':''}</div><button class="modal-close" id="mc1">✕</button></div><div class="modal-body"><div class="pipeline-mini">${displayFlow.map((s,i)=>{const im=!isAdmin()&&myStatuses.includes(s);let cc='';if(req.status==='REJECTED')cc=i<currentIdx?'done':i===currentIdx?'rejected-step':'';else if(req.status==='SAP_PUSHED')cc='done';else if(i<currentIdx)cc='done';else if(i===currentIdx)cc='current-bom';const lbl={PENDING:'Submit',L1_APPROVED:'L1 Approve',L2_APPROVED:'L2 Approve',L3_APPROVED:'L3 Approve',SAP_PUSHED:'SAP B1'}[s]||s;const lc=cc==='done'?'done':(im&&i===currentIdx?'mine-bom':'');return`<div class="pm-step"><div class="pm-circle ${cc}">${cc==='done'?'✓':cc==='rejected-step'?'✗':i+1}</div><div class="pm-label ${lc}">${lbl}</div></div>${i<displayFlow.length-1?`<div class="pm-arrow ${i<currentIdx||req.status==='SAP_PUSHED'?'done':''}"></div>`:''}`;}).join('')}</div>${isAdmin()&&isActive?`<div class="alert al-gold">⚡ <strong>Admin mode:</strong> You can push this BOM directly to SAP B1.</div>`:''}<div class="detail-sec"><div class="detail-sec-title">BOM Information</div><div class="detail-grid"><div class="detail-row"><span class="detail-label">Item Code</span><span class="detail-val mono">${esc(req.itemCode)}</span></div><div class="detail-row"><span class="detail-label">Description</span><span class="detail-val">${esc(req.itemName||'—')}</span></div><div class="detail-row"><span class="detail-label">BOM Type</span><span class="detail-val">${esc(req.bomType||'Production')}</span></div><div class="detail-row"><span class="detail-label">Base Qty</span><span class="detail-val mono">${req.qty||1}</span></div><div class="detail-row"><span class="detail-label">Submitted By</span><span class="detail-val">${esc(req.submittedByName||req.submittedBy)}</span></div><div class="detail-row"><span class="detail-label">Submitted At</span><span class="detail-val">${new Date(req.submittedAt||Date.now()).toLocaleString('en-IN')}</span></div></div></div><div class="detail-sec"><div class="detail-sec-title">Components (${(req.components||[]).length})</div>${(req.components||[]).length>0?`<div style="overflow-x:auto;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)"><table class="comp-table"><thead><tr><th>#</th><th>Item Code</th><th>Description</th><th>Qty</th><th>Issue Method</th></tr></thead><tbody>${(req.components||[]).map((c,i)=>`<tr><td>${i+1}</td><td style="font-family:var(--mono);color:var(--blue)">${esc(c.itemCode||'—')}</td><td>${esc(c.itemName||'—')}</td><td style="font-family:var(--mono)">${c.qty||1}</td><td>${esc(c.issueMethod||'Manual')}</td></tr>`).join('')}</tbody></table></div>`:'<p style="font-size:12px;color:var(--text3)">No components</p>'}</div><div class="detail-sec"><div class="detail-sec-title">Approval History</div><div class="log-entry"><div class="log-dot submit">📝</div><div class="log-info"><div class="log-who">${esc(req.submittedByName||req.submittedBy)}</div><div class="log-what">Submitted · ${new Date(req.submittedAt||Date.now()).toLocaleString('en-IN')}</div></div></div>${(req.approvalLog||[]).map(l=>`<div class="log-entry"><div class="log-dot ${l.action}">${l.action==='approve'?'✓':'✗'}</div><div class="log-info"><div class="log-who">${esc(l.name||l.username)} <span class="log-role">(${esc(l.role)})</span></div><div class="log-what">${l.action==='approve'?'✓ Approved':'✗ Rejected'} from <strong style="color:var(--text)">${getBomStatusLabel(l.status)}</strong> · ${new Date(l.timestamp).toLocaleString('en-IN')}</div>${l.comment?`<div class="log-comment">"${esc(l.comment)}"</div>`:''}</div></div>`).join('')}</div>${isMyTurn?`<div class="detail-sec" style="margin-bottom:0"><div class="detail-sec-title">Your Decision</div>${isAdmin()?`<div class="alert al-gold">⚡ <strong>Admin:</strong> Approving will immediately push to SAP B1.</div>`:isFinal?`<div class="alert al-green">🚀 <strong>Final approval.</strong> This will push the BOM to SAP B1.</div>`:`<div class="alert al-info">ℹ Approving advances this to the next level.</div>`}<label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);display:block;margin-bottom:7px">Comment (optional)</label><textarea class="comment-area" id="bom-modal-comment" placeholder="Add notes…"></textarea></div>`:req.status==='SAP_PUSHED'?`<div class="alert al-green" style="margin-bottom:0">🚀 Pushed to SAP B1 successfully.</div>`:`<div class="alert al-info" style="margin-bottom:0">⏳ Waiting for another approver.</div>`}</div><div class="modal-footer">${isMyTurn?`<button class="btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}" id="bom-modal-approve"><span id="bom-modal-sp" style="display:none" class="sp"></span>${isAdmin()?'⚡ Push to SAP':isFinal?'🚀 Approve & Push to SAP':'✓ Approve'}</button><button class="btn b-reject" id="bom-modal-reject">✗ Reject</button>`:''}<button class="btn" style="border:1px solid var(--border2);color:var(--text2);background:none;margin-left:auto" id="mc2">Close</button></div>`;
+  const closeModal=()=>{document.getElementById('detail-modal').style.display='none';};
+  container.querySelector('#mc1').onclick=closeModal;container.querySelector('#mc2').onclick=closeModal;
+  document.getElementById('detail-modal').onclick=e=>{if(e.target.id==='detail-modal')closeModal();};
+  container.querySelector('#bom-modal-approve')?.addEventListener('click',async()=>{
+    const comment=container.querySelector('#bom-modal-comment')?.value||'';
+    const btn=container.querySelector('#bom-modal-approve'),sp=container.querySelector('#bom-modal-sp');
+    btn.disabled=true;sp.style.display='inline-block';
+    try{const r=await api('PATCH',`/bom-requests/${req.id}/action`,{action:'approve',comment});toast(r.message||'✓ Approved!');closeModal();await loadBomRequests();render();}
+    catch(e){toast(e.message,'err');btn.disabled=false;sp.style.display='none';}
+  });
+  container.querySelector('#bom-modal-reject')?.addEventListener('click',async()=>{
+    const comment=container.querySelector('#bom-modal-comment')?.value||'';
+    if(!comment&&!confirm('Reject without a comment?'))return;
+    const btn=container.querySelector('#bom-modal-reject');btn.disabled=true;
+    try{await api('PATCH',`/bom-requests/${req.id}/action`,{action:'reject',comment});toast('✗ Rejected','warn');closeModal();await loadBomRequests();render();}
+    catch(e){toast(e.message,'err');btn.disabled=false;}
+  });
+}
+
+// ════════════════════════════════════════
+//  CUSTOMER SECTION
+// ════════════════════════════════════════
+function renderCustSection(container){
+  container.appendChild(buildCustPipeline());
+  const myTurn=countMyTurnCust(),pending=_custRequests.filter(r=>r.status==='PENDING').length;
+  const verified=_custRequests.filter(r=>r.status==='VERIFIED'||r.status==='REVIEWED').length;
+  const approved=_custRequests.filter(r=>r.status==='APPROVED').length;
+  const rejected=_custRequests.filter(r=>r.status==='REJECTED').length;
+  const sr=document.createElement('div');sr.className='stats-row';
+  sr.innerHTML=`<div class="stat-pill"><span class="stat-n ${isAdmin()?'gold':'green'}">${myTurn}</span><span style="font-size:11px;color:var(--text3)">${isAdmin()?'All Actionable':'My Turn'}</span></div><div class="stat-pill"><span class="stat-n teal">${pending}</span><span style="font-size:11px;color:var(--text3)">New</span></div><div class="stat-pill"><span class="stat-n amber">${verified}</span><span style="font-size:11px;color:var(--text3)">Verified</span></div><div class="stat-pill"><span class="stat-n green">${approved}</span><span style="font-size:11px;color:var(--text3)">In SAP B1</span></div><div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
+  container.appendChild(sr);container.appendChild(buildCustFilterBar());
+  const filtered=getCustFiltered();
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_custFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_custFilter==='MY_TURN'?'All caught up!':'No customer requests'}</p>`;container.appendChild(e);return;}
+  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildCustCard(r)));container.appendChild(grid);
+}
+function buildCustPipeline(){
+  const div=document.createElement('div');div.className='pipeline-header';
+  const label=document.createElement('span');label.className='ph-label';label.textContent=isAdmin()?'Admin — Direct Push':`Customer ${_custApprovalLevels}-Level`;div.appendChild(label);
+  const steps=document.createElement('div');steps.className='ph-steps';
+  const flow=getCustDisplayFlow();
+  const custMap=CUST_APPROVAL_MAP[_custApprovalLevels]||CUST_APPROVAL_MAP[2];
+  const myStatuses=isAdmin()?[]:Object.entries(custMap).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  const labels={PENDING:'Submit',VERIFIED:'Verify\n(Mgr)',REVIEWED:'Review\n(Sr.Mgr)',APPROVED:'Approve\n→ SAP'};
+  flow.forEach((status,idx)=>{
+    const isMine=!isAdmin()&&(myStatuses.includes(status)||(status==='APPROVED'&&_user?.role==='sap_adder'));
+    const sd=document.createElement('div');sd.className='ph-step';
+    const cc=isAdmin()?'mine-admin':isMine?'mine-cust':'';
+    sd.innerHTML=`<div class="ph-circle ${cc}">${idx+1}</div><div class="ph-step-label ${isAdmin()?'mine-admin':isMine?'mine-cust':''}">${(labels[status]||status).replace(/\n/g,'<br/>')}</div>`;
+    steps.appendChild(sd);
+    if(idx<flow.length-1){const a=document.createElement('div');a.className='ph-arrow';steps.appendChild(a);}
+  });
+  div.appendChild(steps);return div;
+}
+function buildCustFilterBar(){
+  const fb=document.createElement('div');fb.className='filter-bar';
+  const mtc=countMyTurnCust();
+  const mb=document.createElement('button');mb.className=`filter-tab my-turn-cust${_custFilter==='MY_TURN'?' on cust':''}`;
+  mb.innerHTML=`✓ ${isAdmin()?'Actionable':'My Turn'}${mtc>0?` <span style="background:var(--green);color:#fff;border-radius:8px;padding:1px 6px;font-size:9px">${mtc}</span>`:''}`;
+  mb.onclick=()=>{_custFilter='MY_TURN';render();};fb.appendChild(mb);
+  ['ALL','PENDING','VERIFIED','REVIEWED','APPROVED','REJECTED'].filter(s=>!(s==='REVIEWED'&&_custApprovalLevels<3)).forEach(s=>{const b=document.createElement('button');b.className=`filter-tab${s===_custFilter?' on cust':''}`;b.textContent=s==='ALL'?'All':getCustStatusLabel(s);b.onclick=()=>{_custFilter=s;render();};fb.appendChild(b);});
+  const rb=document.createElement('button');rb.className='refresh-btn';rb.innerHTML='↻ Refresh';rb.onclick=async()=>{rb.textContent='...';await Promise.all([loadBomRequests(),loadCustRequests(),loadVendRequests()]);render();toast('Refreshed');};fb.appendChild(rb);
+  return fb;
+}
+function getCustFiltered(){return _custRequests.filter(req=>{if(_custFilter==='MY_TURN')return canApproveCust(req.status)&&req.status!=='APPROVED'&&req.status!=='REJECTED';if(_custFilter==='ALL')return true;return req.status===_custFilter;});}
+function buildCustCard(cust){
+  const card=document.createElement('div');
+  const isMyTurn=canApproveCust(cust.status)&&cust.status!=='APPROVED'&&cust.status!=='REJECTED';
+  const isFinal=isFinalCustApproval(cust.status);
+  const flow=getCustDisplayFlow();const currentIdx=flow.indexOf(cust.status==='APPROVED'?'APPROVED':cust.status);
+  const borderStatus=cust.status==='APPROVED'?'CUST_APPROVED':cust.status==='VERIFIED'?'CUST_VERIFIED':cust.status==='REJECTED'?'CUST_REJECTED':'CUST_PENDING';
+  card.className=`req-card border-${borderStatus}${isMyTurn?(isAdmin()?' my-turn-card-admin':' my-turn-card-cust'):''}`;
+  const progressHtml=flow.map((s,i)=>{let cls='';if(cust.status==='REJECTED')cls=i<currentIdx?'done':i===currentIdx?'rejected':'';else if(cust.status==='APPROVED')cls='done';else if(i<currentIdx)cls='done';else if(i===currentIdx)cls='current-cust';return`<div class="rp-step ${cls}"></div>`;}).join('');
+  const ll=(CUST_LEVEL_LABELS[_custApprovalLevels]||CUST_LEVEL_LABELS[2])[cust.status]||'';
+  const tc=isMyTurn?(isAdmin()?'<span class="admin-chip">⚡ Admin Push</span>':'<span class="can-approve-chip">✓ Your Turn</span>'):cust.status==='APPROVED'?'<span class="already-chip">✓ In SAP B1</span>':cust.status!=='REJECTED'?'<span class="waiting-chip">⏳ Waiting</span>':'';
+
+  // Count attachments for badge on card
+  const attachCount = cust.attachments ? Object.values(cust.attachments).reduce((n,v)=>n+(Array.isArray(v)?v.filter(f=>f?.data).length:v?.data?1:0),0) : 0;
+  const attachBadge = attachCount > 0 ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);border-radius:8px;font-size:9px;font-weight:700;color:var(--teal)">📎 ${attachCount} doc${attachCount!==1?'s':''}</span>` : '';
+
+  card.innerHTML=`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><div><span style="font-family:var(--mono);font-size:10.5px;color:var(--teal);font-weight:600">REG-${String(cust.id).padStart(5,'0')}</span></div><div class="rc-badges"><span class="rc-type-badge CUSTOMER">CUSTOMER</span><span class="status-badge sb-${cust.status==='APPROVED'?'CUST_APPROVED':cust.status==='VERIFIED'?'CUST_VERIFIED':cust.status==='PENDING'?'CUST_PENDING':'CUST_REJECTED'}">${getCustStatusLabel(cust.status)}</span>${tc}${attachBadge}${coBadge(cust.company)}</div>${ll&&!isAdmin()?`<div style="font-size:10px;color:var(--text3);margin-top:3px">${esc(ll)}</div>`:''}</div></div><div class="rc-name">${esc(cust.cardName||'—')}</div><div class="rc-meta"><span>${esc(cust.customerType||'B2B')}</span><span class="rc-dot"></span><span>${esc(cust.industry||'—')}</span><span class="rc-dot"></span><span>${esc(cust.mobile||'—')}</span>${cust.submittedAt?`<span class="rc-dot"></span><span>${new Date(cust.submittedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span>`:''}</div><div class="req-progress">${progressHtml}<span class="rp-label">${Math.max(0,currentIdx)}/${flow.length-1}</span></div><div class="rc-actions" id="crc-${cust.id}"></div>`;
+  const actDiv=card.querySelector(`#crc-${cust.id}`);
+  const db=document.createElement('button');db.className='btn b-teal';db.innerHTML='👁 Details';db.onclick=()=>openCustDetail(cust.id);actDiv.appendChild(db);
+  if(isMyTurn){const ab=document.createElement('button');ab.className=`btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}`;ab.innerHTML=isAdmin()?'⚡ Push → SAP B1':isFinal?'🚀 Approve → SAP B1':'✓ Verify & Edit';ab.onclick=e=>{e.stopPropagation();openCustDetail(cust.id);};actDiv.appendChild(ab);if(!isAdmin()){const rb=document.createElement('button');rb.className='btn b-reject';rb.innerHTML='✗ Reject';rb.onclick=e=>{e.stopPropagation();quickCustReject(cust);};actDiv.appendChild(rb);}}
+  return card;
+}
+async function quickCustReject(cust){
+  const comment=window.prompt('Reason for rejection (optional):');if(comment===null)return;
+  try{await api('PATCH',`/customers/${cust.id}/verify`,{approved:false,company:cust.company||_activeCompany});toast('✗ Customer rejected','warn');await loadCustRequests();render();}
+  catch(e){toast(e.message,'err');}
+}
+async function openCustDetail(id){
+  const overlay=document.getElementById('detail-modal'),inner=document.getElementById('modal-inner');
+  overlay.style.display='flex';inner.innerHTML='<div style="padding:60px;text-align:center;color:var(--text3)"><span class="sp"></span></div>';
+  try{const cust=_custRequests.find(c=>c.id==id);const co=cust?.company||_activeCompany;const r=await api('GET',`/customers/${id}?company=${encodeURIComponent(co)}`);buildCustDetailModal(inner,r.data);}
+  catch(e){inner.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${esc(e.message)}</div>`;}
+}
+function buildCustDetailModal(container,cust){
+  const isMyTurn=canApproveCust(cust.status)&&cust.status!=='APPROVED'&&cust.status!=='REJECTED';
+  const isFinal=isFinalCustApproval(cust.status);
+  const isManager=_user?.role==='manager'||isAdmin();const isSapAdder=_user?.role==='sap_adder'||isAdmin();
+  const flow=getCustDisplayFlow();const currentIdx=flow.indexOf(cust.status==='APPROVED'?'APPROVED':cust.status);
+  const custMap=CUST_APPROVAL_MAP[_custApprovalLevels]||CUST_APPROVAL_MAP[2];
+  const myStatuses=isAdmin()?[]:Object.entries(custMap).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  const showMgrFields=isMyTurn&&(isManager||isSapAdder||isAdmin());
+  const bpGroupOpts=_lookupCache.bpGroups.map(g=>`<option value="${esc(g.code)}" ${cust.mgrGroupCode==g.code?'selected':''}>${esc(g.name)} (${esc(g.code)})</option>`).join('');
+  const payTermsOpts=_lookupCache.payTerms.map(p=>`<option value="${esc(p.code)}" ${cust.mgrPayTermsCode==p.code?'selected':''}>${esc(p.name)}</option>`).join('');
+  const salesEmpOpts=_lookupCache.salesEmployees.map(s=>`<option value="${esc(s.code)}" ${cust.mgrSalesPersonCode==s.code?'selected':''}>${esc(s.name)} (${esc(s.code)})</option>`).join('');
+  const arAcctOpts=_lookupCache.arAccounts.map(a=>`<option value="${esc(a.code)}" ${cust.mgrArAccount==a.code?'selected':''}>${esc(a.code)} — ${esc(a.name)}</option>`).join('');
+  const mainGroupOpts=_lookupCache.mainGroups.map(m=>`<option value="${esc(m.code)}" ${cust.mgrMainGroup==m.code?'selected':''}>${esc(m.name)}</option>`).join('');
+  const chainOpts=_lookupCache.chains.map(c=>`<option value="${esc(c.code)}" ${cust.mgrChain==c.code?'selected':''}>${esc(c.name)}</option>`).join('');
+  const statusBadgeClass=cust.status==='APPROVED'?'CUST_APPROVED':cust.status==='VERIFIED'?'CUST_VERIFIED':cust.status==='PENDING'?'CUST_PENDING':'CUST_REJECTED';
+
+  // Count attachments
+  const attachCount = cust.attachments ? Object.values(cust.attachments).reduce((n,v)=>n+(Array.isArray(v)?v.filter(f=>f?.data).length:v?.data?1:0),0) : 0;
+  const attachTabLabel = `📎 Attachments${attachCount>0?` (${attachCount})`:''}`;
+
+  container.innerHTML=`<div class="modal-header"><div class="modal-title"><span class="rc-type-badge CUSTOMER">CUSTOMER</span><strong style="color:var(--teal)">REG-${String(cust.id).padStart(5,'0')}</strong><span class="status-badge sb-${statusBadgeClass}">${getCustStatusLabel(cust.status)}</span>${isAdmin()&&isMyTurn?'<span class="admin-chip">⚡ Admin</span>':''}</div><button class="modal-close" id="cmc1">✕</button></div><div class="modal-body"><div class="pipeline-mini">${flow.map((s,i)=>{const im=!isAdmin()&&myStatuses.includes(s);let cc='';if(cust.status==='REJECTED')cc=i<currentIdx?'done':i===currentIdx?'rejected-step':'';else if(cust.status==='APPROVED')cc='done';else if(i<currentIdx)cc='done';else if(i===currentIdx)cc='current-cust';const lbl={PENDING:'Submit',VERIFIED:'Verify',REVIEWED:'Sr.Review',APPROVED:'→ SAP B1'}[s]||s;const lc=cc==='done'?'done':(im&&i===currentIdx?'mine-cust':'');return`<div class="pm-step"><div class="pm-circle ${cc}">${cc==='done'?'✓':cc==='rejected-step'?'✗':i+1}</div><div class="pm-label ${lc}">${lbl}</div></div>${i<flow.length-1?`<div class="pm-arrow ${i<currentIdx||cust.status==='APPROVED'?'done':''}"></div>`:''}`;}).join('')}</div>${isAdmin()&&isMyTurn?`<div class="alert al-gold">⚡ <strong>Admin mode:</strong> You can approve and push this customer directly to SAP B1.</div>`:''}<div class="modal-tabs">${showMgrFields?`<button class="modal-tab active" data-tab="tab-cust-details">📋 Customer Details</button><button class="modal-tab" data-tab="tab-cust-sap">⚙ SAP Configuration</button><button class="modal-tab" data-tab="tab-cust-attach">${attachTabLabel}</button><button class="modal-tab" data-tab="tab-cust-history">📜 History</button>`:`<button class="modal-tab active" data-tab="tab-cust-details">📋 Details</button><button class="modal-tab" data-tab="tab-cust-attach">${attachTabLabel}</button><button class="modal-tab" data-tab="tab-cust-history">📜 History</button>`}</div><div class="modal-tab-pane active" id="tab-cust-details">${showMgrFields?`<div class="mgr-section"><div class="mgr-section-title blue">🏢 Business Information</div><div class="mgr-grid"><div class="form-row"><label class="form-label">Company Name *</label><input class="form-input" id="ed-cardName" value="${esc(cust.cardName||'')}"/></div><div class="form-row"><label class="form-label">Customer Type</label><select class="form-select" id="ed-customerType">${['B2B','B2C','Government','Distributor','Retailer'].map(v=>`<option ${cust.customerType===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="form-row"><label class="form-label">Industry</label><input class="form-input" id="ed-industry" value="${esc(cust.industry||'')}"/></div><div class="form-row"><label class="form-label">Mobile *</label><input class="form-input" id="ed-mobile" value="${esc(cust.mobile||'')}"/></div><div class="form-row"><label class="form-label">Email *</label><input class="form-input" id="ed-email" type="email" value="${esc(cust.email||'')}"/></div><div class="form-row"><label class="form-label">Foreign Name</label><input class="form-input" id="ed-foreignName" value="${esc(cust.foreignName||'')}"/></div></div></div><div class="mgr-section"><div class="mgr-section-title blue">📍 Billing Address</div><div class="mgr-grid g3"><div class="form-row" style="grid-column:span 3"><label class="form-label">Street *</label><input class="form-input" id="ed-billStreet" value="${esc(cust.billStreet||'')}"/></div><div class="form-row"><label class="form-label">City *</label><input class="form-input" id="ed-billCity" value="${esc(cust.billCity||'')}"/></div><div class="form-row"><label class="form-label">State</label><input class="form-input" id="ed-billState" value="${esc(cust.billState||'')}"/></div><div class="form-row"><label class="form-label">PIN</label><input class="form-input" id="ed-billZip" value="${esc(cust.billZip||'')}"/></div></div></div><div class="mgr-section"><div class="mgr-section-title blue">📝 Remarks</div><div class="form-row"><textarea class="comment-area" id="ed-remarks">${esc(cust.remarks||'')}</textarea></div></div>`:`<div class="detail-sec"><table class="cust-detail-table"><tr><td>Company Name</td><td><strong>${esc(cust.cardName||'—')}</strong></td></tr><tr><td>Customer Type</td><td>${esc(cust.customerType||'B2B')}</td></tr><tr><td>Industry</td><td>${esc(cust.industry||'—')}</td></tr><tr><td>Mobile</td><td>${esc(cust.mobile||'—')}</td></tr><tr><td>Email</td><td>${esc(cust.email||'—')}</td></tr><tr><td>GSTIN</td><td style="font-family:var(--mono);color:var(--blue)">${esc(cust.gstin||'—')}</td></tr><tr><td>PAN</td><td style="font-family:var(--mono)">${esc(cust.pan||'—')}</td></tr><tr><td>Billing Address</td><td>${esc(cust.billStreet||'')}${cust.billCity?', '+esc(cust.billCity):''}${cust.billState?', '+esc(cust.billState):''}</td></tr>${cust.sapCardCode?`<tr><td>SAP Card Code</td><td style="font-family:var(--mono);color:var(--green)">✓ ${esc(cust.sapCardCode)}</td></tr>`:''}</table></div>`}</div><div class="modal-tab-pane" id="tab-cust-sap">${showMgrFields?`<div class="mgr-section"><div class="mgr-section-title">🏷 Card Code & Group</div><div class="mgr-grid"><div class="form-row"><label class="form-label">Card Code Prefix</label><input class="form-input" id="mgr-prefix" value="${esc(cust.mgrCardCodePrefix||'CUSTA')}"/></div><div class="form-row"><label class="form-label">BP Group</label><select class="form-select" id="mgr-groupCode"><option value="">-- Select Group --</option>${bpGroupOpts}</select></div></div></div><div class="mgr-section"><div class="mgr-section-title">💰 Financial Settings</div><div class="mgr-grid g3"><div class="form-row"><label class="form-label">AR Account</label><select class="form-select" id="mgr-arAccount"><option value="">-- AR Account --</option>${arAcctOpts}</select></div><div class="form-row"><label class="form-label">Payment Terms</label><select class="form-select" id="mgr-payTermsCode"><option value="">-- Pay Terms --</option>${payTermsOpts}</select></div><div class="form-row"><label class="form-label">Credit Limit (₹)</label><input class="form-input" id="mgr-creditLimit" type="number" min="0" value="${cust.mgrCreditLimit||0}"/></div></div></div><div class="mgr-section"><div class="mgr-section-title">👤 Sales & Territory</div><div class="mgr-grid"><div class="form-row"><label class="form-label">Sales Employee</label><select class="form-select" id="mgr-salesPersonCode"><option value="">-- Select --</option>${salesEmpOpts}</select></div><div class="form-row"><label class="form-label">Territory</label><input class="form-input" id="mgr-territory" value="${esc(cust.mgrTerritory||'')}"/></div><div class="form-row"><label class="form-label">Main Group</label><select class="form-select" id="mgr-mainGroup"><option value="">-- Select --</option>${mainGroupOpts}</select></div><div class="form-row"><label class="form-label">Chain</label><select class="form-select" id="mgr-chain"><option value="">-- Select --</option>${chainOpts}</select></div></div></div><div class="mgr-section"><div class="mgr-section-title">📝 Internal Notes</div><div class="form-row"><textarea class="comment-area" id="mgr-notes">${esc(cust.mgrNotes||'')}</textarea></div></div>`:'<div class="alert al-info">No SAP configuration set yet.</div>'}</div>
+
+  <!-- ══ ATTACHMENT TAB ═══════════════════════════════════════════ -->
+  <div class="modal-tab-pane" id="tab-cust-attach">
+    ${buildAttachmentTabHTML(cust.attachments, cust.sapAttachmentEntry, cust.sapCardCode, 'teal')}
+  </div>
+
+  <div class="modal-tab-pane" id="tab-cust-history"><div class="log-entry"><div class="log-dot submit">📝</div><div class="log-info"><div class="log-who">${esc(cust.submittedByName||cust.submittedBy||'Customer')}</div><div class="log-what">Form submitted · ${cust.submittedAt?new Date(cust.submittedAt).toLocaleString('en-IN'):'—'}</div></div></div>${cust.verifiedAt?`<div class="log-entry"><div class="log-dot approve">✓</div><div class="log-info"><div class="log-who">${esc(cust.verifiedBy||'Manager')}</div><div class="log-what">Verified · ${new Date(cust.verifiedAt).toLocaleString('en-IN')}</div></div></div>`:''} ${cust.approvedAt?`<div class="log-entry"><div class="log-dot push">🚀</div><div class="log-info"><div class="log-who" style="color:var(--green)">${esc(cust.approvedBy||'SAP Adder')}</div><div class="log-what">→ SAP B1 as <strong style="color:var(--green)">${esc(cust.sapCardCode||'')}</strong> · ${new Date(cust.approvedAt).toLocaleString('en-IN')}</div></div></div>`:''}</div>${isMyTurn?`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px">Your Decision</div>${isAdmin()?`<div class="alert al-gold">⚡ <strong>Admin:</strong> Approving will immediately create in SAP B1.</div>`:isFinal?`<div class="alert al-green">🚀 <strong>Final approval.</strong> Approving pushes to SAP B1.</div>`:`<div class="alert al-teal">ℹ Verifying will save edits and forward to next approver.</div>`}<label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);display:block;margin-bottom:7px">Comment (optional)</label><textarea class="comment-area" id="cust-modal-comment" style="min-height:55px" placeholder="Add notes…"></textarea></div>`:cust.status==='APPROVED'?`<div class="alert al-green" style="margin-top:12px">✓ Customer created in SAP B1 as <strong>${esc(cust.sapCardCode||'')}</strong>.</div>`:`<div class="alert al-info" style="margin-top:12px">⏳ Waiting for the appropriate approver.</div>`}</div><div class="modal-footer">${isMyTurn?`<button class="btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}" id="cust-modal-approve"><span id="cust-modal-sp" style="display:none" class="sp"></span>${isAdmin()?'⚡ Approve → SAP B1':isFinal?'🚀 Approve → SAP B1':'✓ Verify & Save'}</button><button class="btn b-reject" id="cust-modal-reject">✗ Reject</button>`:''}<button class="btn" style="border:1px solid var(--border2);color:var(--text2);background:none;margin-left:auto" id="cmc2">Close</button></div>`;
+  container.querySelectorAll('.modal-tab').forEach(tab=>{tab.addEventListener('click',()=>{container.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));container.querySelectorAll('.modal-tab-pane').forEach(p=>p.classList.remove('active'));tab.classList.add('active');const target=container.querySelector('#'+tab.dataset.tab);if(target)target.classList.add('active');});});
+  const closeModal=()=>{document.getElementById('detail-modal').style.display='none';};
+  container.querySelector('#cmc1').onclick=closeModal;container.querySelector('#cmc2').onclick=closeModal;
+  document.getElementById('detail-modal').onclick=e=>{if(e.target.id==='detail-modal')closeModal();};
+  function collectCustFields(){
+    const f={};if(!showMgrFields)return f;
+    const get=id=>container.querySelector('#'+id)?.value||'';
+    f.cardName=get('ed-cardName');f.industry=get('ed-industry');f.mobile=get('ed-mobile');f.email=get('ed-email');
+    f.billStreet=get('ed-billStreet');f.billCity=get('ed-billCity');f.billState=get('ed-billState');f.billZip=get('ed-billZip');
+    f.remarks=get('ed-remarks');f.foreignName=get('ed-foreignName');
+    const gc=get('mgr-groupCode');const ar=get('mgr-arAccount')||cust.mgrArAccount||'1101001';const pc=get('mgr-payTermsCode');const sc=get('mgr-salesPersonCode');
+    f.mgrCardCodePrefix=get('mgr-prefix')||'CUSTA';f.mgrGroupCode=gc||null;
+    f.mgrGroup=_lookupCache.bpGroups.find(g=>String(g.code)===String(gc))?.name||gc;
+    f.mgrArAccount=ar;f.mgrArAccountName=_lookupCache.arAccounts.find(a=>a.code===ar)?.name||'';
+    f.mgrPayTermsCode=pc||null;f.mgrSalesPersonCode=sc||null;f.mgrCreditLimit=parseFloat(get('mgr-creditLimit'))||0;
+    f.mgrTerritory=get('mgr-territory');f.mgrMainGroup=get('mgr-mainGroup')||null;f.mgrChain=get('mgr-chain')||null;
+    f.mgrNotes=get('mgr-notes');return f;
+  }
+  container.querySelector('#cust-modal-approve')?.addEventListener('click',async()=>{
+    const btn=container.querySelector('#cust-modal-approve'),sp=container.querySelector('#cust-modal-sp');
+    btn.disabled=true;sp.style.display='inline-block';
+    const af=collectCustFields();
+    const _co=cust.company||_activeCompany;
+    try{if(isAdmin()){await api('PATCH',`/customers/${cust.id}/admin-approve`,{approved:true,company:_co,...af});toast('⚡ Customer pushed to SAP B1!');}else if(isFinal){await api('PATCH',`/customers/${cust.id}/approve`,{approved:true,company:_co,...af});toast('🚀 Customer pushed to SAP B1!');}else{await api('PATCH',`/customers/${cust.id}/verify`,{approved:true,company:_co,...af});toast('✓ Customer verified — forwarded');}closeModal();await loadCustRequests();render();}
+    catch(e){toast(e.message,'err');btn.disabled=false;sp.style.display='none';}
+  });
+  container.querySelector('#cust-modal-reject')?.addEventListener('click',async()=>{
+    const btn=container.querySelector('#cust-modal-reject');btn.disabled=true;
+    const _co=cust.company||_activeCompany;
+    try{const ep=(isFinal&&!isAdmin())?`/customers/${cust.id}/approve`:`/customers/${cust.id}/verify`;await api('PATCH',ep,{approved:false,company:_co});toast('✗ Customer rejected','warn');closeModal();await loadCustRequests();render();}
+    catch(e){toast(e.message,'err');btn.disabled=false;}
+  });
+}
+
+// ════════════════════════════════════════
+//  VENDOR SECTION
+// ════════════════════════════════════════
+function renderVendSection(container){
+  container.appendChild(buildVendPipeline());
+  const myTurn=countMyTurnVend(),pending=_vendRequests.filter(r=>r.status==='PENDING').length;
+  const verified=_vendRequests.filter(r=>r.status==='VERIFIED').length;
+  const approved=_vendRequests.filter(r=>r.status==='APPROVED').length;
+  const rejected=_vendRequests.filter(r=>r.status==='REJECTED').length;
+  const sr=document.createElement('div');sr.className='stats-row';
+  sr.innerHTML=`<div class="stat-pill"><span class="stat-n ${isAdmin()?'gold':'green'}">${myTurn}</span><span style="font-size:11px;color:var(--text3)">${isAdmin()?'All Actionable':'My Turn'}</span></div><div class="stat-pill"><span class="stat-n orange">${pending}</span><span style="font-size:11px;color:var(--text3)">New</span></div><div class="stat-pill"><span class="stat-n amber">${verified}</span><span style="font-size:11px;color:var(--text3)">Verified</span></div><div class="stat-pill"><span class="stat-n green">${approved}</span><span style="font-size:11px;color:var(--text3)">In SAP B1</span></div><div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
+  container.appendChild(sr);container.appendChild(buildVendFilterBar());
+  const filtered=getVendFiltered();
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_vendFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_vendFilter==='MY_TURN'?'All caught up!':'No vendor requests'}</p>`;container.appendChild(e);return;}
+  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildVendCard(r)));container.appendChild(grid);
+}
+function buildVendPipeline(){
+  const div=document.createElement('div');div.className='pipeline-header';
+  const label=document.createElement('span');label.className='ph-label';label.textContent=isAdmin()?'Admin — Direct Push':'Vendor 2-Level';div.appendChild(label);
+  const steps=document.createElement('div');steps.className='ph-steps';
+  const myStatuses=isAdmin()?[]:Object.entries(VEND_APPROVAL_MAP).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  const labels={PENDING:'Submit',VERIFIED:'Verify\n(Mgr)',APPROVED:'Approve\n→ SAP'};
+  VEND_STATUS_FLOW.forEach((status,idx)=>{
+    const isMine=!isAdmin()&&(myStatuses.includes(status)||(status==='APPROVED'&&_user?.role==='sap_adder'));
+    const sd=document.createElement('div');sd.className='ph-step';
+    const cc=isAdmin()?'mine-admin':isMine?'mine-vend':'';
+    sd.innerHTML=`<div class="ph-circle ${cc}">${idx+1}</div><div class="ph-step-label ${isAdmin()?'mine-admin':isMine?'mine-vend':''}">${(labels[status]||status).replace(/\n/g,'<br/>')}</div>`;
+    steps.appendChild(sd);
+    if(idx<VEND_STATUS_FLOW.length-1){const a=document.createElement('div');a.className='ph-arrow';steps.appendChild(a);}
+  });
+  div.appendChild(steps);return div;
+}
+function buildVendFilterBar(){
+  const fb=document.createElement('div');fb.className='filter-bar';
+  const mtc=countMyTurnVend();
+  const mb=document.createElement('button');mb.className=`filter-tab my-turn-vend${_vendFilter==='MY_TURN'?' on vend':''}`;
+  mb.innerHTML=`✓ ${isAdmin()?'Actionable':'My Turn'}${mtc>0?` <span style="background:var(--green);color:#fff;border-radius:8px;padding:1px 6px;font-size:9px">${mtc}</span>`:''}`;
+  mb.onclick=()=>{_vendFilter='MY_TURN';render();};fb.appendChild(mb);
+  ['ALL','PENDING','VERIFIED','APPROVED','REJECTED'].forEach(s=>{const b=document.createElement('button');b.className=`filter-tab${s===_vendFilter?' on vend':''}`;b.textContent=s==='ALL'?'All':getVendStatusLabel(s);b.onclick=()=>{_vendFilter=s;render();};fb.appendChild(b);});
+  const rb=document.createElement('button');rb.className='refresh-btn';rb.innerHTML='↻ Refresh';rb.onclick=async()=>{rb.textContent='...';await Promise.all([loadBomRequests(),loadCustRequests(),loadVendRequests()]);render();toast('Refreshed');};fb.appendChild(rb);
+  return fb;
+}
+function getVendFiltered(){return _vendRequests.filter(req=>{if(_vendFilter==='MY_TURN')return canApproveVend(req.status)&&req.status!=='APPROVED'&&req.status!=='REJECTED';if(_vendFilter==='ALL')return true;return req.status===_vendFilter;});}
+function buildVendCard(vend){
+  const card=document.createElement('div');
+  const isMyTurn=canApproveVend(vend.status)&&vend.status!=='APPROVED'&&vend.status!=='REJECTED';
+  const isFinal=isFinalVendApproval(vend.status);
+  const flow=VEND_STATUS_FLOW;const currentIdx=flow.indexOf(vend.status==='APPROVED'?'APPROVED':vend.status);
+  const borderStatus=vend.status==='APPROVED'?'VEND_APPROVED':vend.status==='VERIFIED'?'VEND_VERIFIED':vend.status==='REJECTED'?'VEND_REJECTED':'VEND_PENDING';
+  card.className=`req-card border-${borderStatus}${isMyTurn?(isAdmin()?' my-turn-card-admin':' my-turn-card-vend'):''}`;
+  const progressHtml=flow.map((s,i)=>{let cls='';if(vend.status==='REJECTED')cls=i<currentIdx?'done':i===currentIdx?'rejected':'';else if(vend.status==='APPROVED')cls='done';else if(i<currentIdx)cls='done';else if(i===currentIdx)cls='current-vend';return`<div class="rp-step ${cls}"></div>`;}).join('');
+  const ll=VEND_LEVEL_LABELS[vend.status]||'';
+  const vtLabel={SUPPLIER:'Supplier',SERVICE:'Service Provider',BOTH:'Supplier+Service'}[vend.vendorType]||vend.vendorType||'SUPPLIER';
+  const tc=isMyTurn?(isAdmin()?'<span class="admin-chip">⚡ Admin Push</span>':'<span class="can-approve-chip">✓ Your Turn</span>'):vend.status==='APPROVED'?'<span class="already-chip">✓ In SAP B1</span>':vend.status!=='REJECTED'?'<span class="waiting-chip">⏳ Waiting</span>':'';
+
+  // Attachment count badge for card
+  const attachCount = vend.attachments ? Object.values(vend.attachments).reduce((n,v)=>n+(Array.isArray(v)?v.filter(f=>f?.data).length:v?.data?1:0),0) : 0;
+  const attachBadge = attachCount > 0 ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:8px;font-size:9px;font-weight:700;color:var(--orange)">📎 ${attachCount} doc${attachCount!==1?'s':''}</span>` : '';
+
+  card.innerHTML=`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><div style="flex:1;min-width:0"><div><span class="rc-code orange">VEND-${String(vend.id).padStart(5,'0')}</span></div><div class="rc-badges"><span class="rc-type-badge VENDOR">VENDOR</span><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(249,115,22,.1);color:var(--orange)">${vtLabel}</span><span class="status-badge sb-VEND_${vend.status}">${getVendStatusLabel(vend.status)}</span>${tc}${attachBadge}${coBadge(vend.company)}</div>${ll&&!isAdmin()?`<div style="font-size:10px;color:var(--text3);margin-top:3px">${esc(ll)}</div>`:''}</div></div><div class="rc-name">${esc(vend.cardName||'—')}</div><div class="rc-meta"><span>${esc(vend.industry||'—')}</span><span class="rc-dot"></span><span>${esc(vend.mobile||'—')}</span><span class="rc-dot"></span><span>${esc(vend.gstin||'No GSTIN')}</span>${vend.submittedAt?`<span class="rc-dot"></span><span>${new Date(vend.submittedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span>`:''}</div><div class="req-progress">${progressHtml}<span class="rp-label">${Math.max(0,currentIdx)}/${flow.length-1}</span></div><div class="rc-actions" id="vrc-${vend.id}"></div>`;
+  const actDiv=card.querySelector(`#vrc-${vend.id}`);
+  const db=document.createElement('button');db.className='btn b-orange';db.innerHTML='👁 Details';db.onclick=()=>openVendDetail(vend.id);actDiv.appendChild(db);
+  if(isMyTurn){const ab=document.createElement('button');ab.className=`btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}`;ab.innerHTML=isAdmin()?'⚡ Push → SAP B1':isFinal?'🚀 Approve → SAP B1':'✓ Verify & Edit';ab.onclick=e=>{e.stopPropagation();openVendDetail(vend.id);};actDiv.appendChild(ab);if(!isAdmin()){const rb=document.createElement('button');rb.className='btn b-reject';rb.innerHTML='✗ Reject';rb.onclick=e=>{e.stopPropagation();quickVendReject(vend);};actDiv.appendChild(rb);}}
+  return card;
+}
+async function quickVendReject(vend){
+  const comment=window.prompt('Reason for rejection (optional):');if(comment===null)return;
+  try{await api('PATCH',`/vendors/${vend.id}/verify`,{approved:false,company:vend.company||_activeCompany});toast('✗ Vendor rejected','warn');await loadVendRequests();render();}
+  catch(e){toast(e.message,'err');}
+}
+async function openVendDetail(id){
+  const overlay=document.getElementById('detail-modal'),inner=document.getElementById('modal-inner');
+  overlay.style.display='flex';inner.innerHTML='<div style="padding:60px;text-align:center;color:var(--text3)"><span class="sp"></span></div>';
+  try{const vr=_vendRequests.find(v=>v.id==id);const co=vr?.company||_activeCompany;const r=await api('GET',`/vendors/${id}?company=${encodeURIComponent(co)}`);buildVendDetailModal(inner,r.data);}
+  catch(e){inner.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${esc(e.message)}</div>`;}
+}
+
+// ════════════════════════════════════════
+//  VENDOR DETAIL MODAL
+// ════════════════════════════════════════
+function buildVendDetailModal(container, vend) {
+  const isMyTurn   = canApproveVend(vend.status) && vend.status !== 'APPROVED' && vend.status !== 'REJECTED';
+  const isFinal    = isFinalVendApproval(vend.status);
+  const isManager  = _user?.role === 'manager' || isAdmin();
+  const isSapAdder = _user?.role === 'sap_adder' || isAdmin();
+  const flow       = VEND_STATUS_FLOW;
+  const currentIdx = flow.indexOf(vend.status === 'APPROVED' ? 'APPROVED' : vend.status);
+  const myStatuses = isAdmin() ? [] : Object.entries(VEND_APPROVAL_MAP).filter(([,r])=>r===_user?.role).map(([s])=>s);
+  const showMgrFields = isMyTurn && (isManager || isSapAdder || isAdmin());
+  const vtLabel = {SUPPLIER:'Supplier',SERVICE:'Service Provider',BOTH:'Supplier+Service'}[vend.vendorType]||vend.vendorType||'SUPPLIER';
+  const bankCount = (_lookupCache.banks||[]).length;
+
+  // Count attachments for tab label
+  const attachCount = vend.attachments ? Object.values(vend.attachments).reduce((n,v)=>n+(Array.isArray(v)?v.filter(f=>f?.data).length:v?.data?1:0),0) : 0;
+  const attachTabLabel = `📎 Attachments${attachCount>0?` (${attachCount})`:''}`;
+
+  const vendBpGroupOpts = _lookupCache.vendBpGroups.map(g=>`<option value="${esc(g.code)}" ${vend.mgrGroupCode==g.code?'selected':''}>${esc(g.name)} (${esc(g.code)})</option>`).join('');
+  const vendPayTermsOpts = _lookupCache.vendPayTerms.map(p=>`<option value="${esc(p.code)}" ${vend.mgrPayTermsCode==p.code?'selected':''}>${esc(p.name)} (${esc(p.code)})</option>`).join('');
+  const apAcctOpts = _lookupCache.apAccounts.map(a=>`<option value="${esc(a.code)}" ${(vend.mgrPurchaseAccount||'2110005')==a.code?'selected':''}>${esc(a.code)} — ${esc(a.name)}</option>`).join('');
+  const mainGroupOpts = _lookupCache.vendMainGroups.map(m=>`<option value="${esc(m.code)}" ${vend.mgrMainGroup==m.code?'selected':''}>${esc(m.name)}</option>`).join('');
+  const chainOpts = _lookupCache.vendChains.map(c=>`<option value="${esc(c.code)}" ${vend.mgrChain==c.code?'selected':''}>${esc(c.name)}</option>`).join('');
+  const salesEmpOpts = _lookupCache.vendSalesEmployees.map(s=>`<option value="${esc(s.code)}" ${vend.mgrSalesPersonCode==s.code?'selected':''}>${esc(s.name)} (${esc(s.code)})</option>`).join('');
+
+  function buildBankAccountRows(bankAccounts, showMgr) {
+    if (!bankAccounts?.length) return '<div class="alert al-amber">⚠ No bank account details provided.</div>';
+    return bankAccounts.map((b, i) => {
+      const currentBankCode = b.bankCode || b.mgrBankCode || '';
+      const bankOpts = (_lookupCache.banks||[]).map(bk=>`<option value="${esc(bk.code)}" ${currentBankCode===bk.code?'selected':''}>${esc(bk.name)} (${esc(bk.code)})</option>`).join('');
+      const codeStatus = currentBankCode
+        ? `<span class="bank-code-badge resolved">✓ ${esc(currentBankCode)}</span>`
+        : bankCount > 0 ? `<span class="bank-code-badge missing">⚠ Select Bank Code</span>` : `<span class="bank-code-badge missing">⚠ Enter manually</span>`;
+      return `<div class="bank-approval-block">
+        <div class="bank-approval-title">🏦 Bank Account ${i+1}${b.isPrimary?' (Primary)':''} ${codeStatus}</div>
+        <table class="vend-detail-table" style="margin-bottom:${showMgr?'10px':'0'}">
+          <tr><td>Bank Name</td><td><strong>${esc(b.bankName||'—')}</strong></td></tr>
+          <tr><td>Branch</td><td>${esc(b.branch||'—')}</td></tr>
+          <tr><td>Account No.</td><td style="font-family:var(--mono);color:var(--orange)">${esc(b.accNo||'—')}</td></tr>
+          <tr><td>IFSC Code</td><td style="font-family:var(--mono)">${esc(b.ifsc||'—')}</td></tr>
+          <tr><td>Account Type</td><td>${esc(b.accountType||'Current')}</td></tr>
+          ${b.swiftCode?`<tr><td>SWIFT</td><td style="font-family:var(--mono)">${esc(b.swiftCode)}</td></tr>`:''}
+        </table>
+        ${showMgr ? `<div class="form-row">
+          <label class="form-label" style="color:var(--orange)">★ SAP Bank Code <span style="color:var(--red)">*Required</span></label>
+          ${bankCount > 0
+            ? `<select class="form-select orange-field" id="bank-code-sel-${i}"><option value="">-- Select Bank Code --</option>${bankOpts}</select>`
+            : `<input class="form-input orange-field" id="bank-code-sel-${i}" placeholder="e.g. HDFC, SBI" value="${esc(currentBankCode)}" style="font-family:var(--mono)"/><div style="font-size:10px;color:var(--red);margin-top:3px">⚠ Bank master not loaded — enter BankCode manually.</div>`
+          }
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  const sapConfigTab = showMgrFields ? `
+    <div class="modal-tab-pane" id="tab-vend-sap">
+      <div class="mgr-section"><div class="mgr-section-title">🏷 Card Code &amp; BP Group</div><div class="mgr-grid">
+        <div class="form-row"><label class="form-label">Card Code Prefix</label><input class="form-input orange-field" id="vmgr-prefix" value="${esc(vend.mgrCardCodePrefix||'VENDA')}"/><div style="font-size:10px;color:var(--text3);margin-top:3px">Auto-generated VENDA000001…</div></div>
+        <div class="form-row"><label class="form-label">BP Group (Vendor)</label>${_lookupCache.vendBpGroups.length?`<select class="form-select orange-field" id="vmgr-groupCode"><option value="">-- Select --</option>${vendBpGroupOpts}</select>`:`<input class="form-input orange-field" id="vmgr-groupCode" placeholder="Group Code" value="${esc(vend.mgrGroupCode||'')}"/>`}</div>
+      </div></div>
+      <div class="mgr-section"><div class="mgr-section-title">💰 AP Account &amp; Payment Terms</div><div class="mgr-grid">
+        <div class="form-row"><label class="form-label">AP Account <span style="color:var(--red)">*</span></label>${_lookupCache.apAccounts.length?`<select class="form-select orange-field" id="vmgr-apAccount"><option value="">-- Select AP --</option><option value="2110005" ${(vend.mgrPurchaseAccount||'2110005')==='2110005'?'selected':''}>2110005 — SUNDRY CREDITOR</option>${apAcctOpts}</select>`:`<input class="form-input orange-field" id="vmgr-apAccount" value="${esc(vend.mgrPurchaseAccount||'2110005')}" style="font-family:var(--mono)"/>`}</div>
+        <div class="form-row"><label class="form-label">Payment Terms</label>${_lookupCache.vendPayTerms.length?`<select class="form-select orange-field" id="vmgr-payTermsCode"><option value="">-- Select --</option>${vendPayTermsOpts}</select>`:`<input class="form-input orange-field" id="vmgr-payTermsCode" value="${esc(vend.mgrPayTermsCode||'')}"/>`}</div>
+      </div></div>
+      <div class="mgr-section"><div class="mgr-section-title">👤 Sales &amp; Classification</div><div class="mgr-grid">
+        <div class="form-row"><label class="form-label">Sales Employee</label>${_lookupCache.vendSalesEmployees.length?`<select class="form-select orange-field" id="vmgr-salesPersonCode"><option value="">-- Select --</option>${salesEmpOpts}</select>`:`<input class="form-input orange-field" id="vmgr-salesPersonCode" value="${esc(vend.mgrSalesPersonCode||'')}"/>`}</div>
+        <div class="form-row"><label class="form-label">Main Group (U_Main_Group)</label>${_lookupCache.vendMainGroups.length?`<select class="form-select orange-field" id="vmgr-mainGroup"><option value="">-- Select --</option>${mainGroupOpts}</select>`:`<input class="form-input orange-field" id="vmgr-mainGroup" value="${esc(vend.mgrMainGroup||'')}"/>`}</div>
+        <div class="form-row"><label class="form-label">Chain (U_Chain)</label>${_lookupCache.vendChains.length?`<select class="form-select orange-field" id="vmgr-chain"><option value="">-- Select --</option>${chainOpts}</select>`:`<input class="form-input orange-field" id="vmgr-chain" value="${esc(vend.mgrChain||'')}"/>`}</div>
+        <div class="form-row"><label class="form-label">Credit Limit (₹)</label><input class="form-input orange-field" id="vmgr-creditLimit" type="number" min="0" value="${vend.mgrCreditLimit||0}"/></div>
+        <div class="form-row"><label class="form-label">Currency</label><select class="form-select orange-field" id="vmgr-currency">${['Indian Rupee','US Dollar','Euro','British Pound','UAE Dirham'].map(v=>`<option ${(vend.mgrCurrency||'Indian Rupee')===v?'selected':''}>${v}</option>`).join('')}</select></div>
+      </div></div>
+      <div class="mgr-section"><div class="mgr-section-title">📝 Internal Notes</div><div class="form-row"><textarea class="comment-area" id="vmgr-notes">${esc(vend.mgrNotes||'')}</textarea></div></div>
+    </div>` : '';
+
+  container.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="rc-type-badge VENDOR">VENDOR</span>
+        <strong style="color:var(--orange)">VEND-${String(vend.id).padStart(5,'0')}</strong>
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(249,115,22,.1);color:var(--orange)">${vtLabel}</span>
+        <span class="status-badge sb-VEND_${vend.status}">${getVendStatusLabel(vend.status)}</span>
+        ${isAdmin()&&isMyTurn?'<span class="admin-chip">⚡ Admin</span>':''}
+      </div>
+      <button class="modal-close" id="vmc1">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="pipeline-mini">
+        ${flow.map((s,i)=>{
+          const im=!isAdmin()&&myStatuses.includes(s);
+          let cc='';
+          if(vend.status==='REJECTED')cc=i<currentIdx?'done':i===currentIdx?'rejected-step':'';
+          else if(vend.status==='APPROVED')cc='done';
+          else if(i<currentIdx)cc='done';
+          else if(i===currentIdx)cc='current-vend';
+          const lbl={PENDING:'Submit',VERIFIED:'Verify',APPROVED:'→ SAP B1'}[s]||s;
+          const lc=cc==='done'?'done':(im&&i===currentIdx?'mine-vend':'');
+          return `<div class="pm-step"><div class="pm-circle ${cc}">${cc==='done'?'✓':cc==='rejected-step'?'✗':i+1}</div>
+            <div class="pm-label ${lc}">${lbl}</div></div>${i<flow.length-1?`<div class="pm-arrow ${i<currentIdx||vend.status==='APPROVED'?'done':''}"></div>`:''}`;
+        }).join('')}
+      </div>
+      ${isAdmin()&&isMyTurn?`<div class="alert al-gold">⚡ <strong>Admin mode:</strong> You can approve and push this vendor directly to SAP B1.</div>`:''}
+      ${!isAdmin()&&VEND_LEVEL_LABELS[vend.status]?`<div class="alert al-orange">⏳ <strong>Current Stage:</strong> ${esc(VEND_LEVEL_LABELS[vend.status])}</div>`:''}
+      ${bankCount===0&&showMgrFields?`<div class="alert al-red">⚠ <strong>Bank Master not loaded.</strong> Check ODSC table access or enter bank codes manually.</div>`:''}
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="tab-vend-details">🏭 Vendor Details</button>
+        <button class="modal-tab" data-tab="tab-vend-bank">🏦 Bank Accounts</button>
+        ${showMgrFields?'<button class="modal-tab" data-tab="tab-vend-sap">⚙ SAP Config</button>':''}
+        <button class="modal-tab" data-tab="tab-vend-attach">${attachTabLabel}</button>
+        <button class="modal-tab" data-tab="tab-vend-history">📜 History</button>
+      </div>
+
+      <!-- TAB: VENDOR DETAILS -->
+      <div class="modal-tab-pane active" id="tab-vend-details">
+        ${showMgrFields ? `
+        <div class="mgr-section">
+          <div class="mgr-section-title orange">🏢 Business Information</div>
+          <div class="mgr-grid">
+            <div class="form-row"><label class="form-label">Vendor Name *</label><input class="form-input" id="vd-cardName" value="${esc(vend.cardName||'')}"/></div>
+            <div class="form-row"><label class="form-label">Vendor Type</label><select class="form-select" id="vd-vendorType">${['SUPPLIER','SERVICE','BOTH'].map(v=>`<option value="${v}" ${vend.vendorType===v?'selected':''}>${{SUPPLIER:'Supplier',SERVICE:'Service Provider',BOTH:'Both'}[v]}</option>`).join('')}</select></div>
+            <div class="form-row"><label class="form-label">Industry</label><input class="form-input" id="vd-industry" value="${esc(vend.industry||'')}"/></div>
+            <div class="form-row"><label class="form-label">Products / Services</label><input class="form-input" id="vd-products" value="${esc(vend.products||'')}"/></div>
+            <div class="form-row"><label class="form-label">Mobile *</label><input class="form-input" id="vd-mobile" value="${esc(vend.mobile||'')}"/></div>
+            <div class="form-row"><label class="form-label">Email *</label><input class="form-input" id="vd-email" type="email" value="${esc(vend.email||'')}"/></div>
+            <div class="form-row"><label class="form-label">GSTIN</label><input class="form-input" id="vd-gstin" value="${esc(vend.gstin||'')}"/></div>
+            <div class="form-row"><label class="form-label">PAN</label><input class="form-input" id="vd-pan" value="${esc(vend.pan||'')}"/></div>
+          </div>
+        </div>
+        <div class="mgr-section">
+          <div class="mgr-section-title orange">📍 Billing Address</div>
+          <div class="mgr-grid g3">
+            <div class="form-row" style="grid-column:span 3"><label class="form-label">Street *</label><input class="form-input" id="vd-billStreet" value="${esc(vend.billStreet||'')}"/></div>
+            <div class="form-row"><label class="form-label">City *</label><input class="form-input" id="vd-billCity" value="${esc(vend.billCity||'')}"/></div>
+            <div class="form-row"><label class="form-label">State</label><input class="form-input" id="vd-billState" value="${esc(vend.billState||'')}"/></div>
+            <div class="form-row"><label class="form-label">PIN</label><input class="form-input" id="vd-billZip" value="${esc(vend.billZip||'')}"/></div>
+          </div>
+        </div>
+        <div class="mgr-section">
+          <div class="mgr-section-title orange">📝 Remarks</div>
+          <div class="form-row"><textarea class="comment-area" id="vd-remarks">${esc(vend.remarks||'')}</textarea></div>
+        </div>` : `
+        <div class="detail-sec">
+          <table class="vend-detail-table">
+            <tr><td>Vendor Name</td><td><strong>${esc(vend.cardName||'—')}</strong></td></tr>
+            <tr><td>Vendor Type</td><td>${vtLabel}</td></tr>
+            <tr><td>Industry</td><td>${esc(vend.industry||'—')}</td></tr>
+            <tr><td>Products/Services</td><td>${esc(vend.products||'—')}</td></tr>
+            <tr><td>Contact Person</td><td>${esc((vend.contactFirst||'')+' '+(vend.contactLast||''))} ${vend.contactTitle?`(${esc(vend.contactTitle)})`:''}</td></tr>
+            <tr><td>Mobile</td><td>${esc(vend.mobile||'—')}</td></tr>
+            <tr><td>Email</td><td>${esc(vend.email||'—')}</td></tr>
+            <tr><td>GSTIN</td><td style="font-family:var(--mono);color:var(--orange)">${esc(vend.gstin||'—')}</td></tr>
+            <tr><td>PAN</td><td style="font-family:var(--mono)">${esc(vend.pan||'—')}</td></tr>
+            <tr><td>Billing Address</td><td>${esc(vend.billStreet||'')}${vend.billCity?', '+esc(vend.billCity):''}${vend.billState?', '+esc(vend.billState):''} ${esc(vend.billZip||'')}</td></tr>
+            ${vend.hasMsme?`<tr><td>MSME</td><td style="font-family:var(--mono);color:var(--green)">✓ ${esc(vend.msmeNo||'')} (${esc(vend.msmeType||'')})</td></tr>`:''}
+            ${vend.sapCardCode?`<tr><td>SAP Card Code</td><td style="font-family:var(--mono);color:var(--green)">✓ ${esc(vend.sapCardCode)}</td></tr>`:''}
+          </table>
+        </div>`}
+      </div>
+
+      <!-- TAB: BANK ACCOUNTS -->
+      <div class="modal-tab-pane" id="tab-vend-bank">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)">
+          Bank Account Details
+          ${showMgrFields?`<span style="margin-left:10px;font-size:9px;background:rgba(249,115,22,.1);color:var(--orange);padding:2px 7px;border-radius:3px;border:1px solid rgba(249,115,22,.25)">★ Select SAP Bank Code for each account</span>`:''}
+        </div>
+        ${buildBankAccountRows(vend.bankAccounts, showMgrFields)}
+      </div>
+
+      <!-- TAB: SAP CONFIG -->
+      ${sapConfigTab}
+
+      <!-- TAB: ATTACHMENTS ─── NEW ─────────────────────────────── -->
+      <div class="modal-tab-pane" id="tab-vend-attach">
+        ${buildAttachmentTabHTML(vend.attachments, vend.sapAttachmentEntry, vend.sapCardCode, 'orange')}
+      </div>
+
+      <!-- TAB: HISTORY -->
+      <div class="modal-tab-pane" id="tab-vend-history">
+        <div class="log-entry"><div class="log-dot submit">📝</div><div class="log-info">
+          <div class="log-who">${esc(vend.userId||'Vendor')} <span class="log-role">(${esc(vend.userType||'—')})</span></div>
+          <div class="log-what">Form submitted · ${vend.submittedAt?new Date(vend.submittedAt).toLocaleString('en-IN'):'—'}</div>
+        </div></div>
+        ${vend.verifiedAt?`<div class="log-entry"><div class="log-dot approve">✓</div><div class="log-info"><div class="log-who">${esc(vend.verifiedBy||'Manager')}</div><div class="log-what">Verified · ${new Date(vend.verifiedAt).toLocaleString('en-IN')}</div></div></div>`:''}
+        ${vend.approvedAt?`<div class="log-entry"><div class="log-dot push">🚀</div><div class="log-info"><div class="log-who" style="color:var(--green)">${esc(vend.approvedBy||'SAP Adder')}</div><div class="log-what">→ SAP B1 as <strong style="color:var(--green)">${esc(vend.sapCardCode||'')}</strong> · ${new Date(vend.approvedAt).toLocaleString('en-IN')}</div></div></div>`:''}
+        ${vend.status==='REJECTED'?`<div class="log-entry"><div class="log-dot reject">✗</div><div class="log-info"><div class="log-who" style="color:var(--red)">Rejected</div>${vend.rejectedAt?`<div class="log-what">by ${esc(vend.rejectedBy||'—')} · ${new Date(vend.rejectedAt).toLocaleString('en-IN')}</div>`:''}</div></div>`:''}
+      </div>
+
+      ${isMyTurn ? `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px">Your Decision</div>
+        ${isAdmin()?`<div class="alert al-gold">⚡ <strong>Admin:</strong> Approving will immediately create this vendor in SAP B1.</div>`:isFinal?`<div class="alert al-green">🚀 <strong>Final approval.</strong> Approving pushes vendor to SAP B1.</div>`:`<div class="alert al-orange">ℹ Verifying saves your edits and forwards to SAP Adder.</div>`}
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);display:block;margin-bottom:7px">Approval Comment (optional)</label>
+        <textarea class="comment-area" id="vend-modal-comment" style="min-height:55px" placeholder="Add verification notes…"></textarea>
+      </div>` :
+      vend.status==='APPROVED'?`<div class="alert al-green" style="margin-top:12px">✓ Vendor created in SAP B1 as <strong>${esc(vend.sapCardCode||'')}</strong>.</div>`:
+      `<div class="alert al-info" style="margin-top:12px">⏳ Waiting for the appropriate approver.</div>`}
+    </div>
+    <div class="modal-footer">
+      ${isMyTurn?`
+        <button class="btn b-approve${isAdmin()?' admin-direct':isFinal?' final':''}" id="vend-modal-approve">
+          <span id="vend-modal-sp" style="display:none" class="sp"></span>
+          ${isAdmin()?'⚡ Approve → SAP B1':isFinal?'🚀 Approve → SAP B1':'✓ Verify & Save'}
+        </button>
+        <button class="btn b-reject" id="vend-modal-reject">✗ Reject</button>`:''}
+      <button class="btn" style="border:1px solid var(--border2);color:var(--text2);background:none;margin-left:auto" id="vmc2">Close</button>
+    </div>`;
+
+  // Tab switching
+  container.querySelectorAll('.modal-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      container.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+      container.querySelectorAll('.modal-tab-pane').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      const target = container.querySelector('#'+tab.dataset.tab);
+      if (target) target.classList.add('active');
+    });
+  });
+
+  const closeModal = () => { document.getElementById('detail-modal').style.display = 'none'; };
+  container.querySelector('#vmc1').onclick = closeModal;
+  container.querySelector('#vmc2').onclick = closeModal;
+  document.getElementById('detail-modal').onclick = e => { if(e.target.id==='detail-modal') closeModal(); };
+
+  function collectVendFields() {
+    const f = {};
+    if (!showMgrFields) return f;
+    const get = id => container.querySelector('#'+id)?.value || '';
+    f.cardName   = get('vd-cardName');
+    f.vendorType = get('vd-vendorType');
+    f.industry   = get('vd-industry');
+    f.products   = get('vd-products');
+    f.mobile     = get('vd-mobile');
+    f.email      = get('vd-email');
+    f.gstin      = get('vd-gstin');
+    f.pan        = get('vd-pan');
+    f.billStreet = get('vd-billStreet');
+    f.billCity   = get('vd-billCity');
+    f.billState  = get('vd-billState');
+    f.billZip    = get('vd-billZip');
+    f.remarks    = get('vd-remarks');
+    f.mgrCardCodePrefix  = get('vmgr-prefix') || 'VENDA';
+    f.mgrGroupCode       = get('vmgr-groupCode') || null;
+    f.mgrPurchaseAccount = get('vmgr-apAccount') || '2110005';
+    f.mgrPayTermsCode    = get('vmgr-payTermsCode') || null;
+    f.mgrSalesPersonCode = get('vmgr-salesPersonCode') || null;
+    f.mgrMainGroup       = get('vmgr-mainGroup') || null;
+    f.mgrChain           = get('vmgr-chain') || null;
+    f.mgrCreditLimit     = parseFloat(get('vmgr-creditLimit')) || 0;
+    f.mgrCurrency        = get('vmgr-currency') || 'Indian Rupee';
+    f.mgrNotes           = get('vmgr-notes');
+    f.bankAccounts = (vend.bankAccounts||[]).map((b, i) => ({
+      ...b, bankCode: get(`bank-code-sel-${i}`) || b.bankCode || null,
+    }));
+    return f;
+  }
+
+  container.querySelector('#vend-modal-approve')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#vend-modal-approve');
+    const sp  = container.querySelector('#vend-modal-sp');
+    btn.disabled = true; sp.style.display = 'inline-block';
+    const allFields = collectVendFields();
+    if (showMgrFields && allFields.bankAccounts?.length) {
+      const missing = allFields.bankAccounts.filter(b => b.accNo && !b.bankCode);
+      if (missing.length > 0) {
+        const proceed = confirm(`⚠ ${missing.length} bank account(s) have no SAP Bank Code.\n\nThese will be SKIPPED in SAP B1.\n\nContinue?`);
+        if (!proceed) { btn.disabled = false; sp.style.display = 'none'; return; }
+      }
+    }
+    try {
+      if (isAdmin()) {
+        const _co=vend.company||_activeCompany;
+        await api('PATCH', `/vendors/${vend.id}/admin-approve`, { approved: true, company:_co, ...allFields });
+        toast('⚡ Vendor pushed to SAP B1!');
+      } else if (isFinal) {
+        const _co=vend.company||_activeCompany;
+        await api('PATCH', `/vendors/${vend.id}/approve`, { approved: true, company:_co, ...allFields });
+        toast('🚀 Vendor pushed to SAP B1!');
+      } else {
+        const _co=vend.company||_activeCompany;
+        await api('PATCH', `/vendors/${vend.id}/verify`, { approved: true, company:_co, ...allFields });
+        toast('✓ Vendor verified — forwarded to SAP Adder');
+      }
+      closeModal(); await loadVendRequests(); render();
+    } catch(e) { toast(e.message, 'err'); btn.disabled = false; sp.style.display = 'none'; }
+  });
+
+  container.querySelector('#vend-modal-reject')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#vend-modal-reject');
+    btn.disabled = true;
+    try {
+      const ep = (isFinal && !isAdmin()) ? `/vendors/${vend.id}/approve` : `/vendors/${vend.id}/verify`;
+      await api('PATCH', ep, { approved: false, company: vend.company||_activeCompany });
+      toast('✗ Vendor rejected', 'warn');
+      closeModal(); await loadVendRequests(); render();
+    } catch(e) { toast(e.message, 'err'); btn.disabled = false; }
+  });
+}
+
+init();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

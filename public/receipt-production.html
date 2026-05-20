@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Receipt from Production — SAP B1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#080e18;--ink2:#0d1626;--ink3:#111f35;--purple:#9f5afd;--blue:#1a6fff;--amber:#f5a623;--green:#0dbb8a;--green2:#059669;--red:#e53e3e;--teal:#06b6d4;--border:#1c2e48;--border2:#243650;--text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;--surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;--radius:10px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+nav{position:sticky;top:0;z-index:200;background:rgba(8,14,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 12px;height:50px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.nav-logo{background:var(--green);color:#fff;font-family:var(--display);font-size:15px;letter-spacing:2px;padding:3px 8px;border-radius:5px}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:center}
+.nav-link{padding:4px 8px;border-radius:5px;font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;white-space:nowrap;font-family:var(--font)}.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}.nav-link.active{color:var(--green);background:rgba(13,187,138,.1)}
+.btn-sm{padding:4px 8px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid var(--border2);color:var(--text3);background:none;cursor:pointer;font-family:var(--font)}.btn-sm:hover{border-color:var(--red);color:var(--red)}
+main{padding:12px;max-width:720px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.card-hd{background:var(--surface3);padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.card-hd .ico{font-size:15px}
+.card-bd{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:4px;display:block}
+.fi{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;height:36px}.fi:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(13,187,138,.15)}.fi::placeholder{color:var(--text3)}
+select.fi{cursor:pointer;appearance:none;background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233d5470'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:26px}
+select.fi option{background:var(--surface2)}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:420px){.fi-row{grid-template-columns:1fr}}
+.fi-mono{font-family:var(--mono);font-size:12px;text-transform:uppercase}
+.order-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px}
+@media(max-width:420px){.order-info{grid-template-columns:1fr}}
+.oi-item{display:flex;flex-direction:column;gap:1px}
+.oi-l{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)}
+.oi-v{font-family:var(--mono);font-size:11px;color:var(--text)}
+.btn-bar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;justify-content:center}.btn:disabled{opacity:.4;cursor:not-allowed}
+.b-receipt{background:var(--green);color:#fff;flex:1}.b-receipt:hover:not(:disabled){background:var(--green2);box-shadow:0 4px 16px rgba(13,187,138,.4)}
+.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}.b-cancel:hover{border-color:var(--text2)}
+.b-new{background:rgba(13,187,138,.1);color:var(--green);border:1px solid rgba(13,187,138,.3);flex:1}.b-new:hover{background:rgba(13,187,138,.2)}
+.alert{padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;line-height:1.5}
+.al-green{background:rgba(13,187,138,.08);border:1px solid rgba(13,187,138,.2);color:#6ee7b7}
+.al-amber{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:#fcd34d}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:56px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;max-width:280px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.suc-box{text-align:center;padding:28px 16px}
+.suc-icon{font-size:44px;margin-bottom:10px}
+.suc-title{font-family:var(--display);font-size:26px;color:var(--green);margin-bottom:6px}
+.suc-pill{display:inline-block;font-family:var(--mono);font-size:13px;padding:5px 16px;border-radius:6px;background:rgba(13,187,138,.12);color:var(--green);border:1px solid rgba(13,187,138,.25);margin:8px 0 12px}
+.empty-msg{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.trans-type{display:flex;gap:4px;margin-bottom:10px}
+.trans-btn{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-family:var(--font);transition:all .15s;text-align:center}
+.trans-btn.on{border-color:var(--green);color:var(--green);background:rgba(13,187,138,.08)}
+.trans-btn:hover{border-color:var(--green);color:var(--green)}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<nav>
+  <span class="nav-logo">SAP</span>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a><a href="/production" class="nav-link">Production</a>
+    <a href="/issue-production" class="nav-link">Issue</a>
+    <a href="/receipt-production" class="nav-link active">Receipt</a>
+    <a href="/grpo" class="nav-link">GRPO</a><a href="/approvals" class="nav-link">Approvals</a>
+  </div>
+  <button class="btn-sm" id="btn-logout">Logout</button>
+</nav>
+<main id="app"></main>
+
+<script>
+'use strict';
+let _tok=null,_user=null,_wh=[],_branches=[],_varieties=[];
+const BE=`${window.location.origin}/api`;
+(function(){try{_tok=sessionStorage.getItem('portal_token')||localStorage.getItem('token');const u=sessionStorage.getItem('portal_user');if(u)_user=JSON.parse(u);}catch(_e){}})();
+if(!_tok)window.location.href='/';
+document.getElementById('btn-logout').onclick=()=>{sessionStorage.clear();localStorage.removeItem('token');window.location.href='/';};
+
+let _co='JIVO_OIL_HANADB';
+let _order=null;
+let _loadingOrder=false;
+let _submitting=false;
+let _success=null;
+
+// Receipt fields
+let _qty=0;
+let _warehouse='';
+let _batchNumber='';
+let _variety='';
+let _transType='Complete'; // 'Complete' or 'Reject'
+let _postDate='';
+
+function today(){return new Date().toISOString().slice(0,10);}
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function q(s){return document.querySelector(s);}
+function mk(c){const d=document.createElement('div');d.className=c;return d;}
+
+async function api(m,p,b=null){
+  const h={'Content-Type':'application/json'};if(_tok)h['Authorization']='Bearer '+_tok;
+  const o={method:m.toUpperCase(),headers:h};if(b)o.body=JSON.stringify(b);
+  let r,d;try{r=await fetch(BE+p,o);d=await r.json();}catch(_e){throw new Error('Cannot reach server');}
+  if(r.status===401){window.location.href='/';throw new Error('Session expired');}
+  if(!r.ok)throw new Error(d?.message||'HTTP '+r.status);return d;
+}
+function toast(msg,type='ok'){const tc=document.getElementById('toast-c');const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=(type==='ok'?'OK ':'ERR ')+msg;tc.appendChild(el);setTimeout(()=>el.remove(),4500);}
+
+async function loadWH(){try{const r=await api('GET',`/sap/lookup/warehouses?company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)_wh=r.data;}catch(_e){}}
+async function loadBranches(){try{const r=await api('GET',`/sap/lookup/branches?company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)_branches=r.data;}catch(_e){}}
+async function loadVarieties(){try{const r=await api('GET',`/sap/lookup/costing-codes?dim=1&company=${encodeURIComponent(_co)}`);if(r.success&&r.data?.length)_varieties=r.data;}catch(_e){}}
+
+async function loadOrder(absEntry){
+  _loadingOrder=true;_order=null;render();
+  try{
+    const r=await api('GET',`/sap/production-orders/${absEntry}?company=${encodeURIComponent(_co)}`);
+    _order=r.data||r;
+    // Set defaults from order
+    const remaining=Math.max(0,(_order.PlannedQuantity||0)-(_order.CompletedQuantity||0));
+    _qty=remaining;
+    _warehouse=_order.Warehouse||'';
+    _batchNumber='';
+    _transType='Complete';
+  }catch(e){toast(e.message,'err');}
+  _loadingOrder=false;render();
+}
+
+async function doReceipt(){
+  if(!_order){toast('Load an order first','err');return;}
+  if(!_qty||_qty<=0){toast('Quantity must be > 0','err');return;}
+  if(!_batchNumber.trim()){toast('Batch number is required','err');return;}
+
+  _submitting=true;render();
+  const bplId=parseInt(q('#sel-branch')?.value)||2;
+  const payload={
+    company:_co,
+    branchId:bplId,
+    _transType:_transType==='Reject'?'R':'C',
+    DocumentLines:[{
+      BaseEntry:_order.AbsoluteEntry,
+      BaseLine:0,
+      BaseType:202,
+      Quantity:_qty,
+      WarehouseCode:_warehouse,
+      TransactionType:_transType==='Reject'?'R':'C',
+      CostingCode:_variety||undefined,
+      BatchNumbers:[{
+        BatchNumber:_batchNumber.trim(),
+        Quantity:_qty,
+      }]
+    }]
+  };
+  if(_postDate){payload.DocDate=_postDate;payload.DocDueDate=_postDate;}
+
+  try{
+    const r=await api('POST','/sap/receipt-production',payload);
+    _success={docEntry:r.data?.DocEntry||'',docNum:r.data?.DocNum||''};
+    toast('Receipt from Production posted!');
+  }catch(e){toast(e.message||'Failed','err');}
+  _submitting=false;render();
+}
+
+// ═══════════════════════════════════════
+function render(){
+  try{_doRender();}catch(e){console.error('Render error:',e);document.getElementById('app').innerHTML=`<div style="padding:20px;color:var(--red)">Error: ${e.message}</div>`;}
+}
+function _doRender(){
+  const app=document.getElementById('app');app.innerHTML='';
+  if(_success){renderSuccess(app);return;}
+
+  // Company + Branch
+  const c1=mk('card');
+  const brOpts=_branches.map(b=>`<option value="${b.BPLId}" ${b.BPLId===2?'selected':''}>${esc(b.BPLName)} (${b.BPLId})</option>`).join('')||'<option value="2">FACTORY (2)</option>';
+  c1.innerHTML=`<div class="card-hd"><span class="ico">&#128230;</span> Receipt from Production</div>
+  <div class="card-bd">
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Company</label><select class="fi" id="sel-co">
+        <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+        <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+        <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+        <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+      </select></div>
+      <div class="fg"><label class="fl">Branch</label><select class="fi" id="sel-branch">${brOpts}</select></div>
+    </div>
+  </div>`;
+  app.appendChild(c1);
+
+  // Order input
+  const c2=mk('card');
+  const orderVal=_order?String(_order.AbsoluteEntry):'';
+  c2.innerHTML=`<div class="card-hd"><span class="ico">&#128196;</span> Production Order</div>
+  <div class="card-bd">
+    <div class="fg"><label class="fl">Order No. (AbsoluteEntry) *</label>
+      <div style="display:flex;gap:6px">
+        <input class="fi fi-mono" id="inp-order" value="${esc(orderVal)}" placeholder="Enter production order number..." style="flex:1"/>
+        <button class="btn" id="btn-load" style="padding:8px 16px;background:var(--green);color:#fff;border-radius:7px;white-space:nowrap"><span id="sp-load" style="display:none" class="sp"></span> Load</button>
+      </div>
+    </div>
+    ${_loadingOrder?'<div class="empty-msg"><span class="sp" style="border-color:rgba(13,187,138,.25);border-top-color:var(--green)"></span> Loading...</div>':''}
+    ${_order?`<div style="margin-top:6px;padding:10px;background:var(--ink2);border:1px solid var(--border);border-radius:6px">
+      <div class="order-info">
+        <div class="oi-item"><span class="oi-l">Product</span><span class="oi-v" style="color:var(--green)">${esc(_order.ItemNo)}</span></div>
+        <div class="oi-item"><span class="oi-l">Description</span><span class="oi-v" style="font-family:var(--font)">${esc(_order.ProductDescription||'')}</span></div>
+        <div class="oi-item"><span class="oi-l">Planned</span><span class="oi-v">${_order.PlannedQuantity}</span></div>
+        <div class="oi-item"><span class="oi-l">Completed</span><span class="oi-v">${_order.CompletedQuantity||0}</span></div>
+        <div class="oi-item"><span class="oi-l">Remaining</span><span class="oi-v" style="color:var(--amber)">${Math.max(0,(_order.PlannedQuantity||0)-(_order.CompletedQuantity||0))}</span></div>
+        <div class="oi-item"><span class="oi-l">Warehouse</span><span class="oi-v">${esc(_order.Warehouse||'-')}</span></div>
+        <div class="oi-item"><span class="oi-l">UoM</span><span class="oi-v">${esc(_order.InventoryUOM||'-')}</span></div>
+        <div class="oi-item"><span class="oi-l">Status</span><span class="oi-v">${esc((_order.ProductionOrderStatus||'').replace('bopos',''))}</span></div>
+      </div>
+    </div>`:''}
+  </div>`;
+  app.appendChild(c2);
+
+  // Receipt form (only if order loaded)
+  if(_order){
+    const c3=mk('card');
+    const whOpts=_wh.map(w=>`<option value="${esc(w.code)}" ${_warehouse===w.code?'selected':''}>${esc(w.code)} - ${esc(w.name)}</option>`).join('');
+    c3.innerHTML=`<div class="card-hd"><span class="ico">&#128230;</span> Receipt Details</div>
+    <div class="card-bd">
+      <div class="fg"><label class="fl">Transaction Type</label>
+        <div class="trans-type">
+          <div class="trans-btn${_transType==='Complete'?' on':''}" data-tt="Complete">Complete</div>
+          <div class="trans-btn${_transType==='Reject'?' on':''}" data-tt="Reject">Reject</div>
+        </div>
+      </div>
+      <div class="fi-row">
+        <div class="fg"><label class="fl">Quantity *</label><input class="fi fi-mono" id="inp-qty" type="number" min="0.001" step="0.001" value="${_qty}" style="text-align:right"/></div>
+        <div class="fg"><label class="fl">Warehouse</label><select class="fi" id="inp-wh">${whOpts}</select></div>
+      </div>
+      <div class="fg"><label class="fl">Variety</label><select class="fi" id="inp-variety">
+        <option value="">-- Select Variety --</option>
+        ${_varieties.map(v=>`<option value="${esc(v.PrcCode)}" ${_variety===v.PrcCode?'selected':''}>${esc(v.PrcCode)} - ${esc(v.PrcName)}</option>`).join('')}
+      </select></div>
+      <div class="fg"><label class="fl">Batch Number * <span style="font-weight:400;text-transform:none;color:var(--text3)">(enter manually)</span></label>
+        <input class="fi fi-mono" id="inp-batch" value="${esc(_batchNumber)}" placeholder="e.g. BATCH-09-04-2026" autocomplete="off"/>
+      </div>
+      <div class="fg"><label class="fl">Posting Date</label><input class="fi" id="inp-postdate" type="date" value="${_postDate||today()}"/></div>
+      <div class="alert al-amber" style="margin-top:4px">Enter the batch number for the finished product being received into inventory. This batch will be created in SAP B1.</div>
+    </div>`;
+    app.appendChild(c3);
+
+    // Action
+    const c4=mk('card');
+    c4.innerHTML=`<div class="card-bd"><div class="btn-bar">
+      <button class="btn b-receipt" id="btn-receipt" ${_submitting?'disabled':''}><span id="sp-receipt" style="display:${_submitting?'inline-block':'none'}" class="sp"></span> Post Receipt</button>
+      <button class="btn b-cancel" id="btn-clear">Clear</button>
+    </div></div>`;
+    app.appendChild(c4);
+  }
+
+  // Wire
+  setTimeout(()=>{
+    q('#sel-co')&&(q('#sel-co').onchange=async function(){_co=this.value;_order=null;await Promise.all([loadWH(),loadBranches(),loadVarieties()]);render();});
+    q('#btn-load')&&(q('#btn-load').onclick=async function(){
+      const v=(q('#inp-order')?.value||'').trim();if(!v){toast('Enter order number','err');return;}
+      this.disabled=true;if(q('#sp-load'))q('#sp-load').style.display='inline-block';
+      await loadOrder(parseInt(v));
+      this.disabled=false;if(q('#sp-load'))q('#sp-load').style.display='none';
+    });
+    q('#inp-order')&&(q('#inp-order').onkeydown=function(e){if(e.key==='Enter')q('#btn-load')?.click();});
+    q('#inp-qty')&&(q('#inp-qty').onchange=function(){_qty=parseFloat(this.value)||0;});
+    q('#inp-wh')&&(q('#inp-wh').onchange=function(){_warehouse=this.value;});
+    q('#inp-variety')&&(q('#inp-variety').onchange=function(){_variety=this.value;});
+    q('#inp-batch')&&(q('#inp-batch').oninput=function(){_batchNumber=this.value.toUpperCase();this.value=this.value.toUpperCase();});
+    q('#inp-postdate')&&(q('#inp-postdate').onchange=function(){_postDate=this.value;});
+    document.querySelectorAll('.trans-btn').forEach(b=>{b.onclick=function(){_transType=this.dataset.tt;render();};});
+    q('#btn-receipt')&&(q('#btn-receipt').onclick=doReceipt);
+    q('#btn-clear')&&(q('#btn-clear').onclick=()=>{_order=null;_qty=0;_batchNumber='';render();});
+  },0);
+}
+
+function renderSuccess(app){
+  const c=mk('card');
+  c.innerHTML=`<div class="card-hd"><span class="ico">&#9989;</span> Receipt from Production — Posted</div>
+  <div class="card-bd"><div class="suc-box">
+    <div class="suc-icon">&#128230;</div>
+    <div class="suc-title">Receipt Posted!</div>
+    <p style="font-size:13px;color:var(--text3)">Finished goods received for Production Order #${esc(String(_order?.DocumentNumber||_order?.AbsoluteEntry||''))}</p>
+    <div class="suc-pill">DocEntry #${esc(String(_success.docEntry))} | DocNum #${esc(String(_success.docNum))}</div>
+    <div class="alert al-green" style="max-width:400px;margin:10px auto;text-align:left">
+      <strong>${esc(_order?.ItemNo||'')}</strong> — ${_qty} ${esc(_order?.InventoryUOM||'PCS')} received into inventory.<br/>
+      Batch: <strong>${esc(_batchNumber)}</strong> | Warehouse: <strong>${esc(_warehouse)}</strong>
+    </div>
+    <div class="btn-bar" style="justify-content:center;margin-top:12px">
+      <button class="btn" id="btn-close-order" style="flex:1;background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.3)">Close Order</button>
+      <button class="btn b-new" id="btn-new">+ New Receipt</button>
+    </div>
+  </div></div>`;
+  app.appendChild(c);
+  setTimeout(()=>{
+    q('#btn-new').onclick=()=>{_success=null;_order=null;_qty=0;_batchNumber='';_variety='';render();};
+    q('#btn-close-order')&&(q('#btn-close-order').onclick=function(){
+      window.location.href=`/close-production#order=${_order.AbsoluteEntry}&company=${encodeURIComponent(_co)}`;
+    });
+  },0);
+}
+
+async function init(){
+  try{
+    const hash=window.location.hash;
+    const orderMatch=hash.match(/order=(\d+)/);
+    const coMatch=hash.match(/company=([^&]+)/);
+    if(coMatch)_co=decodeURIComponent(coMatch[1]);
+    _postDate=today();
+
+    await Promise.all([loadWH(),loadBranches(),loadVarieties()]);
+    render();
+
+    if(orderMatch){
+      const entry=parseInt(orderMatch[1]);
+      if(entry) await loadOrder(entry);
+    }
+  }catch(e){console.error('Init error:',e);render();}
+}
+init();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

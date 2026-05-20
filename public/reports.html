@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Reports — SAP B1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#080e18;--ink2:#0d1626;--ink3:#111f35;--blue:#1a6fff;--amber:#f5a623;--green:#0dbb8a;--red:#e53e3e;--teal:#06b6d4;--border:#1c2e48;--border2:#243650;--text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;--surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;--radius:10px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh}
+main{padding:12px;max-width:800px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px}
+.card-hd{background:var(--surface3);padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0}
+.card-hd .right{margin-left:auto;font-size:11px;color:var(--text3);font-weight:400}
+.card-bd{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:4px;display:block}
+.fi{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;height:36px}
+.fi:focus{border-color:var(--blue)}
+.rpt-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:all .15s}
+.rpt-card:hover{border-color:var(--blue);transform:translateY(-1px)}
+.rpt-icon{font-size:28px;flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--surface3);border-radius:8px}
+.rpt-info{flex:1;min-width:0}
+.rpt-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;word-break:break-all}
+.rpt-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap}
+.rpt-meta b{color:var(--text2)}
+.rpt-ext{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;font-family:var(--mono)}
+.rpt-ext.pdf{background:rgba(229,62,62,.1);color:var(--red);border:1px solid rgba(229,62,62,.2)}
+.rpt-ext.rpt{background:rgba(159,90,253,.1);color:#9f5afd;border:1px solid rgba(159,90,253,.2)}
+.rpt-ext.xlsx,.rpt-ext.xls,.rpt-ext.csv{background:rgba(13,187,138,.1);color:var(--green);border:1px solid rgba(13,187,138,.2)}
+.rpt-ext.docx,.rpt-ext.doc{background:rgba(26,111,255,.1);color:var(--blue);border:1px solid rgba(26,111,255,.2)}
+.rpt-btn{padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(26,111,255,.25);background:rgba(26,111,255,.08);color:var(--blue);font-family:var(--font);white-space:nowrap;transition:all .12s}
+.rpt-btn:hover{background:rgba(26,111,255,.15)}
+.empty-msg{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.b-primary{background:var(--blue);color:#fff}.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:56px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;max-width:280px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<main id="app"></main>
+
+<script>
+'use strict';
+let _tok=null,_user=null;
+const BE=`${window.location.origin}/api`;
+(function(){try{_tok=sessionStorage.getItem('portal_token')||localStorage.getItem('token');const u=sessionStorage.getItem('portal_user');if(u)_user=JSON.parse(u);}catch(_e){}})();
+if(!_tok)window.location.href='/';
+
+let _files=[];
+let _loading=false;
+let _search='';
+let _tab='crystal';
+const REPORT_PATH='\\\\103.89.45.247\\Data\\SAP Attachments\\Jivo Oil\\Attachments';
+
+// Reports configuration
+const REPORTS=[
+  {
+    id:'inv-audit',
+    name:'Inventory Audit Report',
+    desc:'Stock movement audit by item, warehouse and date range',
+    icon:'&#128202;',
+    params:[
+      {key:'ItemCode',label:'Item Code',type:'text',required:false,placeholder:'Leave empty for all'},
+      {key:'Warehouse',label:'Warehouse',type:'text',required:false,placeholder:'Leave empty for all'},
+      {key:'DateFrom',label:'Date From',type:'date',required:true},
+      {key:'DateTo',label:'Date To',type:'date',required:true},
+    ]
+  }
+];
+
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function q(s){return document.querySelector(s);}
+function mk(c){const d=document.createElement('div');d.className=c;return d;}
+function fmtSize(b){if(!b)return'-';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function fmtDate(d){if(!d)return'-';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+
+async function api(m,p,b=null){
+  const h={'Content-Type':'application/json'};if(_tok)h['Authorization']='Bearer '+_tok;
+  const o={method:m.toUpperCase(),headers:h};if(b)o.body=JSON.stringify(b);
+  let r,d;try{r=await fetch(BE+p,o);d=await r.json();}catch(_e){throw new Error('Cannot reach server');}
+  if(r.status===401){window.location.href='/';throw new Error('Session expired');}
+  if(!r.ok)throw new Error(d?.message||'HTTP '+r.status);return d;
+}
+function toast(msg,type='ok'){const tc=document.getElementById('toast-c');const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=(type==='ok'?'OK ':'ERR ')+msg;tc.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+let _reportData=null;
+let _reportLoading=false;
+let _co='JIVO_OIL_HANADB';
+
+function renderCrystal(app){
+  // Company selector
+  const c0=mk('card');
+  c0.innerHTML=`<div class="card-hd">&#128202; Reports</div>
+  <div class="card-bd"><div class="fg"><label class="fl">Company</label><select class="fi" id="rpt-co">
+    <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+    <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+    <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+    <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+  </select></div></div>`;
+  app.appendChild(c0);
+
+  // Report cards
+  REPORTS.forEach((rpt,ri)=>{
+    const c=mk('card');
+    c.innerHTML=`<div class="card-hd">${rpt.icon} ${esc(rpt.name)}<span class="right" style="font-size:10px">${esc(rpt.desc)}</span></div>
+    <div class="card-bd">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${rpt.params.map(p=>`<div class="fg" style="margin-bottom:6px">
+          <label class="fl">${esc(p.label)} ${p.required?'*':''}</label>
+          <input class="fi${p.type==='text'?' fi-mono':''}" id="rpt-${ri}-${p.key}" type="${p.type}" placeholder="${esc(p.placeholder||'')}" value="${p.type==='date'?new Date().toISOString().slice(0,10):''}"/>
+        </div>`).join('')}
+      </div>
+      <button class="btn b-primary" id="rpt-run-${ri}" style="width:100%;margin-top:4px" ${_reportLoading?'disabled':''}>
+        ${_reportLoading?'<span class="sp"></span>':''}Run Report
+      </button>
+    </div>`;
+    app.appendChild(c);
+  });
+
+  // Results
+  if(_reportData){
+    const c=mk('card');
+    const rows=_reportData.rows||[];
+    const cols=_reportData.columns||[];
+    let tableHtml='';
+    if(rows.length){
+      const numCols=['Quantity','Oil Liter','DocTime'];
+      tableHtml=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:70vh;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead style="position:sticky;top:0;z-index:2"><tr>${cols.map(col=>`<th style="text-align:${numCols.includes(col)?'right':'left'};padding:4px 5px;background:var(--surface3);border-bottom:2px solid var(--border);font-size:8px;font-weight:700;text-transform:uppercase;color:var(--text3);white-space:nowrap">${esc(col)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map((row,ri)=>{
+          const isOB=row.DocNum==='OB';
+          const bg=isOB?'background:rgba(245,166,35,.06);font-weight:700':ri%2===0?'':'background:var(--surface2)';
+          return`<tr style="${bg}">${cols.map(col=>`<td style="padding:3px 5px;border-bottom:1px solid var(--border);font-size:10px;white-space:nowrap;${numCols.includes(col)?'text-align:right;font-family:var(--mono)':''};${col==='ItemCode'||col==='DocNum'?'font-family:var(--mono);color:var(--blue)':''}">${esc(String(row[col]||''))}</td>`).join('')}</tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:10px;color:var(--text3)">
+        <span>${rows.length} rows</span>
+        <button class="btn b-cancel" id="rpt-export" style="padding:4px 10px;font-size:10px">Export CSV</button>
+      </div>`;
+    }else{
+      tableHtml='<div class="empty-msg">No data found for the given criteria</div>';
+    }
+    c.innerHTML=`<div class="card-hd">&#128200; Results<span class="right">${rows.length} rows</span></div><div class="card-bd">${tableHtml}</div>`;
+    app.appendChild(c);
+  }
+}
+
+function wireCrystal(){
+  q('#rpt-co')&&(q('#rpt-co').onchange=function(){_co=this.value;});
+  REPORTS.forEach((rpt,ri)=>{
+    const btn=q(`#rpt-run-${ri}`);
+    if(!btn)return;
+    btn.onclick=async function(){
+      const params={};
+      let valid=true;
+      rpt.params.forEach(p=>{
+        const v=q(`#rpt-${ri}-${p.key}`)?.value||'';
+        if(p.required&&!v.trim()){toast(p.label+' is required','err');valid=false;}
+        if(v.trim())params[p.key]=v.trim();
+      });
+      if(!valid)return;
+      _reportLoading=true;_reportData=null;render();
+      try{
+        const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+        const r=await api('GET',`/sap/reports/run/${rpt.id}?company=${encodeURIComponent(_co)}&${qs}`);
+        _reportData=r.data||{rows:[],columns:[]};
+      }catch(e){toast(e.message,'err');}
+      _reportLoading=false;render();
+    };
+  });
+  q('#rpt-export')&&(q('#rpt-export').onclick=function(){
+    if(!_reportData||!_reportData.rows?.length)return;
+    const cols=_reportData.columns;
+    const csv=[cols.join(','),..._reportData.rows.map(r=>cols.map(c=>'"'+(String(r[c]||'')).replace(/"/g,'""')+'"').join(','))].join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='report.csv';a.click();
+  });
+}
+
+async function loadFiles(){
+  _loading=true;render();
+  try{
+    const r=await api('GET',`/sap/reports/list?path=${encodeURIComponent(REPORT_PATH)}`);
+    _files=r.data||[];
+    if(r.warning)toast(r.warning,'err');
+  }catch(e){toast(e.message,'err');_files=[];}
+  _loading=false;render();
+}
+
+function openReport(filename){
+  const url=BE+`/sap/reports/download/${encodeURIComponent(filename)}?path=${encodeURIComponent(REPORT_PATH)}`;
+  fetch(url,{headers:{'Authorization':'Bearer '+_tok}})
+    .then(r=>{if(!r.ok)throw new Error('File not accessible');return r.blob();})
+    .then(blob=>{
+      const ext=filename.split('.').pop().toLowerCase();
+      if(ext==='pdf'){
+        window.open(URL.createObjectURL(blob),'_blank');
+      }else{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=filename;
+        a.click();
+      }
+    })
+    .catch(e=>{toast('Cannot open: '+e.message,'err');});
+}
+
+function render(){
+  const app=document.getElementById('app');app.innerHTML='';
+  renderCrystal(app);
+
+  setTimeout(()=>{
+    wireCrystal();
+  },0);
+}
+
+render();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

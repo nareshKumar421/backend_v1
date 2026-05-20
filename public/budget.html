@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Budget — SAP B1</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#080e18;--ink2:#0d1626;--ink3:#111f35;--purple:#9f5afd;--blue:#1a6fff;--amber:#f5a623;--green:#0dbb8a;--red:#e53e3e;--teal:#06b6d4;--border:#1c2e48;--border2:#243650;--text:#c8d6e8;--text2:#7a9ab8;--text3:#3d5470;--surface:#0f1d30;--surface2:#142338;--surface3:#0b1520;--radius:10px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Bebas Neue',sans-serif;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+nav{position:sticky;top:0;z-index:200;background:rgba(8,14,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 12px;height:50px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.nav-logo{background:var(--amber);color:#fff;font-family:var(--display);font-size:15px;letter-spacing:2px;padding:3px 8px;border-radius:5px}
+.nav-links{display:flex;gap:2px;overflow-x:auto;flex:1;justify-content:center}
+.nav-link{padding:4px 8px;border-radius:5px;font-size:10px;font-weight:600;color:var(--text2);text-decoration:none;white-space:nowrap;font-family:var(--font)}.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}.nav-link.active{color:var(--amber);background:rgba(245,166,35,.1)}
+.btn-sm{padding:4px 8px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid var(--border2);color:var(--text3);background:none;cursor:pointer;font-family:var(--font)}.btn-sm:hover{border-color:var(--red);color:var(--red)}
+main{padding:12px;max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--surface3);border-radius:var(--radius);padding:4px}
+.tab{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;font-family:var(--font);text-align:center;transition:all .15s}.tab:hover{color:var(--text2)}.tab.on{background:var(--surface);color:var(--amber);border:1px solid var(--border2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.card-hd{background:var(--surface3);padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.card-hd .ico{font-size:15px}
+.card-hd .right{margin-left:auto;font-size:11px;color:var(--text3);font-weight:400}
+.card-bd{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:4px;display:block}
+.fi{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;height:36px}.fi:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,166,35,.15)}.fi::placeholder{color:var(--text3)}
+select.fi{cursor:pointer;appearance:none;background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233d5470'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:26px}
+select.fi option{background:var(--surface2)}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:420px){.fi-row{grid-template-columns:1fr}}
+.fi-mono{font-family:var(--mono);font-size:12px}
+.line-card{background:var(--ink2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative}
+.line-card:hover{border-color:var(--border2)}
+.line-num{position:absolute;top:8px;right:10px;font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--surface3);padding:1px 6px;border-radius:4px}
+.line-month{font-family:var(--mono);font-size:13px;color:var(--amber);font-weight:600;margin-bottom:6px}
+.line-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:420px){.line-grid{grid-template-columns:1fr}}
+.line-fl{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)}
+.line-inp{width:100%;padding:5px 7px;border:1px solid var(--border2);border-radius:5px;font-size:12px;font-family:var(--mono);background:var(--surface2);color:var(--text);outline:none;height:30px}.line-inp:focus{border-color:var(--amber)}
+.btn-bar{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;justify-content:center}.btn:disabled{opacity:.4;cursor:not-allowed}
+.b-save{background:var(--amber);color:#fff;flex:1}.b-save:hover:not(:disabled){background:#d4891b;box-shadow:0 4px 16px rgba(245,166,35,.4)}
+.b-add{background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.3)}.b-add:hover{background:rgba(245,166,35,.2)}
+.b-cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}.b-cancel:hover{border-color:var(--text2)}
+.b-del{background:rgba(229,62,62,.06);color:var(--red);border:1px solid rgba(229,62,62,.2);padding:4px 10px;font-size:10px;border-radius:5px}.b-del:hover{background:rgba(229,62,62,.15)}
+.blist-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.blist-card:hover{border-color:var(--amber);transform:translateY(-1px)}
+.blist-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.blist-id{font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:600}
+.blist-budget{font-size:12px;font-weight:600;color:var(--text)}
+.blist-sub{font-size:11px;color:var(--text3)}
+.alert{padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;line-height:1.5}
+.al-green{background:rgba(13,187,138,.08);border:1px solid rgba(13,187,138,.2);color:#6ee7b7}
+.al-amber{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:#fcd34d}
+.sp{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-c{position:fixed;top:56px;right:10px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:var(--shadow);animation:sIn .22s ease;max-width:280px;pointer-events:auto}
+.t-ok{background:var(--green);color:#fff}.t-err{background:var(--red);color:#fff}
+@keyframes sIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+.empty-msg{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.total-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface3);border-radius:7px;font-size:12px;font-weight:700;margin-top:8px}
+.total-row .tl{color:var(--text3)}.total-row .tv{font-family:var(--mono);color:var(--amber)}
+</style>
+<link rel="stylesheet" href="/theme.css"/>
+</head>
+<body>
+<div class="toast-c" id="toast-c"></div>
+<nav>
+  <span class="nav-logo">SAP</span>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/production" class="nav-link">Production</a>
+    <a href="/budget" class="nav-link active">Budget</a>
+    <a href="/approvals" class="nav-link">Approvals</a>
+  </div>
+  <button class="btn-sm" id="btn-logout">Logout</button>
+</nav>
+<main id="app"></main>
+
+<script>
+'use strict';
+let _tok=null,_user=null;
+const BE=`${window.location.origin}/api`;
+(function(){try{_tok=sessionStorage.getItem('portal_token')||localStorage.getItem('token');const u=sessionStorage.getItem('portal_user');if(u)_user=JSON.parse(u);}catch(_e){}})();
+if(!_tok)window.location.href='/';
+document.getElementById('btn-logout').onclick=()=>{sessionStorage.clear();localStorage.removeItem('token');window.location.href='/';};
+
+let _co='JIVO_OIL_HANADB';
+let _tab='create'; // create | list
+let _budgets=[],_dim3=[],_dim4=[];
+let _loading=false,_saving=false;
+
+// Form state
+let _hdr={budget:'',subBudget:''};
+let _lines=[]; // [{month:'2026-04-01',fixedAmount:0,vAmount:0,subBudget:''}]
+let _editId=null; // null=new, number=editing existing
+
+function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function q(s){return document.querySelector(s);}
+function mk(c){const d=document.createElement('div');d.className=c;return d;}
+
+async function api(m,p,b=null){
+  const h={'Content-Type':'application/json'};if(_tok)h['Authorization']='Bearer '+_tok;
+  const o={method:m.toUpperCase(),headers:h};if(b)o.body=JSON.stringify(b);
+  let r,d;try{r=await fetch(BE+p,o);d=await r.json();}catch(_e){throw new Error('Cannot reach server');}
+  if(r.status===401){window.location.href='/';throw new Error('Session expired');}
+  if(!r.ok)throw new Error(d?.message||'HTTP '+r.status);return d;
+}
+function toast(msg,type='ok'){const tc=document.getElementById('toast-c');const el=document.createElement('div');el.className=`toast t-${type}`;el.textContent=(type==='ok'?'OK ':'ERR ')+msg;tc.appendChild(el);setTimeout(()=>el.remove(),4500);}
+
+async function loadDim3(){try{const r=await api('GET',`/sap/lookup/costing-codes?dim=3&company=${encodeURIComponent(_co)}`);if(r.success)_dim3=r.data||[];}catch(_e){}}
+async function loadDim4(){try{const r=await api('GET',`/sap/lookup/costing-codes?dim=4&company=${encodeURIComponent(_co)}`);if(r.success)_dim4=r.data||[];}catch(_e){}}
+async function loadBudgets(){
+  _loading=true;render();
+  try{const r=await api('GET',`/sap/budget/list?company=${encodeURIComponent(_co)}`);_budgets=r.data||[];}
+  catch(e){toast(e.message,'err');}
+  _loading=false;render();
+}
+
+async function loadBudget(id){
+  _loading=true;render();
+  try{
+    const r=await api('GET',`/sap/budget/${id}?company=${encodeURIComponent(_co)}`);
+    const d=r.data;
+    _editId=d.DocEntry;
+    _hdr.budget=d.U_BUDGET||'';
+    _hdr.subBudget=d.U_SUB_BUDGET||'';
+    _lines=(d.BUDGET1Collection||[]).map(l=>({
+      month:(l.U_MONTH||'').substring(0,10),
+      fixedAmount:Number(l.U_FIXED_AMOUNT)||0,
+      vAmount:Number(l.U_V_AMOUNT)||0,
+      subBudget:l.U_SUB_BUDGET||'',
+    }));
+    _tab='create';
+  }catch(e){toast(e.message,'err');}
+  _loading=false;render();
+}
+
+function addLine(){
+  const now=new Date();
+  const m=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  _lines.push({month:m,fixedAmount:0,vAmount:0,subBudget:''});
+  render();
+}
+
+function removeLine(i){_lines.splice(i,1);render();}
+
+async function doSave(){
+  if(!_hdr.budget){toast('Select a Budget','err');return;}
+  if(!_lines.length){toast('Add at least one month line','err');return;}
+  _saving=true;render();
+
+  const payload={
+    company:_co,
+    U_BUDGET:_hdr.budget,
+    U_SUB_BUDGET:_hdr.subBudget||null,
+    BUDGET1Collection:_lines.map(l=>({
+      U_MONTH:l.month,
+      U_FIXED_AMOUNT:parseFloat(l.fixedAmount)||0,
+      U_V_AMOUNT:parseFloat(l.vAmount)||0,
+      U_SUB_BUDGET:l.subBudget||null,
+    }))
+  };
+
+  try{
+    if(_editId){
+      await api('PUT',`/sap/budget/${_editId}?company=${encodeURIComponent(_co)}`,payload);
+      toast('Budget updated!');
+    }else{
+      const r=await api('POST',`/sap/budget?company=${encodeURIComponent(_co)}`,payload);
+      _editId=r.data?.DocEntry||null;
+      toast('Budget created!');
+    }
+    await loadBudgets();
+  }catch(e){toast(e.message||'Failed','err');}
+  _saving=false;render();
+}
+
+function resetForm(){
+  _editId=null;
+  _hdr={budget:'',subBudget:''};
+  _lines=[];
+  render();
+}
+
+// ═══════════════════════════════════════
+function render(){
+  try{_doRender();}catch(e){console.error(e);document.getElementById('app').innerHTML=`<div style="padding:20px;color:var(--red)">Error: ${e.message}</div>`;}
+}
+function _doRender(){
+  const app=document.getElementById('app');app.innerHTML='';
+
+  // Tabs
+  const tb=mk('tabs');
+  [{id:'create',l:_editId?'Edit Budget':'+ New Budget'},{id:'list',l:'View Budgets'}].forEach(t=>{
+    const b=document.createElement('button');b.className=`tab${_tab===t.id?' on':''}`;b.textContent=t.l;
+    b.onclick=()=>{_tab=t.id;if(t.id==='list'&&!_budgets.length)loadBudgets();else render();};
+    tb.appendChild(b);
+  });
+  app.appendChild(tb);
+
+  if(_tab==='list'){renderList(app);return;}
+
+  // ── Company
+  const c1=mk('card');
+  c1.innerHTML=`<div class="card-hd"><span class="ico">&#128176;</span> ${_editId?'Edit Budget #'+_editId:'New Budget'}</div>
+  <div class="card-bd">
+    <div class="fg"><label class="fl">Company</label><select class="fi" id="sel-co">
+      <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+      <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+      <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+      <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+    </select></div>
+    <div class="fi-row">
+      <div class="fg"><label class="fl">Budget (Dim3) *</label><select class="fi" id="sel-budget">
+        <option value="">-- Select Budget --</option>
+        ${_dim3.map(d=>`<option value="${esc(d.PrcCode)}" ${_hdr.budget===d.PrcCode?'selected':''}>${esc(d.PrcCode)} - ${esc(d.PrcName)}</option>`).join('')}
+      </select></div>
+      <div class="fg"><label class="fl">Sub Budget (Dim4)</label><select class="fi" id="sel-sub">
+        <option value="">-- None --</option>
+        ${_dim4.map(d=>`<option value="${esc(d.PrcCode)}" ${_hdr.subBudget===d.PrcCode?'selected':''}>${esc(d.PrcCode)} - ${esc(d.PrcName)}</option>`).join('')}
+      </select></div>
+    </div>
+  </div>`;
+  app.appendChild(c1);
+
+  // ── Month Lines
+  const c2=mk('card');
+  let linesHtml='';
+  if(!_lines.length){
+    linesHtml='<div class="empty-msg">No month lines added yet</div>';
+  }else{
+    const dim4Opts=_dim4.map(d=>`<option value="${esc(d.PrcCode)}">${esc(d.PrcCode)}</option>`).join('');
+    linesHtml=_lines.map((l,i)=>{
+      const selOpts=_dim4.map(d=>`<option value="${esc(d.PrcCode)}" ${l.subBudget===d.PrcCode?'selected':''}>${esc(d.PrcCode)}</option>`).join('');
+      return`<div class="line-card">
+        <span class="line-num">#${i+1}</span>
+        <div class="fg"><label class="line-fl">Month</label><input class="line-inp" data-i="${i}" data-f="month" type="month" value="${(l.month||'').substring(0,7)}" style="color:var(--amber)"/></div>
+        <div class="line-grid">
+          <div><label class="line-fl">Fixed Amount</label><input class="line-inp" data-i="${i}" data-f="fixedAmount" type="number" min="0" step="0.01" value="${l.fixedAmount}" style="text-align:right"/></div>
+          <div><label class="line-fl">V Amount</label><input class="line-inp" data-i="${i}" data-f="vAmount" type="number" min="0" step="0.01" value="${l.vAmount}" style="text-align:right"/></div>
+        </div>
+        <div class="fg" style="margin-top:6px"><label class="line-fl">Sub Budget</label><select class="line-inp" data-i="${i}" data-f="subBudget"><option value="">--</option>${selOpts}</select></div>
+        <div style="text-align:right;margin-top:4px"><button class="b-del" data-rm="${i}">Remove</button></div>
+      </div>`;
+    }).join('');
+  }
+  const totalFixed=_lines.reduce((s,l)=>s+(parseFloat(l.fixedAmount)||0),0);
+  const totalV=_lines.reduce((s,l)=>s+(parseFloat(l.vAmount)||0),0);
+  c2.innerHTML=`<div class="card-hd"><span class="ico">&#128197;</span> Monthly Lines<span class="right">${_lines.length} month${_lines.length!==1?'s':''}</span></div>
+  <div class="card-bd">
+    ${linesHtml}
+    <button class="btn b-add" id="btn-add-line" style="width:100%;padding:8px;font-size:11px;margin-top:4px">+ Add Month</button>
+    ${_lines.length?`<div class="total-row"><span class="tl">Total Fixed</span><span class="tv">${totalFixed.toLocaleString('en-IN',{minimumFractionDigits:2})}</span></div>
+    <div class="total-row" style="margin-top:4px"><span class="tl">Total V Amount</span><span class="tv">${totalV.toLocaleString('en-IN',{minimumFractionDigits:2})}</span></div>`:''}
+  </div>`;
+  app.appendChild(c2);
+
+  // ── Actions
+  const c3=mk('card');
+  c3.innerHTML=`<div class="card-bd"><div class="btn-bar">
+    <button class="btn b-save" id="btn-save" ${_saving?'disabled':''}><span id="sp-save" style="display:${_saving?'inline-block':'none'}" class="sp"></span> ${_editId?'Update Budget':'Create Budget'}</button>
+    <button class="btn b-cancel" id="btn-reset">${_editId?'Cancel Edit':'Reset'}</button>
+  </div></div>`;
+  app.appendChild(c3);
+
+  // Wire
+  setTimeout(()=>{
+    q('#sel-co')&&(q('#sel-co').onchange=async function(){_co=this.value;await Promise.all([loadDim3(),loadDim4()]);render();});
+    q('#sel-budget')&&(q('#sel-budget').onchange=function(){_hdr.budget=this.value;});
+    q('#sel-sub')&&(q('#sel-sub').onchange=function(){_hdr.subBudget=this.value;});
+    q('#btn-add-line')&&(q('#btn-add-line').onclick=addLine);
+    q('#btn-save')&&(q('#btn-save').onclick=doSave);
+    q('#btn-reset')&&(q('#btn-reset').onclick=resetForm);
+    document.querySelectorAll('[data-rm]').forEach(b=>{b.onclick=function(){removeLine(parseInt(this.dataset.rm));};});
+    document.querySelectorAll('.line-inp').forEach(el=>{
+      el.onchange=function(){
+        const i=parseInt(this.dataset.i),f=this.dataset.f;
+        if(f==='fixedAmount'||f==='vAmount')_lines[i][f]=parseFloat(this.value)||0;
+        else if(f==='month')_lines[i][f]=this.value+'-01';
+        else _lines[i][f]=this.value;
+        // Update totals without full re-render
+        const tf=document.querySelector('.total-row .tv');
+        if(tf){const t=_lines.reduce((s,l)=>s+(parseFloat(l.fixedAmount)||0),0);tf.textContent=t.toLocaleString('en-IN',{minimumFractionDigits:2});}
+      };
+    });
+  },0);
+}
+
+// ═══════════════════════════════════════
+function renderList(app){
+  const c=mk('card');
+  let listHtml='';
+  if(_loading){
+    listHtml='<div class="empty-msg"><span class="sp" style="border-color:rgba(245,166,35,.25);border-top-color:var(--amber)"></span> Loading...</div>';
+  }else if(!_budgets.length){
+    listHtml='<div class="empty-msg">No budgets found</div>';
+  }else{
+    listHtml=_budgets.map(b=>`<div class="blist-card" style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;cursor:pointer" data-bid="${b.DocEntry}">
+        <div class="blist-top"><span class="blist-id">#${b.DocEntry}</span></div>
+        <div class="blist-budget">${esc(b.U_BUDGET||'-')}</div>
+        ${b.U_SUB_BUDGET?`<div class="blist-sub">Sub: ${esc(b.U_SUB_BUDGET)}</div>`:''}
+      ${b.CreateDate?`<div class="blist-sub">${new Date(b.CreateDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})}</div>`:''}
+      </div>
+      <button data-del="${b.DocEntry}" style="padding:5px 10px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(229,62,62,.06);color:var(--red);border:1px solid rgba(229,62,62,.2);cursor:pointer;white-space:nowrap">Delete</button>
+    </div>`).join('');
+  }
+  c.innerHTML=`<div class="card-hd"><span class="ico">&#128203;</span> Budgets
+    <span class="right"><select class="fi" id="v-co" style="height:28px;font-size:11px;width:140px;padding:2px 22px 2px 8px">
+      <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+      <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+      <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+      <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+    </select></span></div>
+  <div class="card-bd">
+    <div style="margin-bottom:10px"><button class="btn b-add" id="v-refresh" style="width:100%;padding:6px;font-size:11px">Refresh</button></div>
+    ${listHtml}
+  </div>`;
+  app.appendChild(c);
+  setTimeout(()=>{
+    q('#v-co')&&(q('#v-co').onchange=function(){_co=this.value;loadBudgets();});
+    q('#v-refresh')&&(q('#v-refresh').onclick=()=>loadBudgets());
+    document.querySelectorAll('[data-bid]').forEach(c=>{c.onclick=function(){loadBudget(parseInt(this.dataset.bid));};});
+    document.querySelectorAll('[data-del]').forEach(b=>{b.onclick=async function(e){
+      e.stopPropagation();
+      const id=parseInt(this.dataset.del);
+      if(!confirm('Delete budget #'+id+'? This cannot be undone.'))return;
+      this.disabled=true;this.textContent='...';
+      try{await api('DELETE',`/sap/budget/${id}?company=${encodeURIComponent(_co)}`);toast('Budget deleted');loadBudgets();}
+      catch(err){toast(err.message,'err');this.disabled=false;this.textContent='Delete';}
+    };});
+  },0);
+}
+
+async function init(){
+  await Promise.all([loadDim3(),loadDim4()]);
+  render();
+}
+init();
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>
