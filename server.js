@@ -67,6 +67,7 @@ app.get('/budget',           (req, res) => res.sendFile(path.join(__dirname, 'pu
 app.get('/documents',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'documents.html')));
 app.get('/sap-approvals',    (req, res) => res.sendFile(path.join(__dirname, 'public', 'sap-approvals.html')));
 app.get('/reports',          (req, res) => res.sendFile(path.join(__dirname, 'public', 'reports.html')));
+app.get('/journal-entries',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'journal-entries.html')));
 app.get('/approvals',       (req, res) => res.sendFile(path.join(__dirname, 'public', 'approvals.html')));
 app.get('/register',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/vendor-register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'vendor-register.html')));
@@ -894,6 +895,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   📝 Customer Form   : http://${ip}:${PORT}/register`);
   console.log(`   📋 BOM Portal      : http://${ip}:${PORT}/bom`);
   console.log(`   ✅ Approvals       : http://${ip}:${PORT}/approvals`);
+  console.log(`   📒 Journal Entries : http://${ip}:${PORT}/journal-entries`);
   console.log(`   🔐 Admin           : http://${ip}:${PORT}/admin`);
   console.log(`   ⏳ Connecting to HANA...\n`);
   runBootstrap();

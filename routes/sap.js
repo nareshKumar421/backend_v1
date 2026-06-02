@@ -48,11 +48,11 @@ async function getHanaConn(){
   return _hanaConn;
 }
 
-async function hanaQuery(sql){
+async function hanaQuery(sql, params = []){
   console.log('[HANA]',sql.slice(0,120).replace(/\s+/g,' '));
   const conn=await getHanaConn();
   return new Promise((resolve,reject)=>{
-    conn.exec(sql,(err,rows)=>{
+    const done=(err,rows)=>{
       if(err){
         try{conn.disconnect();}catch(_){}
         _hanaConn=null;
@@ -60,7 +60,9 @@ async function hanaQuery(sql){
       }
       console.log(`[HANA] ✅ ${(rows||[]).length} rows`);
       resolve(rows||[]);
-    });
+    };
+    if(params.length) conn.exec(sql,params,done);
+    else conn.exec(sql,done);
   });
 }
 
@@ -90,6 +92,202 @@ async function safeLookup(res,sql,mapFn){
     return res.json({success:true,data:[],warning:err.message});
   }
 }
+
+function firstValue(obj, keys, fallback = null) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
+  }
+  return fallback;
+}
+
+function cleanString(v) {
+  if (v === undefined || v === null) return '';
+  return String(v).trim();
+}
+
+function asNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function dateOnly(v) {
+  if (!v) return null;
+  if (v instanceof Date && !Number.isNaN(v.getTime())) return v.toISOString().slice(0, 10);
+  const s = String(v);
+  return s ? s.slice(0, 10) : null;
+}
+
+function parsePositiveInt(value, fieldName) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = parseInt(value, 10);
+  if (!Number.isFinite(n) || !/^\d+$/.test(String(value).trim()) || n < 0) {
+    const err = new Error(`${fieldName} must be a positive number`);
+    err.statusCode = 400;
+    throw err;
+  }
+  return n;
+}
+
+function normalizeDateFilter(value, fieldName) {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const err = new Error(`${fieldName} must be in YYYY-MM-DD format`);
+    err.statusCode = 400;
+    throw err;
+  }
+  return s;
+}
+
+function requireModule(moduleName) {
+  return (req,res,next)=>{
+    const role=req.user?.role;
+    const modules=req.user?.modules;
+    if(role==='admin'||role==='sap_adder') return next();
+    if(!Array.isArray(modules)||modules.includes(moduleName)) return next();
+    return res.status(403).json({
+      success:false,
+      message:`You do not have access to ${moduleName}. Ask an admin to enable this module for your user.`,
+    });
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+//  JOURNAL ENTRIES — OJDT header + JDT1 lines + OACT account names
+// ════════════════════════════════════════════════════════════════
+router.get('/journal-entries', verifyToken, requireModule('journal-entries'), async(req,res)=>{
+  const co=cq(req);
+  try{
+    const db=DB(co);
+    const limitRaw=req.query.limit ?? req.query.top;
+    const limit=Math.min(Math.max(parseInt(limitRaw || '5',10) || 5,1),100);
+    const transId=parsePositiveInt(req.query.transId ?? req.query.trans_id,'TransId');
+    const number=parsePositiveInt(req.query.number ?? req.query.jeNumber ?? req.query.journalEntryNumber,'Journal Entry Number');
+    const baseRef=cleanString(req.query.baseRef ?? req.query.docRef ?? req.query.reference);
+    const transType=cleanString(req.query.transType ?? req.query.sapType);
+    const fromDate=normalizeDateFilter(req.query.fromDate ?? req.query.dateFrom,'From Date');
+    const toDate=normalizeDateFilter(req.query.toDate ?? req.query.dateTo,'To Date');
+
+    const where=[];
+    const params=[];
+    if(transId !== null){ where.push('H."TransId" = ?'); params.push(transId); }
+    if(number !== null){ where.push('H."Number" = ?'); params.push(number); }
+    if(baseRef){
+      const refLike=`%${baseRef.toUpperCase()}%`;
+      where.push(`(
+        UPPER(COALESCE(H."BaseRef",'')) LIKE ?
+        OR UPPER(COALESCE(H."Ref1",'')) LIKE ?
+        OR UPPER(COALESCE(H."Ref2",'')) LIKE ?
+        OR UPPER(COALESCE(H."Ref3",'')) LIKE ?
+      )`);
+      params.push(refLike,refLike,refLike,refLike);
+    }
+    if(transType){
+      where.push('CAST(H."TransType" AS NVARCHAR) = ?');
+      params.push(transType);
+    }
+    if(fromDate){ where.push('H."RefDate" >= ?'); params.push(fromDate); }
+    if(toDate){ where.push('H."RefDate" <= ?'); params.push(toDate); }
+
+    const whereSql=where.length?`WHERE ${where.join(' AND ')}`:'';
+    const headerRows=await hanaQuery(`
+      SELECT TOP ${limit}
+        H."TransId" AS "trans_id",
+        H."Number" AS "number",
+        H."RefDate" AS "ref_date",
+        H."DueDate" AS "due_date",
+        H."TaxDate" AS "tax_date",
+        H."Memo" AS "memo",
+        H."BaseRef" AS "base_ref",
+        H."TransType" AS "trans_type",
+        CAST(COALESCE(SUM(L."Debit"),0) AS DECIMAL(19,2)) AS "total_debit",
+        CAST(COALESCE(SUM(L."Credit"),0) AS DECIMAL(19,2)) AS "total_credit"
+      FROM ${db}."OJDT" H
+      LEFT JOIN ${db}."JDT1" L ON L."TransId" = H."TransId"
+      ${whereSql}
+      GROUP BY H."TransId",H."Number",H."RefDate",H."DueDate",H."TaxDate",H."Memo",H."BaseRef",H."TransType"
+      ORDER BY H."TransId" DESC
+    `,params);
+
+    const transIds=headerRows.map(r=>asNumber(firstValue(r,['trans_id','TRANS_ID','TransId']))).filter(Boolean);
+    let linesByTransId=new Map();
+    if(transIds.length){
+      const placeholders=transIds.map(()=>'?').join(',');
+      const lineRows=await hanaQuery(`
+        SELECT
+          L."TransId" AS "trans_id",
+          L."Line_ID" AS "line_id",
+          L."Account" AS "account",
+          A."AcctName" AS "account_name",
+          L."ShortName" AS "short_name",
+          CAST(COALESCE(L."Debit",0) AS DECIMAL(19,2)) AS "debit",
+          CAST(COALESCE(L."Credit",0) AS DECIMAL(19,2)) AS "credit",
+          L."ContraAct" AS "contra_account",
+          L."LineMemo" AS "line_memo",
+          L."Project" AS "project",
+          L."ProfitCode" AS "cost_center",
+          L."OcrCode2" AS "cost_center_2",
+          L."OcrCode3" AS "cost_center_3",
+          L."OcrCode4" AS "cost_center_4",
+          L."OcrCode5" AS "cost_center_5"
+        FROM ${db}."JDT1" L
+        LEFT JOIN ${db}."OACT" A ON A."AcctCode" = L."Account"
+        WHERE L."TransId" IN (${placeholders})
+        ORDER BY L."TransId" DESC,L."Line_ID" ASC
+      `,transIds);
+      linesByTransId=lineRows.reduce((map,row)=>{
+        const id=asNumber(firstValue(row,['trans_id','TRANS_ID','TransId']));
+        const line={
+          line_id:asNumber(firstValue(row,['line_id','LINE_ID','Line_ID'])),
+          account:cleanString(firstValue(row,['account','ACCOUNT','Account'])),
+          account_name:cleanString(firstValue(row,['account_name','ACCOUNT_NAME','AcctName'])),
+          short_name:cleanString(firstValue(row,['short_name','SHORT_NAME','ShortName'])),
+          debit:asNumber(firstValue(row,['debit','DEBIT','Debit'])),
+          credit:asNumber(firstValue(row,['credit','CREDIT','Credit'])),
+          contra_account:cleanString(firstValue(row,['contra_account','CONTRA_ACCOUNT','ContraAct'])),
+          line_memo:cleanString(firstValue(row,['line_memo','LINE_MEMO','LineMemo'])),
+          project:cleanString(firstValue(row,['project','PROJECT','Project'])),
+          cost_center:cleanString(firstValue(row,['cost_center','COST_CENTER','ProfitCode'])),
+          cost_center_2:cleanString(firstValue(row,['cost_center_2','COST_CENTER_2','OcrCode2'])),
+          cost_center_3:cleanString(firstValue(row,['cost_center_3','COST_CENTER_3','OcrCode3'])),
+          cost_center_4:cleanString(firstValue(row,['cost_center_4','COST_CENTER_4','OcrCode4'])),
+          cost_center_5:cleanString(firstValue(row,['cost_center_5','COST_CENTER_5','OcrCode5'])),
+        };
+        if(!map.has(id)) map.set(id,[]);
+        map.get(id).push(line);
+        return map;
+      },new Map());
+    }
+
+    const data=headerRows.map(row=>{
+      const id=asNumber(firstValue(row,['trans_id','TRANS_ID','TransId']));
+      return {
+        trans_id:id,
+        number:asNumber(firstValue(row,['number','NUMBER','Number'])),
+        ref_date:dateOnly(firstValue(row,['ref_date','REF_DATE','RefDate'])),
+        due_date:dateOnly(firstValue(row,['due_date','DUE_DATE','DueDate'])),
+        tax_date:dateOnly(firstValue(row,['tax_date','TAX_DATE','TaxDate'])),
+        memo:cleanString(firstValue(row,['memo','MEMO','Memo'])),
+        base_ref:cleanString(firstValue(row,['base_ref','BASE_REF','BaseRef'])),
+        trans_type:cleanString(firstValue(row,['trans_type','TRANS_TYPE','TransType'])),
+        total_debit:asNumber(firstValue(row,['total_debit','TOTAL_DEBIT'])),
+        total_credit:asNumber(firstValue(row,['total_credit','TOTAL_CREDIT'])),
+        lines:linesByTransId.get(id)||[],
+      };
+    });
+
+    res.json({
+      success:true,
+      data,
+      count:data.length,
+      source:{header:'OJDT',lines:'JDT1',accounts:'OACT'},
+      filters:{company:resolveCompany(co),transId,number,baseRef,transType,fromDate,toDate,limit},
+    });
+  }catch(e){
+    console.error('[JOURNAL-ENTRIES] Error:',e.message);
+    res.status(e.statusCode||500).json({success:false,message:e.message});
+  }
+});
 
 // ════════════════════════════════════════════════════════════════
 //  ITEM SEARCH
@@ -1126,6 +1324,34 @@ function normalizeSapUserId(v){
   return Number.isFinite(n)&&n>0?n:null;
 }
 
+function splitUserToken(value){
+  if (value === null || value === undefined) return [];
+  const raw = String(value).trim();
+  if (!raw) return [];
+  const values = new Set([raw.toLowerCase()]);
+  const num = normalizeSapUserId(raw);
+  if (num !== null) values.add(String(num));
+  return [...values];
+}
+
+function approvalLineUserTokens(line){
+  const values = new Set();
+  [
+    line?.UserID, line?.ApproverUserID, line?.ApproverID, line?.ApproverId,
+    line?.ApproverCode, line?.ApproverUserCode, line?.ApproverLoginName, line?.ApproverUserLoginName,
+    line?.UserCode, line?.UserName, line?.ApproverUserName, line?.ApproverName, line?.ApproverFullName,
+  ].forEach(v => splitUserToken(v).forEach(t => values.add(t)));
+  return [...values];
+}
+
+function buildSapUserMatchTokens(req, sapUserId){
+  const tokens = new Set();
+  splitUserToken(sapUserId).forEach(t => tokens.add(t));
+  splitUserToken(req?.user?.username).forEach(t => tokens.add(t));
+  splitUserToken(req?.user?.name).forEach(t => tokens.add(t));
+  return tokens;
+}
+
 async function getMappedSapUserId(req){
   const tokenSapUserId=normalizeSapUserId(req.user?.sapUserId);
   if(!req.user?.id) return tokenSapUserId;
@@ -1156,7 +1382,7 @@ function approvalLineUserId(line){
 
 function isPendingApprovalStatus(v){
   const s=String(v||'').toLowerCase();
-  return !s||s==='ardpending'||s==='arspending'||s==='pending';
+  return !s||s==='ardpending'||s==='arspending'||s==='arpending'||s==='pending';
 }
 
 function isRequestPending(r){
@@ -1171,16 +1397,22 @@ function sameApprovalStage(line,r){
 }
 
 function hasApprovalLineForSapUser(r,sapUserId){
-  return (r?.ApprovalRequestLines||[]).some(line=>approvalLineUserId(line)===sapUserId);
+  const userTokens = sapUserId instanceof Set ? sapUserId : buildSapUserMatchTokens({}, sapUserId);
+  return (r?.ApprovalRequestLines || []).some(line => {
+    const lineTokens = approvalLineUserTokens(line);
+    return lineTokens.some(token => userTokens.has(token));
+  });
 }
 
 function canSapUserApproveRequest(r,sapUserId){
   if(!isRequestPending(r)) return false;
-  return (r?.ApprovalRequestLines||[]).some(line=>
-    approvalLineUserId(line)===sapUserId&&
-    isPendingApprovalStatus(line?.Status)&&
-    sameApprovalStage(line,r)
-  );
+  const userTokens = sapUserId instanceof Set ? sapUserId : buildSapUserMatchTokens({}, sapUserId);
+  return (r?.ApprovalRequestLines||[]).some(line=>{
+    const lineTokens = approvalLineUserTokens(line);
+    return lineTokens.some(token => userTokens.has(token)) &&
+      isPendingApprovalStatus(line?.Status)&&
+      sameApprovalStage(line,r);
+  });
 }
 
 function isApprovalVisibleToSapUser(r,sapUserId,requestedStatus){
@@ -1204,7 +1436,7 @@ async function fetchApprovalRequestPage(co,filters,top,skip){
   return result?.value||[];
 }
 
-async function listVisibleApprovalRequests(co,filters,top,skip,sapUserId,requestedStatus){
+async function listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,requestedStatus){
   const visible=[];
   const pageTop=Math.max(50,top);
   let sapSkip=0;
@@ -1216,7 +1448,7 @@ async function listVisibleApprovalRequests(co,filters,top,skip,sapUserId,request
       return r;
     })));
     hydrated.forEach(r=>{
-      if(isApprovalVisibleToSapUser(r,sapUserId,requestedStatus)) visible.push(r);
+      if(isApprovalVisibleToSapUser(r,sapUserTokens,requestedStatus)) visible.push(r);
     });
     sapSkip+=rows.length;
     if(rows.length<pageTop) break;
@@ -1273,6 +1505,7 @@ router.get('/approval-requests', verifyToken, async(req,res)=>{
   try{
     const sapUserId=await getMappedSapUserId(req);
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
+    const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
     const filters=[];
     if(status==='Pending')filters.push(`Status eq 'arsPending'`);
     else if(status==='Approved')filters.push(`Status eq 'arsApproved'`);
@@ -1284,7 +1517,7 @@ router.get('/approval-requests', verifyToken, async(req,res)=>{
     if(dateFrom)filters.push(`CreationDate ge '${dateFrom}'`);
     if(dateTo)filters.push(`CreationDate le '${dateTo}'`);
     if(code)filters.push(`Code eq ${parseInt(code)}`);
-    const data=await listVisibleApprovalRequests(co,filters,top,skip,sapUserId,status);
+    const data=await listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,status);
     res.json({success:true,data});
   }catch(e){
     const code=e.statusCode||500;
@@ -1297,8 +1530,9 @@ router.get('/approval-requests/:id', verifyToken, async(req,res)=>{
   try{
     const sapUserId=await getMappedSapUserId(req);
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
+    const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
     const result=await fetchApprovalRequestDetail(req.params.id,co);
-    if(!isApprovalVisibleToSapUser(result,sapUserId)) {
+    if(!isApprovalVisibleToSapUser(result,sapUserTokens)) {
       return res.status(403).json({success:false,message:'You are not authorized to view this SAP approval request.'});
     }
     res.json({success:true,data:result});
@@ -1323,8 +1557,9 @@ router.patch('/approval-requests/:id', verifyToken, async(req,res)=>{
   try{
     const sapUserId=await getMappedSapUserId(req);
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
+    const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
     const approvalRequest=await fetchApprovalRequestDetail(id,co);
-    if(!canSapUserApproveRequest(approvalRequest,sapUserId)) {
+    if(!canSapUserApproveRequest(approvalRequest,sapUserTokens)) {
       return res.status(403).json({success:false,message:'You are not authorized to approve or reject this SAP approval request.'});
     }
     if(!sapPassword) return res.status(400).json({success:false,message:'SAP password required'});

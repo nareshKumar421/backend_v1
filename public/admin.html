@@ -289,7 +289,7 @@ function toast(msg, type = 'ok') {
   setTimeout(() => el.remove(), 4500);
 }
 
-const ALL_MODULES=[{k:'bom',l:'BOM'},{k:'production',l:'Production'},{k:'grpo',l:'GRPO'},{k:'approvals',l:'Approvals'},{k:'customers',l:'Customers'},{k:'vendors',l:'Vendors'},{k:'budget',l:'Budget'},{k:'documents',l:'Documents'},{k:'sap-approvals',l:'SAP Approvals'},{k:'reports',l:'Reports'},{k:'admin',l:'Admin'}];
+const ALL_MODULES=[{k:'bom',l:'BOM'},{k:'production',l:'Production'},{k:'grpo',l:'GRPO'},{k:'approvals',l:'Approvals'},{k:'customers',l:'Customers'},{k:'vendors',l:'Vendors'},{k:'budget',l:'Budget'},{k:'journal-entries',l:'Journal Entries'},{k:'documents',l:'Documents'},{k:'sap-approvals',l:'SAP Approvals'},{k:'reports',l:'Reports'},{k:'admin',l:'Admin'}];
 function buildModuleCheckboxes(user){
   const mods=user&&Array.isArray(user.modules)?user.modules:[];
   return ALL_MODULES.map(function(m){

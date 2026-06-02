@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Journal Entries - SAP B1</title>
+<link rel="stylesheet" href="/theme.css"/>
+<style>
+:root{
+  --je-bg:#f4f7fb;
+  --je-surface:#ffffff;
+  --je-panel:#f9fbfd;
+  --je-ink:#172536;
+  --je-muted:#637386;
+  --je-border:#dbe4ee;
+  --je-blue:#0a6ed1;
+  --je-teal:#047e7e;
+  --je-green:#137333;
+  --je-red:#b3261e;
+  --je-warn:#a15c00;
+  --je-green-bg:#e8f5ee;
+  --je-red-bg:#fdecea;
+  --je-shadow:0 10px 26px rgba(22,41,72,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--je-bg);color:var(--je-ink);font-family:Inter,Arial,Helvetica,sans-serif}
+.je-page{width:min(1480px,100%);margin:0 auto;padding:26px}
+.je-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}
+.eyebrow{display:block;margin-bottom:8px;color:var(--je-teal);font-size:12px;font-weight:900;text-transform:uppercase}
+.je-title h1{margin:0 0 7px;font-size:34px;line-height:1.08;font-weight:850;letter-spacing:0;color:var(--je-ink)}
+.je-title p{margin:0;color:var(--je-muted);font-size:16px;line-height:1.45;max-width:740px}
+.status-stack{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:240px}
+.pill{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:8px 12px;border-radius:7px;border:1px solid var(--je-border);background:#fff;color:var(--je-muted);font-size:13px;font-weight:850}
+.pill.ok{border-color:#b9dfc9;background:#f0faf4;color:var(--je-green)}
+.pill.warn{border-color:#f0d19f;background:#fff8ec;color:var(--je-warn)}
+.pill.bad{border-color:#f1b8b5;background:#fff7f7;color:var(--je-red)}
+.je-panel{background:var(--je-surface);border:1px solid var(--je-border);border-radius:8px;box-shadow:var(--je-shadow)}
+.je-filters{padding:16px;margin-bottom:16px}
+.filter-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12px;font-weight:900;color:#34465e;text-transform:uppercase}
+.field input,.field select{width:100%;height:42px;border:1px solid var(--je-border);border-radius:7px;background:#fff;color:var(--je-ink);font:700 14px/1.2 Inter,Arial,sans-serif;padding:9px 11px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--je-blue);box-shadow:0 0 0 3px rgba(10,110,209,.12)}
+.field input::placeholder{color:#99a6b6;font-weight:600}
+.filter-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.btn{height:42px;border-radius:7px;border:1px solid var(--je-border);padding:0 16px;background:#fff;color:var(--je-ink);font:850 14px/1 Inter,Arial,sans-serif;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--je-teal);border-color:var(--je-teal);color:#fff}
+.btn:hover:not(:disabled){border-color:var(--je-teal)}
+.btn.primary:hover:not(:disabled){background:#036b6b}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.advanced{margin-top:12px;border-top:1px solid var(--je-border);padding-top:12px}
+.advanced summary{cursor:pointer;color:var(--je-muted);font-size:13px;font-weight:900;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.advanced summary::-webkit-details-marker{display:none}
+.advanced summary::before{content:'+';width:18px;height:18px;border-radius:5px;border:1px solid var(--je-border);display:inline-flex;align-items:center;justify-content:center;background:#fff;color:var(--je-teal)}
+.advanced[open] summary::before{content:'-'}
+.advanced-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px}
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.summary-card{padding:16px;background:var(--je-surface);border:1px solid var(--je-border);border-radius:8px}
+.summary-card span{display:block;color:var(--je-muted);font-size:12px;font-weight:900;margin-bottom:8px;text-transform:uppercase}
+.summary-card strong{display:block;color:var(--je-ink);font-size:25px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+.summary-card.debit strong{color:var(--je-green)}
+.summary-card.credit strong{color:var(--je-red)}
+.summary-card.ok strong{color:var(--je-green)}
+.summary-card.warn strong{color:var(--je-warn)}
+.entry-list{display:flex;flex-direction:column;gap:14px}
+.entry-card{background:var(--je-surface);border:1px solid var(--je-border);border-radius:8px;box-shadow:var(--je-shadow);overflow:hidden}
+.entry-top{display:grid;grid-template-columns:1.45fr repeat(5,1fr);gap:12px;align-items:center;padding:16px;border-bottom:1px solid var(--je-border);background:var(--je-panel)}
+.entry-main strong{display:block;font-size:20px;line-height:1.15;color:var(--je-ink)}
+.entry-main span{display:block;margin-top:5px;color:var(--je-muted);font-size:13px;font-weight:800}
+.entry-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.balance-badge{display:inline-flex;align-items:center;min-height:24px;padding:5px 8px;border-radius:6px;font-size:11px;font-weight:900;text-transform:uppercase;border:1px solid #b9dfc9;background:#f0faf4;color:var(--je-green)}
+.balance-badge.warn{border-color:#f0d19f;background:#fff8ec;color:var(--je-warn)}
+.entry-kv span{display:block;font-size:11px;font-weight:900;color:var(--je-muted);margin-bottom:5px;text-transform:uppercase}
+.entry-kv strong{display:block;font-size:15px;color:var(--je-ink);word-break:break-word;font-variant-numeric:tabular-nums}
+.entry-kv.debit strong{color:var(--je-green)}
+.entry-kv.credit strong{color:var(--je-red)}
+.memo{display:flex;gap:18px;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--je-border);font-size:14px;line-height:1.45;color:#34465e;background:#fff}
+.memo b{color:var(--je-ink)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1160px}
+th{position:sticky;top:0;background:#eef3f8;color:#34465e;text-align:left;font-size:11px;text-transform:uppercase;font-weight:900;padding:11px 10px;border-bottom:1px solid var(--je-border);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--je-border);font-size:14px;line-height:1.35;vertical-align:top;color:var(--je-ink)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#fbfdff}
+.mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-weight:750}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.debit-cell{background:var(--je-green-bg);color:var(--je-green);font-weight:900}
+.credit-cell{background:var(--je-red-bg);color:var(--je-red);font-weight:900}
+.muted{color:#8a96a5}
+.empty,.error{background:#fff;border:1px solid var(--je-border);border-radius:8px;padding:28px;text-align:center;color:var(--je-muted);font-size:16px}
+.error{border-color:#f1b8b5;color:var(--je-red);background:#fff7f7}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px}
+.spinner{width:18px;height:18px;border-radius:50%;border:3px solid #d5e1ee;border-top-color:var(--je-teal);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:1280px){
+  .filter-grid{grid-template-columns:repeat(3,1fr)}
+  .filter-actions{grid-column:span 3}
+  .entry-top{grid-template-columns:repeat(3,1fr)}
+  .entry-main{grid-column:span 3}
+  .summary-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:820px){
+  .je-page{padding:18px 14px 90px}
+  .je-head{display:block}
+  .je-title h1{font-size:29px}
+  .je-title p{font-size:15px}
+  .status-stack{align-items:flex-start;min-width:0;margin-top:12px}
+  .filter-grid,.advanced-grid{grid-template-columns:1fr}
+  .filter-actions{grid-column:auto;justify-content:stretch;flex-direction:column}
+  .btn{width:100%}
+  .summary-grid{grid-template-columns:1fr}
+  .entry-top{grid-template-columns:1fr}
+  .entry-main{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<main class="je-page">
+  <header class="je-head">
+    <div class="je-title">
+      <span class="eyebrow">Finance</span>
+      <h1>Journal Entries</h1>
+      <p>Review live SAP Business One postings from OJDT, JDT1, and OACT.</p>
+    </div>
+    <div class="status-stack">
+      <span class="pill" id="status">Ready</span>
+      <span class="pill ok" id="balanceStatus">No variance</span>
+    </div>
+  </header>
+
+  <section class="je-panel je-filters" aria-label="Journal entry filters">
+    <div class="filter-grid">
+      <div class="field">
+        <label for="company">Company</label>
+        <select id="company">
+          <option value="JIVO_OIL_HANADB">Jivo Oil</option>
+          <option value="JIVO_BEVERAGES_HANADB">Jivo Beverages</option>
+          <option value="JIVO_MART_HANADB">Jivo Mart</option>
+          <option value="TEST_OIL_15122025">Test Oil</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" min="1" max="100" value="5"/>
+      </div>
+      <div class="field">
+        <label for="fromDate">From Date</label>
+        <input id="fromDate" type="date"/>
+      </div>
+      <div class="field">
+        <label for="toDate">To Date</label>
+        <input id="toDate" type="date"/>
+      </div>
+      <div class="field">
+        <label for="transId">TransId</label>
+        <input id="transId" type="number" min="0" placeholder="Exact ID"/>
+      </div>
+      <div class="field">
+        <label for="baseRef">Doc / Base Ref</label>
+        <input id="baseRef" type="text" placeholder="BaseRef or Ref"/>
+      </div>
+      <div class="field">
+        <label for="jeNumber">JE Number</label>
+        <input id="jeNumber" type="number" min="0" placeholder="Number"/>
+      </div>
+      <div class="field">
+        <label for="transType">SAP Type</label>
+        <input id="transType" type="text" placeholder="TransType"/>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" id="resetBtn" type="button">Reset</button>
+        <button class="btn primary" id="loadBtn" type="button">Load</button>
+      </div>
+    </div>
+    <details class="advanced">
+      <summary>Connection</summary>
+      <div class="advanced-grid">
+        <div class="field">
+          <label for="apiUrl">Backend API URL</label>
+          <input id="apiUrl" type="text" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label for="token">Bearer Token</label>
+          <input id="token" type="password" autocomplete="off" placeholder="Portal token is used automatically"/>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <section class="summary-grid" id="summary"></section>
+  <section class="entry-list" id="entries"></section>
+</main>
+
+<script>
+'use strict';
+const DEFAULT_API_URL = `${window.location.origin}/api/sap/journal-entries`;
+const COMPANY_LABELS = {
+  JIVO_OIL_HANADB: 'Jivo Oil',
+  JIVO_BEVERAGES_HANADB: 'Jivo Beverages',
+  JIVO_MART_HANADB: 'Jivo Mart',
+  TEST_OIL_15122025: 'Test Oil',
+};
+const TRANS_TYPES = {
+  '-3': 'Closing Balance',
+  '-2': 'Opening Balance',
+  '13': 'AR Invoice',
+  '14': 'AR Credit Memo',
+  '15': 'Delivery',
+  '16': 'Return',
+  '18': 'AP Invoice',
+  '19': 'AP Credit Memo',
+  '20': 'Goods Receipt PO',
+  '21': 'Goods Return',
+  '22': 'Purchase Order',
+  '24': 'Incoming Payment',
+  '25': 'Deposit',
+  '30': 'Journal Entry',
+  '46': 'Outgoing Payment',
+  '59': 'Goods Receipt',
+  '60': 'Goods Issue',
+  '67': 'Inventory Transfer',
+  '69': 'Landed Costs',
+  '162': 'Inventory Revaluation',
+  '202': 'Production Order',
+};
+let state = { loading:false, entries:[], error:'' };
+
+function byId(id){ return document.getElementById(id); }
+function esc(v){
+  return (v === undefined || v === null ? '' : String(v))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function getStoredToken(){
+  try{
+    return sessionStorage.getItem('portal_token') || localStorage.getItem('token') || localStorage.getItem('portal_token') || '';
+  }catch(_e){ return ''; }
+}
+function getStoredUser(){
+  try{
+    const raw = sessionStorage.getItem('portal_user') || localStorage.getItem('portal_user') || '';
+    return raw ? JSON.parse(raw) : null;
+  }catch(_e){ return null; }
+}
+function hasModuleAccess(user){
+  if(!user) return true;
+  if(user.role === 'admin' || user.role === 'sap_adder') return true;
+  return !Array.isArray(user.modules) || user.modules.includes('journal-entries');
+}
+function saveToken(token){
+  if(!token) return;
+  try{
+    sessionStorage.setItem('portal_token', token);
+    localStorage.setItem('token', token);
+  }catch(_e){}
+}
+function setStatus(text, kind){
+  const el = byId('status');
+  el.textContent = text;
+  el.className = 'pill' + (kind ? ` ${kind}` : '');
+}
+function setBalanceStatus(summary){
+  const el = byId('balanceStatus');
+  const diff = Math.abs(summary.totalDebit - summary.totalCredit);
+  const balanced = diff < 0.01;
+  el.textContent = balanced ? 'No variance' : `Variance ${amount(diff)}`;
+  el.className = `pill ${balanced ? 'ok' : 'warn'}`;
+}
+function amount(v){
+  return Number(v || 0).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function dateText(v){
+  if(!v) return '-';
+  const d = new Date(v);
+  if(Number.isNaN(d.getTime())) return String(v);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function inputToken(){
+  return (byId('token').value || '').trim().replace(/^Bearer\s+/i, '');
+}
+function normalizeApiUrl(raw){
+  const value = (raw || DEFAULT_API_URL).trim();
+  const url = new URL(value, window.location.origin);
+  const path = url.pathname.replace(/\/+$/,'');
+  if(path === '' || path === '/') url.pathname = '/api/sap/journal-entries';
+  else if(path === '/api') url.pathname = '/api/sap/journal-entries';
+  else if(path === '/api/sap') url.pathname = '/api/sap/journal-entries';
+  else if(!path.endsWith('/journal-entries')) url.pathname = path + '/journal-entries';
+  return url;
+}
+function buildUrl(){
+  const url = normalizeApiUrl(byId('apiUrl').value);
+  const params = url.searchParams;
+  params.set('company', byId('company').value);
+  params.set('limit', byId('limit').value || '5');
+  [
+    ['transId','transId'],
+    ['baseRef','baseRef'],
+    ['jeNumber','jeNumber'],
+    ['transType','transType'],
+    ['fromDate','fromDate'],
+    ['toDate','toDate'],
+  ].forEach(([id,key]) => {
+    const val = (byId(id).value || '').trim();
+    if(val) params.set(key,val);
+    else params.delete(key);
+  });
+  return url;
+}
+function sapTypeText(v){
+  const key = String(v || '').trim();
+  if(!key) return '-';
+  return TRANS_TYPES[key] ? `${key} - ${TRANS_TYPES[key]}` : key;
+}
+async function refreshTokenIfPossible(expiredToken){
+  const stored = getStoredToken();
+  if(stored && stored !== expiredToken) return stored;
+  let refresh = '';
+  try{
+    refresh = sessionStorage.getItem('portal_refresh_token') || localStorage.getItem('refresh_token') || localStorage.getItem('portal_refresh_token') || '';
+  }catch(_e){}
+  if(!refresh) return '';
+  try{
+    const authUrl = new URL('/api/auth/refresh', window.location.origin);
+    const res = await fetch(authUrl.toString(), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ refreshToken: refresh }),
+    });
+    if(!res.ok) return '';
+    const data = await res.json();
+    const token = data.token || data.accessToken || '';
+    if(token) saveToken(token);
+    return token;
+  }catch(_e){ return ''; }
+}
+async function fetchEntries(retried){
+  const token = inputToken();
+  const headers = { 'Accept':'application/json' };
+  if(token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(buildUrl().toString(), { headers });
+  const data = await res.json().catch(() => ({}));
+  if(res.status === 401 && !retried){
+    const fresh = await refreshTokenIfPossible(token);
+    if(fresh){
+      byId('token').value = fresh;
+      return fetchEntries(true);
+    }
+  }
+  if(!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+  if(!data.success) throw new Error(data.message || 'Request failed');
+  return data.data || [];
+}
+function summarize(entries){
+  const lines = entries.flatMap(e => e.lines || []);
+  const debitLines = lines.filter(l => Number(l.debit || 0) > 0).length;
+  const creditLines = lines.filter(l => Number(l.credit || 0) > 0).length;
+  const totalDebit = entries.reduce((sum,e) => sum + Number(e.total_debit || 0), 0);
+  const totalCredit = entries.reduce((sum,e) => sum + Number(e.total_credit || 0), 0);
+  return { count:entries.length, lineCount:lines.length, debitLines, creditLines, totalDebit, totalCredit };
+}
+function costText(line){
+  const parts = [];
+  if(line.project) parts.push(`Project: ${line.project}`);
+  [
+    ['CC1', line.cost_center],
+    ['CC2', line.cost_center_2],
+    ['CC3', line.cost_center_3],
+    ['CC4', line.cost_center_4],
+    ['CC5', line.cost_center_5],
+  ].forEach(([label,value]) => { if(value) parts.push(`${label}: ${value}`); });
+  return parts.length ? parts.join(' / ') : '-';
+}
+function renderSummary(entries){
+  const s = summarize(entries);
+  const diff = Math.abs(s.totalDebit - s.totalCredit);
+  setBalanceStatus(s);
+  byId('summary').innerHTML = `
+    <div class="summary-card"><span>Journal entries</span><strong>${s.count}</strong></div>
+    <div class="summary-card"><span>Lines</span><strong>${s.lineCount}</strong></div>
+    <div class="summary-card debit"><span>Total debit</span><strong>${amount(s.totalDebit)}</strong></div>
+    <div class="summary-card credit"><span>Total credit</span><strong>${amount(s.totalCredit)}</strong></div>
+    <div class="summary-card ${diff < 0.01 ? 'ok' : 'warn'}"><span>Difference</span><strong>${amount(diff)}</strong></div>
+  `;
+}
+function renderEntries(entries){
+  const root = byId('entries');
+  if(state.loading){
+    root.innerHTML = '<div class="empty loading"><span class="spinner"></span><span>Loading journal entries...</span></div>';
+    return;
+  }
+  if(state.error){
+    root.innerHTML = `<div class="error">${esc(state.error)}</div>`;
+    return;
+  }
+  if(!entries.length){
+    root.innerHTML = '<div class="empty">No journal entries found.</div>';
+    return;
+  }
+  root.innerHTML = entries.map(entry => `
+    <article class="entry-card">
+      <div class="entry-top">
+        <div class="entry-main">
+          <div class="entry-title-row">
+            <strong>JE ${esc(entry.number || '-')}</strong>
+            <span class="balance-badge ${Math.abs(Number(entry.total_debit || 0) - Number(entry.total_credit || 0)) < 0.01 ? '' : 'warn'}">
+              ${Math.abs(Number(entry.total_debit || 0) - Number(entry.total_credit || 0)) < 0.01 ? 'Balanced' : 'Check'}
+            </span>
+          </div>
+          <span>TransId ${esc(entry.trans_id)} / ${esc(COMPANY_LABELS[byId('company').value] || byId('company').value)}</span>
+        </div>
+        <div class="entry-kv"><span>Date</span><strong>${dateText(entry.ref_date)}</strong></div>
+        <div class="entry-kv"><span>SAP Type</span><strong>${esc(sapTypeText(entry.trans_type))}</strong></div>
+        <div class="entry-kv"><span>Base Ref</span><strong>${esc(entry.base_ref || '-')}</strong></div>
+        <div class="entry-kv debit"><span>Total Debit</span><strong>${amount(entry.total_debit)}</strong></div>
+        <div class="entry-kv credit"><span>Total Credit</span><strong>${amount(entry.total_credit)}</strong></div>
+      </div>
+      <div class="memo">
+        <span><b>Memo:</b> ${esc(entry.memo || '-')}</span>
+        <span><b>Due:</b> ${dateText(entry.due_date)}</span>
+        <span><b>Tax:</b> ${dateText(entry.tax_date)}</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>GL Account</th>
+              <th>Account Name</th>
+              <th>BP / Short Name</th>
+              <th class="num">Debit</th>
+              <th class="num">Credit</th>
+              <th>Contra Account</th>
+              <th>Memo</th>
+              <th>Cost Center / Project</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(entry.lines || []).map(line => {
+              const debit = Number(line.debit || 0);
+              const credit = Number(line.credit || 0);
+              return `
+                <tr>
+                  <td class="mono">${esc(line.line_id)}</td>
+                  <td class="mono">${esc(line.account || '-')}</td>
+                  <td>${esc(line.account_name || '-')}</td>
+                  <td class="mono">${esc(line.short_name || '-')}</td>
+                  <td class="num ${debit > 0 ? 'debit-cell' : 'muted'}">${debit > 0 ? amount(debit) : '-'}</td>
+                  <td class="num ${credit > 0 ? 'credit-cell' : 'muted'}">${credit > 0 ? amount(credit) : '-'}</td>
+                  <td class="mono">${esc(line.contra_account || '-')}</td>
+                  <td>${esc(line.line_memo || '-')}</td>
+                  <td>${esc(costText(line))}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `).join('');
+}
+function render(){
+  renderSummary(state.entries);
+  renderEntries(state.entries);
+}
+async function loadEntries(){
+  state.loading = true;
+  state.error = '';
+  render();
+  byId('loadBtn').disabled = true;
+  setStatus('Loading', '');
+  try{
+    const token = inputToken();
+    if(!token) throw new Error('Please sign in to the portal or paste a bearer token.');
+    const entries = await fetchEntries(false);
+    state.entries = entries;
+    setStatus(`${entries.length} loaded`, 'ok');
+  }catch(e){
+    state.entries = [];
+    state.error = e.message || 'Unable to load journal entries';
+    setStatus('Load failed', 'bad');
+  }finally{
+    state.loading = false;
+    byId('loadBtn').disabled = false;
+    render();
+  }
+}
+function resetFilters(){
+  byId('transId').value = '';
+  byId('baseRef').value = '';
+  byId('jeNumber').value = '';
+  byId('transType').value = '';
+  byId('fromDate').value = '';
+  byId('toDate').value = '';
+  byId('limit').value = '5';
+  loadEntries();
+}
+function init(){
+  byId('apiUrl').value = localStorage.getItem('journal_api_url') || DEFAULT_API_URL;
+  byId('company').value = localStorage.getItem('journal_company') || 'JIVO_OIL_HANADB';
+  const token = getStoredToken();
+  if(token) byId('token').value = token;
+  byId('apiUrl').addEventListener('change', () => localStorage.setItem('journal_api_url', byId('apiUrl').value));
+  byId('company').addEventListener('change', () => localStorage.setItem('journal_company', byId('company').value));
+  byId('loadBtn').addEventListener('click', loadEntries);
+  byId('resetBtn').addEventListener('click', resetFilters);
+  document.querySelector('.je-filters').addEventListener('keydown', event => {
+    if(event.key === 'Enter') loadEntries();
+  });
+  const user = getStoredUser();
+  if(!hasModuleAccess(user)){
+    state.entries = [];
+    state.error = 'You do not have access to Journal Entries. Ask an admin to enable this module for your user.';
+    setStatus('No access', 'bad');
+    render();
+    byId('loadBtn').disabled = true;
+    return;
+  }
+  render();
+  loadEntries();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="/sidebar.js"></script>
+</body>
+</html>

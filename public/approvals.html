@@ -320,6 +320,53 @@ main{position:relative;z-index:1;padding:16px;max-width:1400px;margin:0 auto}
 .log-role{font-size:10px;color:var(--text3);font-weight:500}
 .log-what{font-size:11px;color:var(--text3);margin-top:2px}
 .log-comment{font-size:11px;color:var(--text2);margin-top:5px;padding:7px 10px;background:var(--surface2);border-radius:5px;border-left:2px solid var(--border2);font-style:italic}
+
+/* Modern Approval Queue workspace */
+main.approval-page{max-width:1180px!important}
+.approval-hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:18px;margin-bottom:18px}
+.approval-hero-main{background:linear-gradient(135deg,#ffffff 0%,#f8fbff 58%,#fff8ed 100%);border:1px solid var(--border);border-radius:8px;padding:28px;box-shadow:var(--shadow-soft)}
+.approval-eyebrow{display:inline-flex;align-items:center;min-height:28px;padding:5px 11px;border-radius:999px;border:1px solid rgba(37,99,235,.18);background:#fff;color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.approval-title{font-family:var(--display);font-size:clamp(34px,4vw,54px);font-weight:800;line-height:1.04;color:var(--text);margin:16px 0 10px;letter-spacing:0}
+.approval-sub{font-size:16px;line-height:1.65;color:var(--text2);max-width:760px}
+.approval-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-top:20px}
+.company-picker{min-width:260px}
+.company-picker label{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.company-picker select{width:100%;min-height:44px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);font-size:14px;font-weight:700}
+.approval-kpis{display:grid;grid-template-columns:1fr;gap:10px}
+.approval-kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:var(--shadow-soft)}
+.approval-kpi-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.approval-kpi-value{font-family:var(--display);font-size:32px;font-weight:800;line-height:1.05;color:var(--text);margin-top:6px}
+.approval-kpi-value.good{color:var(--green)}.approval-kpi-value.warn{color:var(--amber)}.approval-kpi-value.danger{color:var(--red)}
+.queue-tabs-wrap{margin-bottom:18px}
+.module-tabs{border:1px solid var(--border)!important;border-radius:8px!important;background:rgba(255,255,255,.75)!important;padding:6px!important;box-shadow:var(--shadow-soft)!important}
+.module-tab{min-height:46px!important;border-radius:8px!important;border-bottom:0!important;margin-bottom:0!important;text-transform:none!important;letter-spacing:0!important;font-size:14px!important}
+.module-tab.on{background:#fff!important;box-shadow:0 8px 16px rgba(16,32,51,.07)!important}
+.queue-section{background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:18px;box-shadow:var(--shadow-soft)}
+.queue-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.queue-section-title{font-size:24px;font-weight:800;color:var(--text);line-height:1.15}
+.queue-section-sub{font-size:14px;color:var(--text3);line-height:1.55;margin-top:5px}
+.queue-section-tag{display:inline-flex;align-items:center;min-height:30px;padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface2);font-size:12px;font-weight:800;color:var(--text2)}
+.pipeline-header{border-radius:8px!important;background:var(--surface2)!important;padding:16px!important;margin-bottom:16px!important}
+.ph-label{font-size:12px!important;color:var(--text2)!important}
+.filter-bar,.stats-row{margin-bottom:16px!important}
+.stats-row{gap:10px!important}
+.stat-pill{min-height:48px!important;padding:10px 14px!important;border-radius:8px!important;background:#fff!important}
+.stat-n{font-size:18px!important}
+.filter-tab{min-height:38px!important;border-radius:999px!important;font-size:12px!important;text-transform:none!important}
+.refresh-btn{min-height:40px!important;border-radius:8px!important;padding:9px 14px!important;font-size:13px!important;font-weight:800!important;background:#fff!important}
+.req-grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))!important;gap:14px!important}
+.req-card{min-height:190px;background:#fff!important;border-color:var(--border)!important;padding:18px!important;box-shadow:var(--shadow-soft)!important}
+.req-card::before{width:4px!important}
+.req-card:hover{box-shadow:var(--shadow-hover)!important}
+.rc-code{font-size:13px!important}.rc-id{font-size:12px!important}
+.rc-name{font-size:17px!important;line-height:1.35!important;white-space:normal!important}
+.rc-meta{font-size:13px!important;line-height:1.5!important}
+.rc-actions{gap:8px!important;padding-top:12px!important}
+.empty{background:var(--surface2);border:1px dashed var(--border2);border-radius:8px;padding:44px 18px!important}
+.detail-sec{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:var(--shadow-soft)}
+.modal{max-width:980px!important}
+@media(max-width:900px){.approval-hero{grid-template-columns:1fr}.approval-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:768px){.approval-kpis{grid-template-columns:1fr}.approval-hero-main{padding:22px}.company-picker{min-width:100%;width:100%}.req-grid{grid-template-columns:1fr!important}.queue-section{padding:14px}.approval-toolbar{align-items:stretch}.approval-toolbar .btn{width:100%;justify-content:center}}
 </style>
 <link rel="stylesheet" href="/theme.css"/>
 </head>
@@ -342,7 +389,7 @@ main{position:relative;z-index:1;padding:16px;max-width:1400px;margin:0 auto}
   </div>
 </nav>
 
-<main>
+<main class="approval-page">
   <div id="page-content">
     <div class="skeleton"></div>
     <div class="skeleton" style="height:80px"></div>
@@ -685,17 +732,33 @@ function render() {
   const container = document.getElementById('page-content');
   container.innerHTML = '';
   const ph = document.createElement('div');
-  ph.className = 'page-header';
-  const adminBadge = isAdmin() ? ' <span style="background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;vertical-align:middle">⚡ ADMIN — Direct SAP Push</span>' : '';
+  ph.className = 'approval-hero';
+  const totalActionable = countMyTurnBom() + countMyTurnCust() + countMyTurnVend();
+  const totalPending = _bomRequests.filter(r=>r.status==='PENDING').length + _custRequests.filter(r=>r.status==='PENDING').length + _vendRequests.filter(r=>r.status==='PENDING').length;
+  const totalCompleted = _bomRequests.filter(r=>r.status==='SAP_PUSHED').length + _custRequests.filter(r=>r.status==='APPROVED').length + _vendRequests.filter(r=>r.status==='APPROVED').length;
+  const totalRejected = _bomRequests.filter(r=>r.status==='REJECTED').length + _custRequests.filter(r=>r.status==='REJECTED').length + _vendRequests.filter(r=>r.status==='REJECTED').length;
+  const roleText = (_user?.role || 'user').replace('_',' ').toUpperCase();
+  const adminBadge = isAdmin() ? '<span class="queue-section-tag">Admin direct SAP push enabled</span>' : `<span class="queue-section-tag">${esc(roleText)}</span>`;
   const coOpts = COMPANIES.map(c=>`<option value="${c.value}"${_activeCompany===c.value?' selected':''}>${c.label}</option>`).join('');
-  ph.innerHTML = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
-    <div class="page-title" style="margin-bottom:0">APPROVAL QUEUE${adminBadge}</div>
-    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Company</span>
-      <select id="company-sel" style="height:30px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font);cursor:pointer">${coOpts}</select>
+  ph.innerHTML = `<section class="approval-hero-main">
+    <span class="approval-eyebrow">Unified Approval Desk</span>
+    <h1 class="approval-title">Approval Queue</h1>
+    <div class="approval-sub">Review BOM, customer, and vendor requests in one place. Prioritize your turn, inspect details, and push final approvals into SAP B1.</div>
+    <div class="approval-toolbar">
+      <div class="company-picker">
+        <label for="company-sel">Company</label>
+        <select id="company-sel">${coOpts}</select>
+      </div>
+      <button class="btn b-primary" id="queue-refresh">Refresh Queue</button>
+      ${adminBadge}
     </div>
-  </div>
-  <div class="page-sub">BOM ${_approvalLevels}-Level · Customer ${_custApprovalLevels}-Level · Vendor 2-Level Approval System</div>`;
+  </section>
+  <aside class="approval-kpis">
+    <div class="approval-kpi"><div class="approval-kpi-label">${isAdmin()?'Actionable':'My Turn'}</div><div class="approval-kpi-value warn">${totalActionable}</div></div>
+    <div class="approval-kpi"><div class="approval-kpi-label">New Pending</div><div class="approval-kpi-value">${totalPending}</div></div>
+    <div class="approval-kpi"><div class="approval-kpi-label">In SAP B1</div><div class="approval-kpi-value good">${totalCompleted}</div></div>
+    <div class="approval-kpi"><div class="approval-kpi-label">Rejected</div><div class="approval-kpi-value danger">${totalRejected}</div></div>
+  </aside>`;
   container.appendChild(ph);
   container.querySelector('#company-sel').addEventListener('change', async e => {
     _activeCompany = e.target.value;
@@ -705,7 +768,13 @@ function render() {
     render();
     toast(`Switched to ${COMPANIES.find(c=>c.value===_activeCompany)?.label}`);
   });
-  container.appendChild(buildModuleTabs());
+  container.querySelector('#queue-refresh').addEventListener('click', async e => {
+    const rb = e.currentTarget; rb.disabled = true; rb.textContent = 'Refreshing...';
+    await Promise.all([loadBomRequests(), loadCustRequests(), loadVendRequests()]);
+    render();
+    toast('Approval queue refreshed');
+  });
+  const tabsWrap=document.createElement('div');tabsWrap.className='queue-tabs-wrap';tabsWrap.appendChild(buildModuleTabs());container.appendChild(tabsWrap);
   if (_activeModule==='bom') renderBomSection(container);
   else if (_activeModule==='cust') renderCustSection(container);
   else renderVendSection(container);
@@ -732,7 +801,9 @@ function buildModuleTabs() {
 //  BOM SECTION  (unchanged from original)
 // ════════════════════════════════════════
 function renderBomSection(container){
-  container.appendChild(buildBomPipeline());
+  const section=document.createElement('section');section.className='queue-section';
+  section.innerHTML=`<div class="queue-section-head"><div><div class="queue-section-title">BOM Approvals</div><div class="queue-section-sub">Track create and update requests through the configured BOM approval flow.</div></div><span class="queue-section-tag">BOM ${_approvalLevels}-Level</span></div>`;
+  section.appendChild(buildBomPipeline());
   const myTurn=countMyTurnBom(),pending=_bomRequests.filter(r=>r.status==='PENDING').length;
   const inProg=_bomRequests.filter(r=>['L1_APPROVED','L2_APPROVED','L3_APPROVED'].includes(r.status)).length;
   const pushed=_bomRequests.filter(r=>r.status==='SAP_PUSHED').length;
@@ -743,13 +814,14 @@ function renderBomSection(container){
     <div class="stat-pill"><span class="stat-n amber">${inProg}</span><span style="font-size:11px;color:var(--text3)">In Progress</span></div>
     <div class="stat-pill"><span class="stat-n green">${pushed}</span><span style="font-size:11px;color:var(--text3)">In SAP</span></div>
     <div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
-  container.appendChild(sr);
-  container.appendChild(buildBomFilterBar());
+  section.appendChild(sr);
+  section.appendChild(buildBomFilterBar());
   const filtered=getBomFiltered();
-  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_bomFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px">${_bomFilter==='MY_TURN'?'All caught up!':'No BOM requests'}</p>`;container.appendChild(e);return;}
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_bomFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px">${_bomFilter==='MY_TURN'?'All caught up!':'No BOM requests'}</p>`;section.appendChild(e);container.appendChild(section);return;}
   const grid=document.createElement('div');grid.className='req-grid';
   filtered.forEach(req=>grid.appendChild(buildBomCard(req)));
-  container.appendChild(grid);
+  section.appendChild(grid);
+  container.appendChild(section);
 }
 function buildBomPipeline(){
   const div=document.createElement('div');div.className='pipeline-header';
@@ -855,17 +927,19 @@ function buildBomDetailModal(container,req){
 //  CUSTOMER SECTION
 // ════════════════════════════════════════
 function renderCustSection(container){
-  container.appendChild(buildCustPipeline());
+  const section=document.createElement('section');section.className='queue-section';
+  section.innerHTML=`<div class="queue-section-head"><div><div class="queue-section-title">Customer Approvals</div><div class="queue-section-sub">Verify customer registration details, documents, and SAP configuration before creation.</div></div><span class="queue-section-tag">Customer ${_custApprovalLevels}-Level</span></div>`;
+  section.appendChild(buildCustPipeline());
   const myTurn=countMyTurnCust(),pending=_custRequests.filter(r=>r.status==='PENDING').length;
   const verified=_custRequests.filter(r=>r.status==='VERIFIED'||r.status==='REVIEWED').length;
   const approved=_custRequests.filter(r=>r.status==='APPROVED').length;
   const rejected=_custRequests.filter(r=>r.status==='REJECTED').length;
   const sr=document.createElement('div');sr.className='stats-row';
   sr.innerHTML=`<div class="stat-pill"><span class="stat-n ${isAdmin()?'gold':'green'}">${myTurn}</span><span style="font-size:11px;color:var(--text3)">${isAdmin()?'All Actionable':'My Turn'}</span></div><div class="stat-pill"><span class="stat-n teal">${pending}</span><span style="font-size:11px;color:var(--text3)">New</span></div><div class="stat-pill"><span class="stat-n amber">${verified}</span><span style="font-size:11px;color:var(--text3)">Verified</span></div><div class="stat-pill"><span class="stat-n green">${approved}</span><span style="font-size:11px;color:var(--text3)">In SAP B1</span></div><div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
-  container.appendChild(sr);container.appendChild(buildCustFilterBar());
+  section.appendChild(sr);section.appendChild(buildCustFilterBar());
   const filtered=getCustFiltered();
-  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_custFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_custFilter==='MY_TURN'?'All caught up!':'No customer requests'}</p>`;container.appendChild(e);return;}
-  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildCustCard(r)));container.appendChild(grid);
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_custFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_custFilter==='MY_TURN'?'All caught up!':'No customer requests'}</p>`;section.appendChild(e);container.appendChild(section);return;}
+  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildCustCard(r)));section.appendChild(grid);container.appendChild(section);
 }
 function buildCustPipeline(){
   const div=document.createElement('div');div.className='pipeline-header';
@@ -994,17 +1068,19 @@ function buildCustDetailModal(container,cust){
 //  VENDOR SECTION
 // ════════════════════════════════════════
 function renderVendSection(container){
-  container.appendChild(buildVendPipeline());
+  const section=document.createElement('section');section.className='queue-section';
+  section.innerHTML=`<div class="queue-section-head"><div><div class="queue-section-title">Vendor Approvals</div><div class="queue-section-sub">Review vendor onboarding, banking, MSME, and SAP master data before final approval.</div></div><span class="queue-section-tag">Vendor 2-Level</span></div>`;
+  section.appendChild(buildVendPipeline());
   const myTurn=countMyTurnVend(),pending=_vendRequests.filter(r=>r.status==='PENDING').length;
   const verified=_vendRequests.filter(r=>r.status==='VERIFIED').length;
   const approved=_vendRequests.filter(r=>r.status==='APPROVED').length;
   const rejected=_vendRequests.filter(r=>r.status==='REJECTED').length;
   const sr=document.createElement('div');sr.className='stats-row';
   sr.innerHTML=`<div class="stat-pill"><span class="stat-n ${isAdmin()?'gold':'green'}">${myTurn}</span><span style="font-size:11px;color:var(--text3)">${isAdmin()?'All Actionable':'My Turn'}</span></div><div class="stat-pill"><span class="stat-n orange">${pending}</span><span style="font-size:11px;color:var(--text3)">New</span></div><div class="stat-pill"><span class="stat-n amber">${verified}</span><span style="font-size:11px;color:var(--text3)">Verified</span></div><div class="stat-pill"><span class="stat-n green">${approved}</span><span style="font-size:11px;color:var(--text3)">In SAP B1</span></div><div class="stat-pill"><span class="stat-n red">${rejected}</span><span style="font-size:11px;color:var(--text3)">Rejected</span></div>`;
-  container.appendChild(sr);container.appendChild(buildVendFilterBar());
+  section.appendChild(sr);section.appendChild(buildVendFilterBar());
   const filtered=getVendFiltered();
-  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_vendFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_vendFilter==='MY_TURN'?'All caught up!':'No vendor requests'}</p>`;container.appendChild(e);return;}
-  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildVendCard(r)));container.appendChild(grid);
+  if(!filtered.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<div class="empty-icon">${_vendFilter==='MY_TURN'?'🎉':'📭'}</div><p style="font-size:14px;font-weight:600;color:var(--text2)">${_vendFilter==='MY_TURN'?'All caught up!':'No vendor requests'}</p>`;section.appendChild(e);container.appendChild(section);return;}
+  const grid=document.createElement('div');grid.className='req-grid';filtered.forEach(r=>grid.appendChild(buildVendCard(r)));section.appendChild(grid);container.appendChild(section);
 }
 function buildVendPipeline(){
   const div=document.createElement('div');div.className='pipeline-header';

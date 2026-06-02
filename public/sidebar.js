@@ -17,6 +17,7 @@
     {href:'/register',icon:'&#9639;',label:'Customers',module:'customers'},
     {href:'/vendor-register',icon:'&#127981;',label:'Vendors',module:'vendors'},
     {href:'/budget',icon:'&#128176;',label:'Budget',module:'budget'},
+    {href:'/journal-entries',icon:'&#128209;',label:'Journal Entries',module:'journal-entries'},
     {href:'/documents',icon:'&#128196;',label:'Documents',module:'documents'},
     {href:'/sap-approvals',icon:'&#9989;',label:'SAP Approvals',module:'sap-approvals'},
     {href:'/reports',icon:'&#128202;',label:'Reports',module:'reports'},
@@ -29,8 +30,10 @@
   const isAdmin=user?.role==='admin'||user?.role==='sap_adder';
   const userModules=user?.modules||null; // null = all access (backward compat)
 
-  // Load theme CSS
-  const themeLink=document.createElement('link');themeLink.rel='stylesheet';themeLink.href='/theme.css';document.head.appendChild(themeLink);
+  // Load theme CSS once; most pages already include it.
+  if(!document.querySelector('link[href="/theme.css"]')){
+    const themeLink=document.createElement('link');themeLink.rel='stylesheet';themeLink.href='/theme.css';document.head.appendChild(themeLink);
+  }
 
   // Remove existing nav
   const oldNav=document.querySelector('nav');
@@ -60,10 +63,10 @@
 
     /* ── DESKTOP ──────────────────────────── */
     @media(min-width:769px){
-      .sb{width:200px;transition:width .2s ease}
+      .sb{width:232px;transition:width .2s ease}
       .sb .sb-lbl{display:inline}
       .sb .sb-user,.sb .sb-logout{display:block}
-      body{margin-left:200px!important;transition:margin-left .2s ease}
+      body{margin-left:232px!important;transition:margin-left .2s ease}
       .mob-bar{display:none!important}
       .sb-overlay{display:none!important}
     }
@@ -74,8 +77,8 @@
       .sb.open{transform:translateX(0)}
       .sb .sb-lbl{display:inline}
       .sb .sb-user,.sb .sb-logout{display:block}
-      body{margin-left:0!important;padding-bottom:56px!important}
-      .mob-bar{position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:300;display:flex;align-items:center;justify-content:space-around;padding:0 4px;box-shadow:0 -2px 10px rgba(0,0,0,.04)}
+      body{margin-left:0!important;padding-bottom:72px!important}
+      .mob-bar{position:fixed;bottom:0;left:0;right:0;height:66px;background:#fff;border-top:1px solid #e0e0e0;z-index:300;display:flex;align-items:center;justify-content:space-around;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.04)}
       .mob-bar a{display:flex;flex-direction:column;align-items:center;gap:2px;color:#6a6d70;text-decoration:none;font-size:9px;font-weight:600;font-family:'Space Grotesk',sans-serif;padding:6px 4px;border-radius:8px;transition:all .12s;flex:1;text-align:center}
       .mob-bar a .mb-ico{font-size:18px}
       .mob-bar a.active{color:#047e7e;background:rgba(4,126,126,.06)}

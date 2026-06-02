@@ -76,13 +76,66 @@ select.fi option{background:var(--surface2)}
 .stage-card{background:var(--ink3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:4px}
 .stage-top{display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap}
 .comment-area{width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:12px;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none;resize:vertical;min-height:60px}
+
+/* SAP approval workspace polish */
+.sap-approval-page{max-width:1180px!important}
+.sap-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px;margin-bottom:18px}
+.sap-hero-main{background:linear-gradient(135deg,#ffffff 0%,#f8fbff 58%,#eefdf8 100%);border:1px solid var(--border);border-radius:8px;padding:28px;box-shadow:var(--shadow-soft)}
+.sap-eyebrow{display:inline-flex;align-items:center;min-height:28px;padding:5px 11px;border-radius:999px;border:1px solid rgba(37,99,235,.18);background:#fff;color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.sap-title{font-family:var(--display);font-size:clamp(34px,4vw,54px);font-weight:800;line-height:1.04;color:var(--text);margin:16px 0 10px}
+.sap-sub{font-size:16px;line-height:1.65;color:var(--text2);max-width:760px}
+.sap-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.sap-kpis{display:grid;grid-template-columns:1fr;gap:10px}
+.sap-kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:var(--shadow-soft)}
+.sap-kpi-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.sap-kpi-value{font-family:var(--display);font-size:30px;font-weight:800;line-height:1.05;color:var(--text);margin-top:6px;word-break:break-word}
+.sap-kpi-value.good{color:var(--green)}.sap-kpi-value.warn{color:var(--amber)}.sap-kpi-value.blue{color:var(--blue)}
+.approval-panel{overflow:hidden}
+.approval-panel .card-hd{align-items:center!important;flex-direction:row!important}
+.panel-title{display:flex;flex-direction:column;gap:3px}
+.panel-title strong{font-size:18px;color:var(--text)}
+.panel-title span{font-size:13px;color:var(--text3);font-weight:600}
+.identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.identity-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.identity-label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.identity-value{font-size:15px;font-weight:800;color:var(--text);word-break:break-word}
+.filter-section{padding-top:2px}
+.filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.filter-actions{display:flex;align-items:flex-end;gap:8px}
+.request-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.request-summary-title{font-size:20px;font-weight:800;color:var(--text)}
+.request-pills{display:flex;gap:8px;flex-wrap:wrap}
+.request-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;background:#fff;padding:7px 11px;font-size:12px;font-weight:800;color:var(--text2)}
+.request-pill b{font-family:var(--mono);color:var(--text)}
+.approval-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.ar-card{position:relative;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;background:#fff!important;border-color:var(--border)!important;padding:16px!important;box-shadow:var(--shadow-soft)!important}
+.ar-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue);border-radius:8px 0 0 8px}
+.ar-card.pending::before{background:var(--amber)}.ar-card.approved::before{background:var(--green)}.ar-card.rejected::before{background:var(--red)}
+.ar-card:hover{box-shadow:var(--shadow-hover)!important}
+.ar-top{gap:8px;margin-bottom:10px}
+.ar-code{font-size:14px!important}
+.ar-desc{font-size:15px!important;line-height:1.45;color:var(--text)!important;margin-bottom:10px}
+.ar-meta{font-size:12px!important;line-height:1.5;color:var(--text3)!important}
+.ar-meta b{color:var(--text)!important}
+.empty-state{padding:36px 18px;text-align:center;color:var(--text3);background:var(--surface2);border:1px dashed var(--border2);border-radius:8px}
+.empty-state strong{display:block;color:var(--text);font-size:18px;margin-bottom:6px}
+.detail-tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px}
+.detail-tabs .m-tab{flex:1;justify-content:center}
+.approval-detail-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--text)}
+.detail-section{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px;box-shadow:var(--shadow-soft)}
+.detail-title{font-size:12px!important;color:var(--text2)!important;letter-spacing:.06em;margin-bottom:12px!important}
+.doc-summary{background:var(--surface2)!important;border-color:var(--border)!important;padding:8px 12px!important}
+.stage-card{background:var(--surface2)!important;border-color:var(--border)!important;border-radius:8px!important;padding:12px!important;margin-bottom:8px!important}
+.approval-action-box{margin-top:16px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);padding:16px}
+@media(max-width:900px){.sap-hero{grid-template-columns:1fr}.sap-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:768px){.identity-grid,.filter-grid{grid-template-columns:1fr}.filter-actions{flex-direction:column}.sap-kpis{grid-template-columns:1fr}.approval-list{grid-template-columns:1fr}.sap-hero-main{padding:22px}.approval-panel .card-hd{align-items:flex-start!important;flex-direction:column!important}}
 </style>
 <link rel="stylesheet" href="/theme.css"/>
 </head>
 <body>
 <div class="toast-c" id="toast-c"></div>
 <div class="modal-bg" id="ar-modal"><div class="modal" id="modal-inner"></div></div>
-<main id="app"></main>
+<main id="app" class="sap-approval-page"></main>
 
 <script>
 'use strict';
@@ -108,7 +161,7 @@ let _mappedUserError='';
 
 const OBJ_MAP={'112':'Draft','13':'AR Invoice','14':'AR Credit Memo','18':'AP Invoice','19':'AP Credit Note','22':'Purchase Order','20':'Goods Receipt PO','21':'Goods Return','59':'Goods Issue','60':'Goods Receipt','46':'Blanket Agreement','17':'Sales Order','15':'Delivery','16':'Return','1470000113':'Inventory Transfer','202':'Production Order','67':'Inventory Transfer Request'};
 const OBJ_ENDPOINT={'13':'Invoices','14':'CreditNotes','18':'PurchaseInvoices','19':'PurchaseCreditNotes','22':'PurchaseOrders','20':'PurchaseDeliveryNotes','21':'PurchaseReturns','17':'Orders','15':'DeliveryNotes','16':'Returns','1470000113':'StockTransfers','202':'ProductionOrders','59':'InventoryGenExits','60':'InventoryGenEntries','67':'InventoryTransferRequests','46':'BlanketAgreements'};
-const STATUS_MAP={'arsPending':'Pending','arsApproved':'Approved','arsNotApproved':'Rejected','arsGenerated':'Generated','arsGeneratedByAuthorizer':'Generated by Auth','arsRejected':'Rejected'};
+const STATUS_MAP={'arsPending':'Pending','arPending':'Pending','arsApproved':'Approved','arsNotApproved':'Rejected','arsGenerated':'Generated','arsGeneratedByAuthorizer':'Generated by Auth','arsRejected':'Rejected'};
 const LINE_STATUS_MAP={'ardPending':'Pending','ardApproved':'Approved','ardNotApproved':'Rejected','ardGenerated':'Generated','ardGeneratedByAuthorizer':'Generated by Auth','ardRejected':'Rejected'};
 
 function esc(v){return(v===null||v===undefined?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -131,6 +184,14 @@ function sapUserLabel(){
   if(_mappedUser?.sapUser)return `${_mappedUser.sapUser.username||_mappedUser.sapUser.userCode} (ID ${_mappedUser.sapUser.id})`;
   if(_mappedUserError&&_mappedUserError.includes('/api/sap/mapped-user'))return'Backend restart required';
   return _mappedUserError||'Not mapped';
+}
+function statusInfo(raw){
+  const st=STATUS_MAP[raw]||raw||'Unknown';
+  const cls=st==='Pending'?'pending':st==='Approved'||st==='Generated'?'approved':st==='Rejected'||st==='Cancelled'?'rejected':'draft';
+  return {st,cls};
+}
+function activeFilterCount(){
+  return [_objectType,_dateFrom,_dateTo,_searchCode,_originatorId].filter(Boolean).length;
 }
 
 async function loadMappedUser(){
@@ -164,44 +225,71 @@ async function loadRequests(){
 
 function render(){
   const app=document.getElementById('app');app.innerHTML='';
+  app.className='sap-approval-page';
+  const pendingCount=_requests.filter(r=>r.Status==='arsPending').length;
+  const approvedCount=_requests.filter(r=>r.Status==='arsApproved'||r.Status==='arsGenerated'||r.Status==='arsGeneratedByAuthorizer').length;
+  const rejectedCount=_requests.filter(r=>r.Status==='arsRejected'||r.Status==='arsNotApproved').length;
+  const filterCount=activeFilterCount();
+
+  const hero=mk('sap-hero');
+  hero.innerHTML=`<section class="sap-hero-main">
+    <span class="sap-eyebrow">SAP B1 Approvals</span>
+    <h1 class="sap-title">SAP Approval Requests</h1>
+    <div class="sap-sub">Review approval requests, inspect linked SAP documents, and approve or reject pending stages with the mapped SAP user.</div>
+    <div class="sap-hero-actions">
+      <button class="btn b-primary" id="btn-hero-refresh">Refresh Requests</button>
+      <button class="btn b-cancel" id="btn-hero-filters">${_showFilters?'Hide Filters':'Advanced Filters'}</button>
+    </div>
+  </section>
+  <aside class="sap-kpis">
+    <div class="sap-kpi"><div class="sap-kpi-label">Loaded Requests</div><div class="sap-kpi-value blue">${_loading?'...':_requests.length}</div></div>
+    <div class="sap-kpi"><div class="sap-kpi-label">Pending Action</div><div class="sap-kpi-value warn">${pendingCount}</div></div>
+    <div class="sap-kpi"><div class="sap-kpi-label">SAP User</div><div class="sap-kpi-value ${_mappedUser?.sapUser?'good':'warn'}" style="font-size:18px;line-height:1.25">${esc(sapUserLabel())}</div></div>
+  </aside>`;
+  app.appendChild(hero);
 
   const c1=mk('card');
   const docTypeOpts=[{v:'',l:'All Types'},{v:'22',l:'Purchase Order'},{v:'20',l:'GRPO'},{v:'18',l:'AP Invoice'},{v:'19',l:'AP Credit Note'},{v:'21',l:'Goods Return'},{v:'13',l:'AR Invoice'},{v:'14',l:'AR Credit Memo'},{v:'16',l:'Return'},{v:'17',l:'Sales Order'},{v:'15',l:'Delivery'},{v:'1470000113',l:'Inv. Transfer'},{v:'202',l:'Production Order'},{v:'59',l:'Goods Issue'},{v:'60',l:'Goods Receipt'}];
-  c1.innerHTML=`<div class="card-hd">&#9989; SAP Approval Requests<span class="right"><button class="btn b-cancel" id="btn-toggle-filter" style="padding:4px 10px;font-size:10px">${_showFilters?'Hide Filters':'Filters'}</button></span></div>
+  c1.className='card approval-panel';
+  c1.innerHTML=`<div class="card-hd"><div class="panel-title"><strong>Request Filters</strong><span>${filterCount?filterCount+' advanced filter'+(filterCount>1?'s':'')+' active':'Filter by company, status, document type, request code, and date.'}</span></div><span class="right"><button class="btn b-cancel" id="btn-toggle-filter">${_showFilters?'Hide Filters':'Advanced Filters'}</button></span></div>
   <div class="card-bd">
-    <div class="ar-meta" style="margin-bottom:10px">
-      <span>Portal User: <b>${esc(portalUserLabel())}</b></span>
-      <span>SAP User: <b>${esc(sapUserLabel())}</b></span>
+    <div class="identity-grid">
+      <div class="identity-card"><div class="identity-label">Portal User</div><div class="identity-value">${esc(portalUserLabel())}</div></div>
+      <div class="identity-card"><div class="identity-label">Mapped SAP User</div><div class="identity-value">${esc(sapUserLabel())}</div></div>
     </div>
-    <div class="fg"><label class="fl">Company</label><select class="fi" id="sel-co">
-      <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
-      <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
-      <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
-      <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
-    </select></div>
-    <div class="fg"><label class="fl">Status</label>
-      <div class="status-tabs">
-        ${['Pending','Approved','Rejected','Generated','Cancelled',''].map(s=>`<button class="st-tab${_status===s?' on':''}" data-st="${s}">${s||'All'}</button>`).join('')}
+    <div class="filter-section">
+      <div class="filter-grid">
+        <div class="fg"><label class="fl">Company</label><select class="fi" id="sel-co">
+          <option value="JIVO_OIL_HANADB" ${_co==='JIVO_OIL_HANADB'?'selected':''}>Jivo Oil</option>
+          <option value="JIVO_BEVERAGES_HANADB" ${_co==='JIVO_BEVERAGES_HANADB'?'selected':''}>Jivo Beverages</option>
+          <option value="JIVO_MART_HANADB" ${_co==='JIVO_MART_HANADB'?'selected':''}>Jivo Mart</option>
+          <option value="TEST_OIL_15122025" ${_co==='TEST_OIL_15122025'?'selected':''}>Test Oil</option>
+        </select></div>
+        <div class="fg"><label class="fl">Status</label>
+          <div class="status-tabs">
+            ${['Pending','Approved','Rejected','Generated','Cancelled',''].map(s=>`<button class="st-tab${_status===s?' on':''}" data-st="${s}">${s||'All'}</button>`).join('')}
+          </div>
+        </div>
       </div>
-    </div>
-    <div id="adv-filters" style="display:${_showFilters?'block':'none'}">
-      <div class="fi-row">
+      <div id="adv-filters" style="display:${_showFilters?'block':'none'}">
+      <div class="filter-grid">
         <div class="fg"><label class="fl">Document Type</label><select class="fi" id="f-objtype">
           ${docTypeOpts.map(o=>`<option value="${o.v}" ${_objectType===o.v?'selected':''}>${o.l}</option>`).join('')}
         </select></div>
         <div class="fg"><label class="fl">Request Code</label><input class="fi fi-mono" id="f-code" value="${esc(_searchCode)}" placeholder="e.g. 59557"/></div>
       </div>
-      <div class="fi-row">
+      <div class="filter-grid">
         <div class="fg"><label class="fl">Date From</label><input class="fi" id="f-datefrom" type="date" value="${_dateFrom}"/></div>
         <div class="fg"><label class="fl">Date To</label><input class="fi" id="f-dateto" type="date" value="${_dateTo}"/></div>
       </div>
-      <div class="fi-row">
+      <div class="filter-grid">
         <div class="fg"><label class="fl">Originator ID</label><input class="fi fi-mono" id="f-originator" value="${esc(_originatorId)}" placeholder="SAP User ID"/></div>
-        <div class="fg" style="display:flex;align-items:flex-end;gap:6px;padding-bottom:10px">
-          <button class="btn b-primary" id="btn-apply" style="flex:1;height:36px;font-size:12px">Apply Filters</button>
-          <button class="btn b-cancel" id="btn-clear-filters" style="height:36px;font-size:11px">Clear</button>
+        <div class="fg filter-actions">
+          <button class="btn b-primary" id="btn-apply" style="flex:1">Apply Filters</button>
+          <button class="btn b-cancel" id="btn-clear-filters">Clear</button>
         </div>
       </div>
+    </div>
     </div>
   </div>`;
   app.appendChild(c1);
@@ -211,14 +299,13 @@ function render(){
   if(_loading){
     listHtml='<div class="empty-msg"><span class="sp" style="border-color:rgba(26,111,255,.25);border-top-color:var(--blue)"></span> Loading...</div>';
   }else if(!_requests.length){
-    listHtml='<div class="empty-msg">No approval requests found</div>';
+    listHtml='<div class="empty-state"><strong>No approval requests found</strong><span>Try another status, company, date range, or request code.</span></div>';
   }else{
-    listHtml=_requests.map(r=>{
-      const st=STATUS_MAP[r.Status]||r.Status;
-      const stCls=st==='Pending'?'pending':st==='Approved'?'approved':'rejected';
+    listHtml=`<div class="approval-list">`+_requests.map(r=>{
+      const {st,cls:stCls}=statusInfo(r.Status);
       const objType=OBJ_MAP[String(r.ObjectType)]||'Doc '+r.ObjectType;
       const docEntry=approvalDocEntry(r);
-      return`<div class="ar-card" data-ar="${r.Code}">
+      return`<div class="ar-card ${stCls}" data-ar="${r.Code}">
         <div class="ar-top">
           <span class="ar-code">#${r.Code}</span>
           <span class="ar-badge ${stCls}">${st}</span>
@@ -228,14 +315,25 @@ function render(){
         <div class="ar-desc">DocEntry: ${esc(docEntry)} | Stage: ${r.CurrentStage||'-'}</div>
         <div class="ar-meta">
           <span>Created: <b>${fmtDate(r.CreationDate)}</b></span>
+          <span>Object: <b>${esc(objType)}</b></span>
           ${r.Remarks?`<span>Note: <b>${esc(r.Remarks.substring(0,40))}</b></span>`:''}
         </div>
       </div>`;
-    }).join('');
+    }).join('')+`</div>`;
   }
-  const pending=_requests.filter(r=>r.Status==='arsPending').length;
-  c2.innerHTML=`<div class="card-hd">Requests<span class="right">${_requests.length} found${pending?' | '+pending+' pending':''}</span></div>
-  <div class="card-bd">${listHtml}
+  c2.className='card approval-panel';
+  c2.innerHTML=`<div class="card-hd"><div class="panel-title"><strong>Requests</strong><span>${_loading?'Loading SAP approval requests':_requests.length+' request'+(_requests.length!==1?'s':'')+' loaded'}</span></div><span class="right"><button class="btn b-cancel" id="btn-refresh">Refresh</button></span></div>
+  <div class="card-bd">
+    <div class="request-summary">
+      <div class="request-summary-title">${_status||'All'} Requests</div>
+      <div class="request-pills">
+        <span class="request-pill"><b>${_requests.length}</b> Loaded</span>
+        <span class="request-pill"><b>${pendingCount}</b> Pending</span>
+        <span class="request-pill"><b>${approvedCount}</b> Approved</span>
+        <span class="request-pill"><b>${rejectedCount}</b> Rejected</span>
+      </div>
+    </div>
+    ${listHtml}
     ${!_loading&&_requests.length>=30?`<div style="display:flex;gap:6px;margin-top:8px;justify-content:center">
       ${_skip>0?'<button class="btn b-cancel" id="btn-prev" style="font-size:11px">Prev</button>':''}
       <button class="btn b-cancel" id="btn-next" style="font-size:11px">Next</button>
@@ -244,6 +342,9 @@ function render(){
   app.appendChild(c2);
 
   setTimeout(()=>{
+    q('#btn-hero-refresh')&&(q('#btn-hero-refresh').onclick=()=>loadRequests());
+    q('#btn-hero-filters')&&(q('#btn-hero-filters').onclick=function(){_showFilters=!_showFilters;render();});
+    q('#btn-refresh')&&(q('#btn-refresh').onclick=()=>loadRequests());
     q('#sel-co')&&(q('#sel-co').onchange=function(){_co=this.value;_skip=0;_mappedUserLoaded=false;loadRequests();});
     document.querySelectorAll('[data-st]').forEach(b=>{b.onclick=function(){_status=this.dataset.st;_skip=0;loadRequests();};});
     q('#btn-toggle-filter')&&(q('#btn-toggle-filter').onclick=function(){_showFilters=!_showFilters;render();});
@@ -314,12 +415,13 @@ function renderDocDetail(doc,objType){
   ];
 
   let headerHtml=`
-    <div class="detail-section"><div class="detail-title">Document Details</div><div class="doc-summary">
+    <div class="detail-section"><div class="detail-title">Document Snapshot</div><div class="doc-summary">
       ${docFields.map(([label,value])=>`<div class="dt-row"><span class="dt-l">${label}</span><span class="dt-v">${value}</span></div>`).join('')}
-    </div></div>
+    </div>
     ${doc.CardName?`<div class="dt-row"><span class="dt-l">Business Partner</span><span class="dt-v" style="font-family:var(--font)">${esc(doc.CardName)} (${esc(doc.CardCode||'')})</span></div>`:''}
     ${doc.Comments?`<div class="dt-row"><span class="dt-l">Comments</span><span class="dt-v" style="font-family:var(--font);max-width:60%;text-align:right">${esc(doc.Comments)}</span></div>`:''}
     ${doc.DocumentStatus?`<div class="dt-row"><span class="dt-l">Status</span><span class="dt-v">${doc.DocumentStatus==='bost_Close'?'Closed':'Open'}</span></div>`:''}
+    </div>
   `;
 
   const itemCols=[
@@ -362,7 +464,7 @@ function renderDocDetail(doc,objType){
   }
   linesHtml+='</div>';
 
-  return headerHtml+linesHtml+(hasAttach?`<div style="margin-top:10px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3)">Attachment Entry: ${doc.AttachmentEntry}</div>`:'');
+  return headerHtml+linesHtml+(hasAttach?`<div class="detail-section"><div class="detail-title">Attachment Reference</div><div class="dt-row" style="border-bottom:0"><span class="dt-l">Attachment Entry</span><span class="dt-v">${doc.AttachmentEntry}</span></div></div>`:'');
 }
 
 async function openDetail(code){
@@ -372,8 +474,7 @@ async function openDetail(code){
   try{
     const r=await api('GET',`/sap/approval-requests/${code}?company=${encodeURIComponent(_co)}`);
     const d=r.data;
-    const st=STATUS_MAP[d.Status]||d.Status;
-    const stCls=st==='Pending'?'pending':st==='Approved'?'approved':'rejected';
+    const {st,cls:stCls}=statusInfo(d.Status);
     const objType=OBJ_MAP[String(d.ObjectType)]||'Doc '+d.ObjectType;
     const isPending=d.Status==='arsPending';
     const lines=d.ApprovalRequestLines||[];
@@ -412,22 +513,23 @@ async function openDetail(code){
         const att=await api('GET',`/sap/attachments/${linkedDoc.AttachmentEntry}?company=${encodeURIComponent(_co)}`);
         const attLines=att.data?.Attachments2_Lines||[];
         if(attLines.length){
-          attachHtml=`<div style="margin-top:10px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Attachments (${attLines.length})</div>`+
-            attLines.map((a,ai)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;margin-bottom:4px"><span style="font-size:14px">&#128206;</span><span style="font-size:11px;color:var(--text);flex:1">${esc(a.FileName||'')}.${esc(a.FileExtension||'')}</span><button style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(26,111,255,.08);color:var(--blue);border:1px solid rgba(26,111,255,.25);cursor:pointer" onclick="viewAtt(${linkedDoc.AttachmentEntry},${a.LineNum||ai})">View</button></div>`).join('');
+          attachHtml=`<div class="detail-section"><div class="detail-title">Attachments (${attLines.length})</div>`+
+            attLines.map((a,ai)=>`<div class="stage-card" style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">&#128206;</span><span style="font-size:14px;color:var(--text);flex:1;min-width:0;word-break:break-word">${esc(a.FileName||'')}.${esc(a.FileExtension||'')}</span><button class="btn b-cancel" style="min-height:34px;padding:7px 12px" onclick="viewAtt(${linkedDoc.AttachmentEntry},${a.LineNum||ai})">View</button></div>`).join('')+
+            `</div>`;
         }
       }catch(_e){}
     }
 
-    inner.innerHTML=`<div class="modal-hd"><div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    inner.innerHTML=`<div class="modal-hd"><div class="approval-detail-title">
       <span>&#9989;</span><span>Approval #${d.Code}</span>
       <span class="ar-badge ${stCls}">${st}</span>
       <span class="ar-badge type">${esc(objType)}</span>
       ${d.IsDraft==='Y'?'<span class="ar-badge draft">Draft</span>':''}
     </div><button class="modal-close" id="m-close">X</button></div>
     <div class="modal-bd">
-      <div style="display:flex;gap:4px;margin-bottom:12px;background:var(--surface3);border-radius:8px;padding:4px">
-        <button class="btn m-tab on" data-mt="tab-doc" style="flex:1;padding:6px;font-size:11px;border-radius:6px">Document</button>
-        <button class="btn m-tab" data-mt="tab-approval" style="flex:1;padding:6px;font-size:11px;border-radius:6px;background:none;color:var(--text3)">Approval Info</button>
+      <div class="detail-tabs">
+        <button class="btn m-tab on" data-mt="tab-doc">Document</button>
+        <button class="btn m-tab" data-mt="tab-approval" style="background:none;color:var(--text3)">Approval Info</button>
       </div>
 
       <div id="tab-doc">
@@ -436,22 +538,23 @@ async function openDetail(code){
       </div>
 
       <div id="tab-approval" style="display:none">
-        <div class="dt-row"><span class="dt-l">Code</span><span class="dt-v">${d.Code}</span></div>
-        <div class="dt-row"><span class="dt-l">Object Type</span><span class="dt-v">${esc(objType)} (${d.ObjectType})</span></div>
-        <div class="dt-row"><span class="dt-l">DocEntry</span><span class="dt-v">${esc(docEntry)}</span></div>
-        <div class="dt-row"><span class="dt-l">Draft</span><span class="dt-v">${d.IsDraft==='Y'?'Yes':'No'}</span></div>
-        <div class="dt-row"><span class="dt-l">Current Stage</span><span class="dt-v">${d.CurrentStage||'-'}</span></div>
-        <div class="dt-row"><span class="dt-l">Originator</span><span class="dt-v">${d.OriginatorID||'-'}</span></div>
-        <div class="dt-row"><span class="dt-l">Created</span><span class="dt-v">${fmtDate(d.CreationDate)} ${d.CreationTime||''}</span></div>
-        <div class="dt-row"><span class="dt-l">Remarks</span><span class="dt-v" style="font-family:var(--font);max-width:60%;text-align:right">${esc(d.Remarks||'-')}</span></div>
+        <div class="detail-section"><div class="detail-title">Approval Summary</div>
+          <div class="dt-row"><span class="dt-l">Code</span><span class="dt-v">${d.Code}</span></div>
+          <div class="dt-row"><span class="dt-l">Object Type</span><span class="dt-v">${esc(objType)} (${d.ObjectType})</span></div>
+          <div class="dt-row"><span class="dt-l">DocEntry</span><span class="dt-v">${esc(docEntry)}</span></div>
+          <div class="dt-row"><span class="dt-l">Draft</span><span class="dt-v">${d.IsDraft==='Y'?'Yes':'No'}</span></div>
+          <div class="dt-row"><span class="dt-l">Current Stage</span><span class="dt-v">${d.CurrentStage||'-'}</span></div>
+          <div class="dt-row"><span class="dt-l">Originator</span><span class="dt-v">${d.OriginatorID||'-'}</span></div>
+          <div class="dt-row"><span class="dt-l">Created</span><span class="dt-v">${fmtDate(d.CreationDate)} ${d.CreationTime||''}</span></div>
+          <div class="dt-row"><span class="dt-l">Remarks</span><span class="dt-v" style="font-family:var(--font);max-width:60%;text-align:right">${esc(d.Remarks||'-')}</span></div>
+        </div>
 
-        <div style="margin-top:14px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Approval Stages (${lines.length})</div>
-        ${stagesHtml}
+        <div class="detail-section"><div class="detail-title">Approval Stages (${lines.length})</div>${stagesHtml}</div>
 
-        ${decisionsHtml?`<div style="margin-top:14px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Decisions</div>${decisionsHtml}`:''}
+        ${decisionsHtml?`<div class="detail-section"><div class="detail-title">Decisions</div>${decisionsHtml}</div>`:''}
       </div>
 
-      ${isPending?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      ${isPending?`<div class="approval-action-box">
         <div class="fg"><label class="fl">Comment (optional)</label><textarea class="comment-area" id="ar-comment" placeholder="Add approval note..."></textarea></div>
         <div class="fg"><label class="fl">SAP Password</label><input id="ar-pwd" type="password" class="comment-area" style="height:34px" placeholder="Your SAP Business One password" autocomplete="off"/></div>
         <div class="btn-bar">

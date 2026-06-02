@@ -264,26 +264,38 @@ function buildLogin() {
   const wrap = document.createElement('div');
   wrap.className = 'login-wrap';
   wrap.innerHTML = `
-    <div class="login-card">
-      <div class="login-logo">
-        <span class="login-logo-box">SAP</span>
-        <span class="login-logo-text">Business One</span>
+    <div class="login-shell">
+      <section class="login-hero">
+        <span class="login-eyebrow">SAP B1 Portal</span>
+        <h1>Run approvals, production, and documents from one clean workspace.</h1>
+        <p>Sign in to manage daily SAP Business One workflows with clearer queues, faster actions, and a more readable operating dashboard.</p>
+        <div class="login-proof-grid">
+          <div class="login-proof"><strong>Approval ready</strong><span>Track BOM, customer, and vendor decisions with role-aware access.</span></div>
+          <div class="login-proof"><strong>Production focused</strong><span>Create, issue, receipt, and close production orders without clutter.</span></div>
+          <div class="login-proof"><strong>SAP connected</strong><span>Keep work aligned with live SAP B1 data and documents.</span></div>
+        </div>
+      </section>
+      <div class="login-card">
+        <div class="login-logo">
+          <span class="login-logo-box">SAP</span>
+          <span class="login-logo-text">Business One Portal</span>
+        </div>
+        <div class="login-h">Welcome Back</div>
+        <div class="login-sub">Enter your portal credentials to continue.</div>
+        <div class="err-box" id="login-err"></div>
+        <div class="field">
+          <label class="field-label">Username</label>
+          <input class="field-input" id="l-user" placeholder="Enter username" autocomplete="username"/>
+        </div>
+        <div class="field">
+          <label class="field-label">Password</label>
+          <input class="field-input" id="l-pass" type="password" placeholder="Enter password" autocomplete="current-password"/>
+        </div>
+        <button class="btn-primary" id="l-btn">
+          <span id="l-sp" style="display:none" class="sp"></span>
+          Sign In
+        </button>
       </div>
-      <div class="login-h">Sign In</div>
-      <div class="login-sub">SAP B1 Customer Portal</div>
-      <div class="err-box" id="login-err"></div>
-      <div class="field">
-        <label class="field-label">Username</label>
-        <input class="field-input" id="l-user" placeholder="Enter username" autocomplete="username"/>
-      </div>
-      <div class="field">
-        <label class="field-label">Password</label>
-        <input class="field-input" id="l-pass" type="password" placeholder="Enter password" autocomplete="current-password"/>
-      </div>
-      <button class="btn-primary" id="l-btn">
-        <span id="l-sp" style="display:none" class="sp"></span>
-        Sign In
-      </button>
     </div>`;
 
   setTimeout(() => {
@@ -332,6 +344,21 @@ function buildDashboard() {
   const isAdmin = role === 'admin' || role === 'sap_adder';
   const userModules = Array.isArray(_user?.modules) ? _user.modules : null;
   const canSee = (m) => !userModules || isAdmin || userModules.includes(m);
+  const moduleCount = ['bom','production','grpo','approvals','customers','vendors','budget','journal-entries','documents','sap-approvals','reports']
+    .filter(canSee).length + (isAdmin ? 1 : 0);
+  const primaryAction = canSee('approvals')
+    ? { href: '/approvals', label: 'Review Approvals' }
+    : canSee('production')
+      ? { href: '/production', label: 'Open Production' }
+      : { href: '/bom', label: 'Start Work' };
+  const secondaryAction = canSee('bom')
+    ? { href: '/bom', label: 'Create BOM' }
+    : canSee('journal-entries')
+      ? { href: '/journal-entries', label: 'View Journal Entries' }
+      : canSee('reports')
+      ? { href: '/reports', label: 'View Reports' }
+      : null;
+  const roleLabel = esc((role || 'user').replace(/_/g, ' ').toUpperCase());
 
   // Pipeline labels
   const stepDefs = {
@@ -344,16 +371,36 @@ function buildDashboard() {
   };
 
   wrap.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">WELCOME BACK</div>
-      <div class="page-sub">${esc(_user?.name || _user?.username)} · <span class="badge badge-${role === 'sap_adder' ? 'green' : role === 'sr_manager' ? 'amber' : 'blue'}">${esc(role?.toUpperCase())}</span></div>
-    </div>
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <span class="hero-eyebrow">Business One Command Center</span>
+        <h1>Welcome back, ${esc(_user?.name || _user?.username || 'there')}.</h1>
+        <p>Your SAP B1 workspace is ready: review approvals, manage production, register partners, and reach operational records with a cleaner path.</p>
+        <div class="hero-actions">
+          <a class="hero-btn primary" href="${primaryAction.href}">${primaryAction.label}</a>
+          ${secondaryAction ? `<a class="hero-btn secondary" href="${secondaryAction.href}">${secondaryAction.label}</a>` : ''}
+        </div>
+      </div>
+      <div class="hero-panel" aria-label="Portal summary">
+        <div class="hero-panel-card"><span>Available modules</span><strong>${moduleCount}</strong></div>
+        <div class="hero-panel-card"><span>Approval flow</span><strong>${levels}L</strong></div>
+        <div class="hero-panel-card"><span>Your access</span><strong>${roleLabel}</strong></div>
+      </div>
+    </section>
 
     <div class="stats-grid" id="stats-grid">
       <div class="stat-card s-blue"><div class="stat-val" id="s-pending">—</div><div class="stat-label">Pending Review</div></div>
       <div class="stat-card s-amber"><div class="stat-val" id="s-approved">—</div><div class="stat-label">In Progress</div></div>
       <div class="stat-card s-green"><div class="stat-val" id="s-pushed">—</div><div class="stat-label">Pushed to SAP</div></div>
       <div class="stat-card s-red"><div class="stat-val" id="s-rejected">—</div><div class="stat-label">Rejected</div></div>
+    </div>
+
+    <div class="dashboard-section-head">
+      <div>
+        <span class="section-eyebrow">Workspace</span>
+        <h2>Choose your module</h2>
+        <p>Large, readable cards keep the most used SAP B1 workflows easy to scan.</p>
+      </div>
     </div>
 
     <div class="modules-grid">
@@ -401,6 +448,11 @@ function buildDashboard() {
         <div class="mc-icon" style="color:#c97800">&#128176;</div>
         <div class="mc-title">Budget</div>
         <div class="mc-desc">Manage budgets with monthly allocation lines</div>
+      </a>` : ''}
+      ${canSee('journal-entries') ? `<a href="/journal-entries" class="module-card">
+        <div class="mc-icon" style="color:#047e7e">&#128209;</div>
+        <div class="mc-title">Journal Entries</div>
+        <div class="mc-desc">Review live SAP B1 GL postings and debit-credit lines</div>
       </a>` : ''}
       ${canSee('documents') ? `<a href="/documents" class="module-card">
         <div class="mc-icon" style="color:#515456">&#128196;</div>
