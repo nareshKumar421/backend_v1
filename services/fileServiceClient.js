@@ -66,26 +66,50 @@ function pickZipEntry(zip, requestedFileName) {
     entries[0];
 }
 
-async function fetchFileFromArchive(fileName, companyDB) {
-  if (!fileName) throw new Error('Attachment filename is missing');
+function compressedVariant(fileName) {
+  const name = String(fileName || '');
+  if (/_compressed(\.[^.]+)?$/i.test(name)) return null; // already compressed
+  const dot = name.lastIndexOf('.');
+  if (dot <= 0) return `${name}_compressed`;
+  return `${name.slice(0, dot)}_compressed${name.slice(dot)}`;
+}
 
-  const companyId = getFileServiceCompanyId(companyDB);
-  if (!companyId) throw new Error(`No file-service company id mapped for ${companyDB || 'unknown company'}`);
-
+async function requestFileService(fileName, companyId) {
   const url = `${FILE_SERVICE_BASE}/files/${encodeURIComponent(fileName)}?company=${encodeURIComponent(companyId)}`;
-
-  let response;
   try {
-    response = await axios.get(url, {
+    const response = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: 60000,
       headers: { Accept: 'application/json' },
       maxContentLength: 100 * 1024 * 1024,
       maxBodyLength: 100 * 1024 * 1024,
     });
+    return { response, url };
   } catch (err) {
     const status = err.response?.status;
-    throw new Error(status ? `File service returned HTTP ${status}` : `File service request failed: ${err.message}`);
+    const e = new Error(status ? `File service returned HTTP ${status}` : `File service request failed: ${err.message}`);
+    e.status = status;
+    throw e;
+  }
+}
+
+async function fetchFileFromArchive(fileName, companyDB) {
+  if (!fileName) throw new Error('Attachment filename is missing');
+
+  const companyId = getFileServiceCompanyId(companyDB);
+  if (!companyId) throw new Error(`No file-service company id mapped for ${companyDB || 'unknown company'}`);
+
+  let response, url;
+  try {
+    ({ response, url } = await requestFileService(fileName, companyId));
+  } catch (err) {
+    // Some originals are only archived in their compressed form (e.g. "2858.pdf"
+    // missing but "2858_compressed.pdf" present). Fall back to that variant on 404.
+    const fallback = err.status === 404 ? compressedVariant(fileName) : null;
+    if (!fallback) throw err;
+    console.warn(`[FILE-SVC] ${fileName} not found, retrying compressed variant ${fallback}`);
+    ({ response, url } = await requestFileService(fallback, companyId));
+    fileName = fallback;
   }
 
   const archiveBuffer = Buffer.from(response.data || []);

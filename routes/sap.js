@@ -251,6 +251,7 @@ router.get('/journal-entries', verifyToken, requireModule('journal-entries'), as
           cost_center_2:cleanString(firstValue(row,['cost_center_2','COST_CENTER_2','OcrCode2'])),
           cost_center_3:cleanString(firstValue(row,['cost_center_3','COST_CENTER_3','OcrCode3'])),
           cost_center_4:cleanString(firstValue(row,['cost_center_4','COST_CENTER_4','OcrCode4'])),
+      cost_center_5:cleanString(firstValue(row,['cost_center_5','COST_CENTER_5','OcrCode5'])),
           cost_center_5:cleanString(firstValue(row,['cost_center_5','COST_CENTER_5','OcrCode5'])),
         };
         if(!map.has(id)) map.set(id,[]);
@@ -410,6 +411,96 @@ router.get('/lookup/gl-accounts', verifyToken, async(req,res)=>{
       ORDER BY "AcctCode"`);
     res.json({success:true,data:rows.map(r=>({AcctCode:r.AcctCode,AcctName:r.AcctName}))});
   }catch(e){res.json({success:true,data:[],warning:e.message});}
+});
+
+// Combined account picker for the General Ledger page: searches BOTH the chart of
+// accounts (OACT) and business partners (OCRD), since the GL ledger accepts either a
+// G/L account code or a BP code. Vendors/customers like "AWL Agri Business Limited"
+// only exist in OCRD, so the plain gl-accounts lookup never surfaces them.
+router.get('/lookup/gl-search', verifyToken, async(req,res)=>{
+  const q=(req.query.q||'').replace(/'/g,"''").toUpperCase();
+  const co=cq(req);
+  try{
+    const [accts,bps]=await Promise.all([
+      hanaQuery(`
+        SELECT TOP 20 "AcctCode" AS "code","AcctName" AS "name"
+        FROM ${DB(co)}."OACT"
+        WHERE "Postable"='Y'
+          AND (UPPER("AcctCode") LIKE '%${q}%' OR UPPER("AcctName") LIKE '%${q}%')
+        ORDER BY "AcctCode"`).catch(()=>[]),
+      hanaQuery(`
+        SELECT TOP 20 "CardCode" AS "code","CardName" AS "name","CardType" AS "cardType"
+        FROM ${DB(co)}."OCRD"
+        WHERE "validFor"='Y'
+          AND (UPPER("CardCode") LIKE '%${q}%' OR UPPER("CardName") LIKE '%${q}%')
+        ORDER BY "CardName"`).catch(()=>[]),
+    ]);
+    const bpKind=t=>t==='S'?'Vendor':t==='C'?'Customer':'BP';
+    const data=[
+      ...accts.map(r=>({code:r.code,name:r.name,kind:'G/L'})),
+      ...bps.map(r=>({code:r.code,name:r.name,kind:bpKind(r.cardType)})),
+    ];
+    res.json({success:true,data});
+  }catch(e){res.json({success:true,data:[],warning:e.message});}
+});
+
+// General ledger / account statement — all journal postings to a single G/L account.
+// The running balance is anchored on the live account balance (OACT."CurrTotal") and
+// walked backwards from the most recent posting, so it stays correct even when the
+// returned rows are capped.
+router.get('/gl-ledger', verifyToken, async(req,res)=>{
+  const co=cq(req);
+  const account=cleanString(req.query.account);
+  if(!account) return res.status(400).json({success:false,message:'account is required'});
+  const top=Math.min(Math.max(parseInt(req.query.top,10)||200,1),1000);
+  const {dateFrom,dateTo}=req.query;
+  try{
+    let acctRows=await hanaQuery('SELECT "AcctName","CurrTotal" FROM '+DB(co)+'."OACT" WHERE "AcctCode"=?',[account]);
+    // Not a G/L account? Fall back to a business partner (BP control ledger, e.g. a vendor).
+    if(!acctRows.length){
+      try{ acctRows=await hanaQuery('SELECT "CardName" AS "AcctName","Balance" AS "CurrTotal" FROM '+DB(co)+'."OCRD" WHERE "CardCode"=?',[account]); }catch(_e){}
+    }
+    const acct=acctRows[0]||{};
+    // Match the G/L account directly OR the BP short name (SAP's General Ledger lists both).
+    const where=['(J."Account"=? OR J."ShortName"=?)']; const params=[account,account];
+    if(dateFrom){ where.push('J."RefDate">=?'); params.push(dateFrom); }
+    if(dateTo){ where.push('J."RefDate"<=?'); params.push(dateTo); }
+    const whereSql=where.join(' AND ');
+    const cntRows=await hanaQuery('SELECT COUNT(*) AS "C" FROM '+DB(co)+'."JDT1" J WHERE '+whereSql,params);
+    const total=Number(firstValue(cntRows[0]||{},['C','c'])||0);
+    const rows=await hanaQuery(
+      'SELECT TOP '+top+' J."TransId" AS "transId", J."RefDate" AS "date", J."DueDate" AS "dueDate", '+
+      'J."TaxDate" AS "docDate", J."Debit" AS "debit", '+
+      'J."Credit" AS "credit", J."LineMemo" AS "memo", J."BaseRef" AS "ref", '+
+      'H."Ref2" AS "billNo", H."TransType" AS "type" '+
+      'FROM '+DB(co)+'."JDT1" J JOIN '+DB(co)+'."OJDT" H ON H."TransId"=J."TransId" '+
+      'WHERE '+whereSql+' ORDER BY J."RefDate" DESC, J."TransId" DESC',params);
+    // Anchor running balance on the current account balance and walk older.
+    let running=Number(firstValue(acct,['CurrTotal','currtotal'])||0);
+    const lines=rows.map(r=>{
+      const r2=n=>Math.round(n*100)/100;
+      const debit=r2(Number(firstValue(r,['debit','Debit'])||0));
+      const credit=r2(Number(firstValue(r,['credit','Credit'])||0));
+      const balance=r2(running);        // balance AFTER this posting
+      running=running-(debit-credit);   // balance after the next-older posting
+      return {
+        transId:cleanString(firstValue(r,['transId','TransId'])),
+        date:firstValue(r,['date','RefDate']),
+        dueDate:firstValue(r,['dueDate','DueDate']),
+        docDate:firstValue(r,['docDate','TaxDate']),
+        debit, credit, balance,
+        memo:cleanString(firstValue(r,['memo','LineMemo'])),
+        ref:cleanString(firstValue(r,['ref','BaseRef'])),
+        billNo:cleanString(firstValue(r,['billNo','Ref2'])),
+        type:cleanString(firstValue(r,['type','TransType'])),
+      };
+    });
+    res.json({success:true,data:{
+      account, name:cleanString(firstValue(acct,['AcctName','ACCTNAME'])),
+      balance:Number(firstValue(acct,['CurrTotal','currtotal'])||0),
+      currency:'INR', total, lines,
+    }});
+  }catch(e){ res.json({success:false,message:e.message}); }
 });
 
 // ════════════════════════════════════════════════════════════════
@@ -1230,7 +1321,558 @@ const DOC_TYPES={
   'CreditNotes':{select:'DocEntry,DocNum,DocDate,DocDueDate,CardCode,CardName,DocTotal,DocCurrency,Comments,DocumentStatus,BPL_IDAssignedToInvoice,AttachmentEntry',label:'AR Credit Memo'},
   'Returns':{select:'DocEntry,DocNum,DocDate,DocDueDate,CardCode,CardName,DocTotal,DocCurrency,Comments,DocumentStatus,BPL_IDAssignedToInvoice,AttachmentEntry',label:'Return Notes'},
   'JournalEntries':{select:'JdtNum,Number,ReferenceDate,DueDate,Memo,Reference,Reference2,StornoToDate',label:'Journal Entry'},
+  'VendorPayments':{select:'DocEntry,DocNum,DocDate,CardCode,CardName,DocCurrency,CashSum,TransferSum,CheckSum,DocTotal,Remarks,JournalRemarks,TransferAccount,TransferDate,TransferReference,AuthorizationStatus,BPLID,BPLName,AttachmentEntry',label:'Outgoing Payment'},
+  'PaymentDrafts':{select:'DocEntry,DocNum,DocDate,CardCode,CardName,DocCurrency,CashSum,TransferSum,CheckSum,DocTotal,Remarks,JournalRemarks,TransferAccount,TransferDate,TransferReference,AuthorizationStatus,BPLID,BPLName,AttachmentEntry',label:'Outgoing Payment Draft'},
 };
+
+function documentLines(doc){
+  return doc?.DocumentLines || doc?.StockTransferLines || doc?.ProductionOrderLines || [];
+}
+
+const DOCUMENT_LINE_TABLES={
+  Drafts:'DRF1',
+  PurchaseOrders:'POR1',
+  PurchaseDeliveryNotes:'PDN1',
+  PurchaseInvoices:'PCH1',
+  PurchaseCreditNotes:'RPC1',
+  PurchaseReturns:'RPD1',
+  Invoices:'INV1',
+  CreditNotes:'RIN1',
+  Orders:'RDR1',
+  DeliveryNotes:'DLN1',
+  Returns:'RDN1',
+  InventoryGenEntries:'IGN1',
+  InventoryGenExits:'IGE1',
+  StockTransfers:'WTR1',
+};
+
+async function tableColumnSet(co, table){
+  const rows=await hanaQuery(
+    'SELECT "COLUMN_NAME" FROM "SYS"."TABLE_COLUMNS" WHERE "SCHEMA_NAME" = ? AND "TABLE_NAME" = ?',
+    [resolveCompany(co), table]
+  );
+  return new Set(rows.map(r=>cleanString(firstValue(r,['COLUMN_NAME','ColumnName','column_name']))).filter(Boolean));
+}
+
+function lineValueMissing(v){
+  return v===undefined||v===null||v==='';
+}
+
+function setLineValue(line, keys, value){
+  if(lineValueMissing(value)) return;
+  if(Array.isArray(keys)){
+    const hasExisting=keys.some(k=>!lineValueMissing(line?.[k]));
+    if(hasExisting) return;
+    line[keys[0]]=value;
+    return;
+  }
+  if(lineValueMissing(line?.[keys])) line[keys]=value;
+}
+
+// Service Layer can omit custom row UDFs in approval/draft reads. Pull the
+// full line rows from HANA and fill only fields that are missing in the response.
+function rowValue(row, keys){
+  for(const key of keys){
+    const value=firstValue(row,[key,key.toUpperCase(),key.toLowerCase()]);
+    if(!lineValueMissing(value)) return value;
+  }
+  return undefined;
+}
+
+function rowValueLike(row, keys, fragmentGroups){
+  const explicit=rowValue(row,keys);
+  if(!lineValueMissing(explicit)) return explicit;
+  const rowKeys=Object.keys(row||{});
+  for(const fragments of fragmentGroups){
+    const found=rowKeys.find(k=>{
+      const nk=String(k).toLowerCase().replace(/[^a-z0-9]/g,'');
+      return fragments.every(f=>nk.includes(f));
+    });
+    if(found&&!lineValueMissing(row[found])) return row[found];
+  }
+  return undefined;
+}
+
+async function enrichDocumentLineFields(co, type, doc){
+  const table=DOCUMENT_LINE_TABLES[type];
+  const entry=asNumber(doc?.DocEntry);
+  const lines=documentLines(doc);
+  if(!table||!entry||!lines.length) return doc;
+  try{
+    const rows=await hanaQuery(
+      'SELECT * FROM '+DB(co)+'."'+table+'" WHERE "DocEntry" = ? ORDER BY "LineNum" ASC',
+      [entry]
+    );
+    if(!rows.length) return doc;
+    const byLine=new Map(rows.map(r=>[asNumber(rowValue(r,['LineNum'])),r]));
+    lines.forEach((line,idx)=>{
+      const lineNum=asNumber(line?.LineNum??line?.LineNumber??idx);
+      const row=byLine.get(lineNum) || rows[idx];
+      if(!row) return;
+      setLineValue(line,['AccountCode','GLAccount','AcctCode'],rowValue(row,['AcctCode','AccountCode','GLAccount','Account']));
+      setLineValue(line,['ItemDescription','Description'],rowValue(row,['Dscription','ItemDescription','Description']));
+      setLineValue(line,['WarehouseCode','Warehouse','WhsCode'],rowValue(row,['WhsCode','WarehouseCode','Warehouse']));
+      setLineValue(line,['LocationCode','LocCode'],rowValue(row,['LocCode','LocationCode','Location']));
+      setLineValue(line,['CostingCode','OcrCode'],rowValue(row,['OcrCode','CostingCode']));
+      setLineValue(line,['CostingCode2','OcrCode2'],rowValue(row,['OcrCode2','CostingCode2']));
+      setLineValue(line,['CostingCode3','OcrCode3'],rowValue(row,['OcrCode3','CostingCode3']));
+      setLineValue(line,['CostingCode4','OcrCode4'],rowValue(row,['OcrCode4','CostingCode4']));
+      setLineValue(line,['CostingCode5','OcrCode5'],rowValue(row,['OcrCode5','CostingCode5']));
+      setLineValue(line,'Project',rowValue(row,['Project']));
+      setLineValue(line,['U_UNE_LTS','U_Litres','U_Litre'],rowValueLike(row,['U_UNE_LTS','U_Litres','U_Litre','U_LitreS'],[['u','lts'],['litre'],['liter']]));
+      setLineValue(line,['U_BilltyNumber','U_BiltyNumber'],rowValueLike(row,['U_BilltyNumber','U_BiltyNumber','U_BilltyNo','U_BiltyNo'],[['billty'],['bilty']]));
+      setLineValue(line,'U_ARNO',rowValueLike(row,['U_ARNO','U_Arno'],[['arno']]));
+      const subAccount=rowValueLike(row,[
+        'U_Sub_Account','U_SubAccount','U_SubAcct','U_SubAcc','U_Sub_Acc','U_Sub_Accnt','U_Sub_Acco',
+        'U_SUB_ACCOUNT','U_SUBACCOUNT','U_SUBACCT','U_SUBACC','U_SUB_ACC','U_SUB_ACCNT','U_SUB_ACCO',
+        'SubAccount','SubAcct','SubAcc','Sub_Account','Sub_Acc'
+      ],[['sub','account'],['sub','acct'],['sub','acnt'],['sub','acc']]);
+      setLineValue(line,['U_Sub_Account','U_SubAccount','U_SubAcct','U_SubAcc','SubAccount'],subAccount);
+      if(!lineValueMissing(subAccount)) line.SubAccount=subAccount;
+      setLineValue(line,'U_CardCode',rowValueLike(row,['U_CardCode','U_CustomerCode','CardCode','CustomerCode'],[['card','code'],['customer','code']]));
+      setLineValue(line,'U_Purpose',rowValueLike(row,['U_Purpose','Purpose'],[['purpose']]));
+      setLineValue(line,['U_Remarks','Remarks','FreeText'],rowValue(row,['U_Remarks','FreeTxt','FreeText','Remarks']));
+    });
+  }catch(e){
+    console.warn('[SAP-DOC] line field enrichment skipped:',e.message);
+  }
+  return doc;
+}
+
+
+function lineAccountCode(line){
+  return cleanString(
+    line?.GLAccount ||
+    line?.AccountCode ||
+    line?.AcctCode ||
+    line?.['G/L Account'] ||
+    line?.Account
+  );
+}
+
+async function enrichDocumentGlNames(doc, co){
+  const lines=documentLines(doc);
+  const codes=[...new Set(lines.map(lineAccountCode).filter(Boolean))];
+  if(!codes.length) return doc;
+  try{
+    const quoted=codes.map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
+    const rows=await hanaQuery(
+      'SELECT "AcctCode","AcctName" FROM ' + DB(co) + '."OACT" WHERE "AcctCode" IN (' + quoted + ')'
+    );
+    const names=new Map(rows.map(r=>[cleanString(r.AcctCode),cleanString(r.AcctName)]));
+    lines.forEach(line=>{
+      const code=lineAccountCode(line);
+      if(code&&names.has(code)&&!line.GLName&&!line.AccountName&&!line.AcctName) line.GLName=names.get(code);
+    });
+  }catch(e){
+    console.warn('[SAP-DOC] GL name enrichment skipped:',e.message);
+  }
+  return doc;
+}
+
+// Per-document withholding-tax (TDS) line table by endpoint
+const TDS_WT_TABLE={Invoices:'INV5',CreditNotes:'RIN5',PurchaseInvoices:'PCH5',PurchaseCreditNotes:'RPC5'};
+function extractTdsSection(name){
+  const m=String(name||'').match(/\b(19[0-9][A-Z]{0,2}|20[0-9][A-Z]{0,2}|206C[A-Z]?)\b/);
+  return m?m[1].toUpperCase():'';
+}
+// Resolve the TDS section/rate/amount for a document from its WT table joined to OWHT
+async function enrichDocumentTds(co, type, doc){
+  const table=TDS_WT_TABLE[type];
+  const entry=asNumber(doc?.DocEntry);
+  if(!table||!entry) return doc;
+  try{
+    const rows=await hanaQuery(
+      'SELECT X."WTCode" AS "code", X."Rate" AS "rate", X."WTAmnt" AS "amount", X."TaxbleAmnt" AS "taxable", W."WTName" AS "name" FROM '+DB(co)+'."'+table+'" X LEFT JOIN '+DB(co)+'."OWHT" W ON W."WTCode"=X."WTCode" WHERE X."AbsEntry"=?',
+      [entry]
+    );
+    if(!rows.length) return doc;
+    doc.TDSDetails=rows.map(r=>{
+      const name=cleanString(firstValue(r,['name','NAME','WTName']));
+      return {
+        code:cleanString(firstValue(r,['code','CODE','WTCode'])),
+        name, section:extractTdsSection(name),
+        rate:asNumber(firstValue(r,['rate','RATE'])),
+        amount:asNumber(firstValue(r,['amount','AMOUNT','WTAmnt'])),
+        taxable:asNumber(firstValue(r,['taxable','TAXABLE','TaxbleAmnt'])),
+      };
+    });
+    doc.TDSSection=[...new Set(doc.TDSDetails.map(d=>d.section).filter(Boolean))].join(', ');
+  }catch(e){ console.warn('[SAP-DOC] TDS enrichment skipped:',e.message); }
+  return doc;
+}
+// Build a ship-from entry from the document's vendor / counterparty (the "other"
+// party — not our own branch). Used as a fallback for service / GL-only documents
+// that have no source warehouse. The address text is already on the document; the
+// GSTIN / state come from the BP address master (CRD1).
+async function shipFromFromVendor(co, doc){
+  const cardCode=cleanString(firstValue(doc||{},['CardCode','CARDCODE']));
+  if(!cardCode) return null;
+  const cardName=cleanString(firstValue(doc||{},['CardName','CARDNAME']));
+  const addrCode=cleanString(firstValue(doc||{},['ShipFrom','ShipToCode','PayToCode']));
+  let gstin='',state='',address='';
+  const where=addrCode?'"CardCode"=? AND "Address"=?':'"CardCode"=?';
+  const params=addrCode?[cardCode,addrCode]:[cardCode];
+  try{
+    // BP address master: GSTIN is CRD1."GSTRegnNo", state is CRD1."State"
+    const rows=await hanaQuery(
+      'SELECT TOP 1 "GSTRegnNo","State","Street","Block","City","ZipCode","Country" '+
+      'FROM '+DB(co)+'."CRD1" WHERE '+where,params);
+    const r=rows[0]||{};
+    gstin=cleanString(firstValue(r,['GSTRegnNo','GSTREGNNO']));
+    state=cleanString(firstValue(r,['State','STATE']));
+    address=[firstValue(r,['Street','STREET']),firstValue(r,['Block','BLOCK']),firstValue(r,['City','CITY']),firstValue(r,['State','STATE']),firstValue(r,['ZipCode','ZIPCODE']),firstValue(r,['Country','COUNTRY'])]
+      .map(cleanString).filter(Boolean).join(', ');
+  }catch(e){ console.warn('[SAP-DOC] Vendor ship-from lookup skipped:',e.message); }
+  // fall back to the document's own address text if CRD1 yielded nothing
+  if(!address){
+    address=cleanString(firstValue(doc||{},['Address','Address2']))
+      .replace(/\r\n?/g,', ').replace(/\s*,\s*,+/g,', ').replace(/^,\s*|,\s*$/g,'');
+  }
+  if(!gstin&&!address&&!cardName) return null;
+  // code shows as the heading; leave branch blank so the frontend doesn't repeat it
+  return {code:cardName||cardCode,name:'',gstin,branch:'',state,address};
+}
+// Resolve the full ship-from list (warehouse, GSTIN, branch, state, address) from the document lines
+async function enrichWarehouseNames(co, doc){
+  const lines=documentLines(doc);
+  const codes=[...new Set(lines.map(l=>cleanString(l.WarehouseCode||l.Warehouse||l.WhsCode)).filter(Boolean))];
+  if(!codes.length){
+    // Service / GL-only documents carry no source warehouse, so derive the
+    // ship-from (GSTIN, state, address) from the vendor / counterparty instead.
+    const vendorShip=await shipFromFromVendor(co,doc);
+    if(vendorShip) doc.ShipFromList=[vendorShip];
+    return doc;
+  }
+  const info=new Map();
+  try{
+    const quoted=codes.map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
+    const rows=await hanaQuery(
+      'SELECT W."WhsCode", W."WhsName", W."Street", W."StreetNo", W."Block", W."City", W."State", W."ZipCode", W."Country", B."BPLName", B."TaxIdNum" AS "gstin", B."State" AS "bpl_state" '+
+      'FROM '+DB(co)+'."OWHS" W LEFT JOIN '+DB(co)+'."OBPL" B ON B."BPLId"=W."BPLid" WHERE W."WhsCode" IN ('+quoted+')'
+    );
+    rows.forEach(r=>{
+      const code=cleanString(firstValue(r,['WhsCode','WHSCODE']));
+      const addr=[firstValue(r,['StreetNo','STREETNO']),firstValue(r,['Street','STREET']),firstValue(r,['Block','BLOCK']),firstValue(r,['City','CITY']),firstValue(r,['State','STATE']),firstValue(r,['ZipCode','ZIPCODE']),firstValue(r,['Country','COUNTRY'])]
+        .map(cleanString).filter(Boolean).join(', ');
+      info.set(code,{
+        code,
+        name:cleanString(firstValue(r,['WhsName','WHSNAME'])),
+        gstin:cleanString(firstValue(r,['gstin','GSTIN','TaxIdNum'])),
+        branch:cleanString(firstValue(r,['BPLName','BPLNAME'])),
+        state:cleanString(firstValue(r,['State','STATE','bpl_state'])),
+        address:addr,
+      });
+    });
+    lines.forEach(l=>{const c=cleanString(l.WarehouseCode||l.Warehouse||l.WhsCode); if(c&&info.has(c)&&!l.WarehouseName) l.WarehouseName=info.get(c).name;});
+  }catch(e){ console.warn('[SAP-DOC] Warehouse/ship-from enrichment skipped:',e.message); }
+  doc.ShipFromList=codes.map(c=>info.get(c)||{code:c,name:'',gstin:'',branch:'',state:'',address:''});
+  return doc;
+}
+
+async function enrichDocumentBranchName(co, doc){
+  const branchId=cleanString(firstValue(doc||{},['BPL_IDAssignedToInvoice','BPLId','BPLID','BranchID']));
+  if(!branchId||doc?.BPLName||doc?.BranchName) return doc;
+  try{
+    const rows=await hanaQuery(
+      'SELECT TOP 1 "BPLId","BPLName" FROM '+DB(co)+'."OBPL" WHERE "BPLId" = ?',
+      [parseInt(branchId,10)]
+    );
+    const name=cleanString(firstValue(rows[0]||{},['BPLName','BPLNAME']));
+    if(name) doc.BPLName=name;
+  }catch(e){ console.warn('[SAP-DOC] Branch name enrichment skipped:',e.message); }
+  return doc;
+}
+
+// Resolve the "Loc." display name for each document line from the SAP location
+// master first. If a legacy payload used a branch id in LocationCode, keep the
+// branch name as a fallback instead of showing only a numeric code.
+async function enrichLocationNames(co, doc){
+  const lines=documentLines(doc);
+  const codes=[...new Set(lines.map(l=>cleanString(l.LocationCode)).filter(c=>/^\d+$/.test(c)))];
+  if(!codes.length) return doc;
+  const locationNames=new Map();
+  const branchNames=new Map();
+  const idList=codes.join(',');
+  try{
+    // OLCT (Locations master): the line's LocationCode maps to OLCT."Code", and the
+    // display name is OLCT."Location" (e.g. 5 -> "DELHI ISD"). This is the authoritative
+    // source — do NOT use OBPL here, which has different names for the same numeric id.
+    const rows=await hanaQuery(
+      'SELECT "Code","Location" FROM '+DB(co)+'."OLCT" WHERE "Code" IN ('+idList+')'
+    );
+    rows.forEach(r=>{
+      const c=cleanString(firstValue(r,['Code','CODE']));
+      const n=cleanString(firstValue(r,['Location','LOCATION']));
+      if(c&&n) locationNames.set(c,n);
+    });
+  }catch(e){ console.warn('[SAP-DOC] Location (OLCT) name lookup skipped:',e.message); }
+  try{
+    const rows=await hanaQuery(
+      'SELECT "BPLId","BPLName" FROM '+DB(co)+'."OBPL" WHERE "BPLId" IN ('+idList+')'
+    );
+    rows.forEach(r=>{
+      const c=cleanString(firstValue(r,['BPLId','BPLID']));
+      const n=cleanString(firstValue(r,['BPLName','BPLNAME']));
+      if(c&&n) branchNames.set(c,n);
+    });
+  }catch(e){ console.warn('[SAP-DOC] Branch (OBPL) name lookup skipped:',e.message); }
+  lines.forEach(l=>{
+    const c=cleanString(l.LocationCode);
+    if(!c) return;
+    if(branchNames.get(c)&&!l.LocationBranchName) l.LocationBranchName=branchNames.get(c);
+    if(locationNames.get(c)){
+      l.LocationName=locationNames.get(c);
+    }else if(branchNames.get(c)&&!l.LocationName){
+      l.LocationName=branchNames.get(c);
+    }
+  });
+  return doc;
+}
+
+// Resolve the cost-center dimension codes on each line (CostingCode..CostingCode5,
+// i.e. OcrCode..OcrCode5) to their human names from OPRC so the line table can
+// show "Haryana"/"Delhi" instead of the raw dimension code (e.g. "DL").
+const DIMENSION_FIELDS=['CostingCode','CostingCode2','CostingCode3','CostingCode4','CostingCode5'];
+async function enrichDimensionNames(co, doc){
+  const lines=documentLines(doc);
+  if(!lines.length) return doc;
+  const codes=new Set();
+  lines.forEach(l=>DIMENSION_FIELDS.forEach(f=>{const v=cleanString(l?.[f]); if(v) codes.add(v);}));
+  if(!codes.size) return doc;
+  const names=new Map();
+  try{
+    const quoted=[...codes].map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
+    const rows=await hanaQuery(
+      'SELECT "PrcCode","PrcName" FROM '+DB(co)+'."OPRC" WHERE "PrcCode" IN ('+quoted+')'
+    );
+    rows.forEach(r=>{
+      const c=cleanString(firstValue(r,['PrcCode','PRCCODE']));
+      const n=cleanString(firstValue(r,['PrcName','PRCNAME']));
+      if(c&&n) names.set(c,n);
+    });
+  }catch(e){ console.warn('[SAP-DOC] Dimension (OPRC) name lookup skipped:',e.message); }
+  if(!names.size) return doc;
+  lines.forEach(l=>DIMENSION_FIELDS.forEach(f=>{
+    const v=cleanString(l?.[f]);
+    if(v&&names.has(v)) l[f+'Name']=names.get(v);
+  }));
+  return doc;
+}
+
+function journalTransTypeForDocument(type, doc){
+  const byType={
+    Invoices:'13', CreditNotes:'14', PurchaseInvoices:'18', PurchaseCreditNotes:'19',
+    PurchaseOrders:'22', PurchaseDeliveryNotes:'20', PurchaseReturns:'21', Returns:'16',
+    Orders:'17', DeliveryNotes:'15', StockTransfers:'67', ProductionOrders:'202',
+    InventoryGenExits:'59', InventoryGenEntries:'60',
+    VendorPayments:'46', PaymentDrafts:'46', IncomingPayments:'24',
+  };
+  const fromDoc=cleanString(doc?.ObjType||doc?.ObjectType||doc?.DocObjectCode);
+  if(type==='Drafts'&&fromDoc) return fromDoc;
+  return byType[type]||fromDoc||'';
+}
+function journalReferenceCandidates(doc){
+  const values=new Set();
+  [
+    doc?.TransId, doc?.TransNum, doc?.JournalEntry, doc?.JdtNum,
+    doc?.DocNum, doc?.DocEntry, doc?.DraftEntry,
+    doc?.NumAtCard, doc?.SupplierRefNo, doc?.VendorRefNo,
+    doc?.InvoiceNo, doc?.InvoiceNumber, doc?.TaxInvoiceNo,
+    doc?.U_InvoiceNo, doc?.U_InvNo,
+  ].forEach(v=>cleanString(v)&&values.add(cleanString(v)));
+  const text=cleanString(doc?.Comments||doc?.Remarks);
+  const invoice=text.match(/invoice\s*(?:no|number|#)?\.?\s*[:\-]?\s*([A-Z0-9/\-]+)/i);
+  if(invoice?.[1]) values.add(cleanString(invoice[1]));
+  return [...values].filter(Boolean).slice(0,20);
+}
+
+async function fetchJournalEntryByReference(co, refs, transType=null){
+  const cleanRefs=[...new Set((refs||[]).map(cleanString).filter(Boolean))];
+  if(!cleanRefs.length) return null;
+  const db=DB(co);
+  const whereParts=[];
+  const params=[];
+  cleanRefs.forEach(ref=>{
+    whereParts.push("(CAST(H.\"BaseRef\" AS NVARCHAR) = ? OR CAST(H.\"Number\" AS NVARCHAR) = ? OR UPPER(COALESCE(H.\"Ref1\",'')) LIKE ? OR UPPER(COALESCE(H.\"Ref2\",'')) LIKE ? OR UPPER(COALESCE(H.\"Ref3\",'')) LIKE ? OR UPPER(COALESCE(H.\"Memo\",'')) LIKE ?)");
+    const like='%'+ref.toUpperCase()+'%';
+    params.push(ref,ref,like,like,like,like);
+  });
+  const typeFilter=cleanString(transType);
+  const whereSql='('+whereParts.join(' OR ')+')'+(typeFilter?' AND CAST(H."TransType" AS NVARCHAR) = ?':'');
+  if(typeFilter) params.push(typeFilter);
+  const rows=await hanaQuery(
+    'SELECT TOP 1 H."TransId" AS "trans_id" FROM '+db+'."OJDT" H WHERE '+whereSql+' ORDER BY H."TransId" DESC',
+    params
+  );
+  const id=asNumber(firstValue(rows[0]||{},['trans_id','TRANS_ID','TransId']));
+  return id?fetchJournalEntryByTransId(co,id):null;
+}
+
+function inTransitTransTypeForDocument(type, doc){
+  const target=journalTransTypeForDocument(type,doc);
+  if(target==='18'||target==='19') return '20';
+  if(target==='13'||target==='14') return '15';
+  return '';
+}
+
+async function fetchJournalEntryForDocument(co, doc, transType=null){
+  const transId=doc?.TransId||doc?.TransNum||doc?.JournalEntry||doc?.JdtNum;
+  if(transId){
+    const direct=await fetchJournalEntryByTransId(co,transId);
+    if(direct) return direct;
+  }
+  return fetchJournalEntryByReference(co,journalReferenceCandidates(doc),transType);
+}
+async function fetchJournalEntryByTransId(co, transId){
+  const id=parseInt(transId,10);
+  if(!Number.isFinite(id)||id<=0) return null;
+  const db=DB(co);
+  const headerRows=await hanaQuery(
+    'SELECT TOP 1 H."TransId" AS "trans_id", H."Number" AS "number", H."RefDate" AS "ref_date", H."DueDate" AS "due_date", H."TaxDate" AS "tax_date", H."Memo" AS "memo", H."BaseRef" AS "base_ref", H."TransType" AS "trans_type", CAST(COALESCE(SUM(L."Debit"),0) AS DECIMAL(19,2)) AS "total_debit", CAST(COALESCE(SUM(L."Credit"),0) AS DECIMAL(19,2)) AS "total_credit" FROM ' + db + '."OJDT" H LEFT JOIN ' + db + '."JDT1" L ON L."TransId" = H."TransId" WHERE H."TransId" = ? GROUP BY H."TransId",H."Number",H."RefDate",H."DueDate",H."TaxDate",H."Memo",H."BaseRef",H."TransType"',
+    [id]
+  );
+  if(!headerRows.length) return null;
+  const lineRows=await hanaQuery(
+    'SELECT L."Line_ID" AS "line_id", L."Account" AS "account", A."AcctName" AS "account_name", L."ShortName" AS "short_name", CAST(COALESCE(L."Debit",0) AS DECIMAL(19,2)) AS "debit", CAST(COALESCE(L."Credit",0) AS DECIMAL(19,2)) AS "credit", L."ContraAct" AS "contra_account", L."LineMemo" AS "line_memo", L."ProfitCode" AS "cost_center", L."OcrCode2" AS "cost_center_2", L."OcrCode3" AS "cost_center_3", L."OcrCode4" AS "cost_center_4" FROM ' + db + '."JDT1" L LEFT JOIN ' + db + '."OACT" A ON A."AcctCode" = L."Account" WHERE L."TransId" = ? ORDER BY L."Line_ID" ASC',
+    [id]
+  );
+  const h=headerRows[0];
+  return {
+    trans_id:asNumber(firstValue(h,['trans_id','TRANS_ID','TransId'])),
+    number:asNumber(firstValue(h,['number','NUMBER','Number'])),
+    ref_date:dateOnly(firstValue(h,['ref_date','REF_DATE','RefDate'])),
+    due_date:dateOnly(firstValue(h,['due_date','DUE_DATE','DueDate'])),
+    tax_date:dateOnly(firstValue(h,['tax_date','TAX_DATE','TaxDate'])),
+    memo:cleanString(firstValue(h,['memo','MEMO','Memo'])),
+    base_ref:cleanString(firstValue(h,['base_ref','BASE_REF','BaseRef'])),
+    trans_type:cleanString(firstValue(h,['trans_type','TRANS_TYPE','TransType'])),
+    total_debit:asNumber(firstValue(h,['total_debit','TOTAL_DEBIT'])),
+    total_credit:asNumber(firstValue(h,['total_credit','TOTAL_CREDIT'])),
+    lines:lineRows.map(row=>({
+      line_id:asNumber(firstValue(row,['line_id','LINE_ID','Line_ID'])),
+      account:cleanString(firstValue(row,['account','ACCOUNT','Account'])),
+      account_name:cleanString(firstValue(row,['account_name','ACCOUNT_NAME','AcctName'])),
+      short_name:cleanString(firstValue(row,['short_name','SHORT_NAME','ShortName'])),
+      debit:asNumber(firstValue(row,['debit','DEBIT','Debit'])),
+      credit:asNumber(firstValue(row,['credit','CREDIT','Credit'])),
+      contra_account:cleanString(firstValue(row,['contra_account','CONTRA_ACCOUNT','ContraAct'])),
+      line_memo:cleanString(firstValue(row,['line_memo','LINE_MEMO','LineMemo'])),
+      cost_center:cleanString(firstValue(row,['cost_center','COST_CENTER','ProfitCode'])),
+      cost_center_2:cleanString(firstValue(row,['cost_center_2','COST_CENTER_2','OcrCode2'])),
+      cost_center_3:cleanString(firstValue(row,['cost_center_3','COST_CENTER_3','OcrCode3'])),
+      cost_center_4:cleanString(firstValue(row,['cost_center_4','COST_CENTER_4','OcrCode4'])),
+    })),
+  };
+}
+
+// ── Draft journal reconstruction ──────────────────────────────────────────
+// A document awaiting approval is held as a DRAFT (ODRF/DRF1/DRF3); SAP has not
+// posted an OJDT/JDT1 journal yet, so there is nothing to read back. SAP computes
+// the journal live from its G/L account determination. We reproduce that result
+// from the draft itself: each document line already carries its determined G/L
+// account (DRF1."AcctCode"), the BP control account comes from OCRD."DebPayAcct",
+// GST is split per tax-code component (STC1) and matched to the chart of accounts,
+// additional expenses come from DRF3, and any residual lands on the rounding
+// (Short & Excess) account so the preview always balances — mirroring SAP exactly.
+const AP_JOURNAL_TYPES=new Set(['18','19','20','22']);  // AP invoice/credit, GRPO, PO → BP credited
+function gstAccountKind(staCode){
+  const c=String(staCode||'').toUpperCase();
+  if(c.includes('IGST')||c.startsWith('IG'))return 'IGST';
+  if(c.includes('CGST')||c.startsWith('CG')||c.startsWith('RCG'))return 'CGST';
+  if(c.includes('SGST')||c.startsWith('SG')||c.startsWith('RSG'))return 'SGST';
+  if(c.includes('CESS'))return 'CESS';
+  return null;
+}
+// GST G/L accounts follow a naming convention ("INPUT IGST @ 18 %", "OUTPUT CGST @ 2.5 %").
+// OSTA/OSTT carry no account here, so the chart of accounts is the determination source.
+async function resolveGstAccount(co,direction,kind,rate){
+  const rateStr=String(Number(rate));  // "18.000000" → "18", "2.500000" → "2.5"
+  const rows=await hanaQuery(
+    'SELECT "AcctCode","AcctName" FROM '+DB(co)+'."OACT" WHERE UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? AND UPPER("AcctName") NOT LIKE \'%RCM%\' ORDER BY LENGTH("AcctName") ASC',
+    ['%'+direction+'%','%'+kind+'%','%'+rateStr+'%']
+  );
+  return rows[0]||null;
+}
+async function buildDraftJournalEntryFromHana(co,draftEntry){
+  const id=parseInt(draftEntry,10);
+  if(!Number.isFinite(id)||id<=0) return null;
+  const db=DB(co);
+  const hRows=await hanaQuery('SELECT TOP 1 "CardCode","CardName","DocTotal","DocDate","DocDueDate","TaxDate","ObjType","NumAtCard","JrnlMemo" FROM '+db+'."ODRF" WHERE "DocEntry"=?',[id]);
+  if(!hRows.length) return null;
+  const h=hRows[0];
+  const objType=cleanString(firstValue(h,['ObjType']));
+  const isAP=AP_JOURNAL_TYPES.has(objType);
+  const dir=isAP?'INPUT':'OUTPUT';
+  const expenseSide=isAP?'D':'C';   // GRNI/expense (AP debit, AR credit)
+  const taxSide=isAP?'D':'C';       // input tax debit / output tax credit
+  const bpSide=isAP?'C':'D';        // vendor credit / customer debit
+  const ctlRows=await hanaQuery('SELECT TOP 1 "DebPayAcct" FROM '+db+'."OCRD" WHERE "CardCode"=?',[cleanString(h.CardCode)]);
+  const ctlAcct=cleanString(ctlRows[0]?.DebPayAcct);
+  const lineRows=await hanaQuery('SELECT "LineNum","AcctCode","LineTotal","LineVat","TaxCode" FROM '+db+'."DRF1" WHERE "DocEntry"=? ORDER BY "LineNum"',[id]);
+  const expRows=await hanaQuery('SELECT "ExpnsCode","LineTotal","LineVat","TaxCode","Stock" FROM '+db+'."DRF3" WHERE "DocEntry"=?',[id]).catch(()=>[]);
+
+  const lines=[];
+  const r2=(v)=>Math.round(asNumber(v)*10000)/10000;
+  const nameCache={};
+  async function acctName(code){
+    const c=cleanString(code); if(!c) return '';
+    if(nameCache[c]!==undefined) return nameCache[c];
+    const r=await hanaQuery('SELECT TOP 1 "AcctName" FROM '+db+'."OACT" WHERE "AcctCode"=?',[c]);
+    return (nameCache[c]=cleanString(r[0]?.AcctName));
+  }
+  const add=(acct,name,amt,side)=>{ const v=r2(amt); if(!v) return; lines.push({account:cleanString(acct),account_name:cleanString(name),short_name:'',debit:side==='D'?v:0,credit:side==='C'?v:0,line_memo:'',cost_center:'',cost_center_2:'',cost_center_3:'',cost_center_4:'',cost_center_5:''}); };
+  async function addTax(taxCode,lineVat){
+    if(!asNumber(lineVat)) return;
+    const comps=await hanaQuery('SELECT "STACode","EfctivRate" FROM '+db+'."STC1" WHERE "STCCode"=? ORDER BY "Line_ID"',[cleanString(taxCode)]).catch(()=>[]);
+    const total=comps.reduce((s,c)=>s+asNumber(c.EfctivRate),0)||1;
+    for(const c of comps){
+      const kind=gstAccountKind(c.STACode); if(!kind) continue;
+      const amt=r2(asNumber(lineVat)*asNumber(c.EfctivRate)/total);
+      const acc=await resolveGstAccount(co,dir,kind,c.EfctivRate);
+      add(acc?.AcctCode||(dir+' '+kind),acc?.AcctName||(dir+' '+kind+' @ '+Number(c.EfctivRate)+'%'),amt,taxSide);
+    }
+  }
+  for(const l of lineRows){ add(l.AcctCode,await acctName(l.AcctCode),l.LineTotal,expenseSide); }
+  for(const l of lineRows){ await addTax(l.TaxCode,l.LineVat); }
+  for(const e of expRows){
+    let acct,name;
+    if(cleanString(e.Stock)==='Y'){  // stock freight clears through Expense Clearing
+      const ec=await hanaQuery('SELECT TOP 1 "AcctCode","AcctName" FROM '+db+'."OACT" WHERE UPPER("AcctName") LIKE \'%EXPENSE CLEARING%\' ORDER BY "AcctCode"');
+      acct=ec[0]?.AcctCode; name=ec[0]?.AcctName;
+    }else{
+      const od=await hanaQuery('SELECT TOP 1 "ExpnsAcct" FROM '+db+'."OEXD" WHERE "ExpnsCode"=?',[asNumber(e.ExpnsCode)]);
+      acct=cleanString(od[0]?.ExpnsAcct); name=await acctName(acct);
+    }
+    add(acct,name,e.LineTotal,expenseSide);
+    await addTax(e.TaxCode,e.LineVat);
+  }
+  add(ctlAcct||cleanString(h.CardCode),cleanString(h.CardName),h.DocTotal,bpSide);
+  const dr=lines.reduce((s,x)=>s+x.debit,0), cr=lines.reduce((s,x)=>s+x.credit,0);
+  const diff=r2(cr-dr);
+  if(Math.abs(diff)>=0.0001){
+    const ra=await hanaQuery('SELECT TOP 1 "LinkAct_24" FROM '+db+'."OACP" ORDER BY "AbsEntry"').catch(()=>[]);
+    let se=null;
+    const raCode=cleanString(ra[0]?.LinkAct_24);
+    if(raCode){ const r=await hanaQuery('SELECT TOP 1 "AcctCode","AcctName" FROM '+db+'."OACT" WHERE "AcctCode"=?',[raCode]); se=r[0]; }
+    if(!se){ const r=await hanaQuery('SELECT TOP 1 "AcctCode","AcctName" FROM '+db+'."OACT" WHERE UPPER("AcctName") LIKE \'%SHORT%EXCESS%\' AND UPPER("AcctName") NOT LIKE \'%STOCK%\' ORDER BY "AcctCode"'); se=r[0]; }
+    add(se?.AcctCode||'Rounding',se?.AcctName||'Rounding / Short & Excess',Math.abs(diff),diff>0?'D':'C');
+  }
+  if(!lines.length) return null;
+  lines.forEach((l,i)=>l.line_id=i+1);
+  return {
+    trans_id:'Draft', number:'Preview',
+    ref_date:dateOnly(firstValue(h,['DocDate'])),
+    due_date:dateOnly(firstValue(h,['DocDueDate'])),
+    tax_date:dateOnly(firstValue(h,['TaxDate'])),
+    memo:cleanString(h.JrnlMemo)||'Reconstructed journal preview — SAP posts the final entry on approval',
+    base_ref:cleanString(h.NumAtCard),
+    trans_type:objType,
+    total_debit:r2(lines.reduce((s,x)=>s+x.debit,0)),
+    total_credit:r2(lines.reduce((s,x)=>s+x.credit,0)),
+    lines,
+  };
+}
 
 // List documents
 router.get('/documents/:type', verifyToken, async(req,res)=>{
@@ -1277,8 +1919,271 @@ router.get('/documents/:type/:id', verifyToken, async(req,res)=>{
   try{
     const key=type==='JournalEntries'?id:`${id}`;
     const result=await getSap().sapRequest('GET',`${type}(${key})`,null,co);
+    await enrichDocumentLineFields(co,type,result);
+    await enrichDocumentGlNames(result,co);
+    await enrichDocumentTds(co,type,result);
+    await enrichDocumentBranchName(co,result);
+    await enrichWarehouseNames(co,result);
+    await enrichLocationNames(co,result);
+    await enrichDimensionNames(co,result);
+    try{ result.LinkedJournalEntry=await fetchJournalEntryForDocument(co,result,journalTransTypeForDocument(type,result)); }
+    catch(e){ console.warn('[SAP-DOC] Journal entry load skipped:',e.message); }
+    // A pending draft has no posted OJDT yet — reconstruct SAP's journal from the draft itself.
+    if(!result.LinkedJournalEntry && type==='Drafts'){
+      try{ result.LinkedJournalEntry=await buildDraftJournalEntryFromHana(co,result?.DocEntry); }
+      catch(e){ console.warn('[SAP-DOC] Draft journal reconstruction skipped:',e.message); }
+    }
+    const inTransitType=inTransitTransTypeForDocument(type,result);
+    if(inTransitType){
+      try{ result.LinkedInTransitEntry=await fetchJournalEntryByReference(co,journalReferenceCandidates(result),inTransitType); }
+      catch(e){ console.warn('[SAP-DOC] In-transit entry load skipped:',e.message); }
+    }
     res.json({success:true,data:result});
   }catch(e){res.status(404).json({success:false,message:e.message});}
+});
+
+// ════════════════════════════════════════════════════════════════
+//  OUTGOING PAYMENT DRAFT (OPDF) — full detail like SAP B1
+//  Pending outgoing-payment approvals are held as drafts (OPDF), which
+//  the Service Layer does not expose as a payment, so we assemble the
+//  complete document straight from HANA: header + G/L accounts (PDF4)
+//  + applied invoices (PDF2) + checks (PDF1) + withholding/TDS (PDF6).
+// ════════════════════════════════════════════════════════════════
+const PAYMENT_INV_TABLE={'13':'OINV','14':'ORIN','18':'OPCH','19':'ORPC','24':'ORCT','46':'OVPM'};
+const PAYMENT_DRAFT_STATUS={'N':'Open','Y':'Closed','C':'Cancelled','W':'Pending Approval','D':'Draft'};
+
+async function resolvePaymentInvoiceNumbers(co, invLines){
+  const byType={};
+  invLines.forEach(l=>{
+    const t=cleanString(l.InvType);const e=asNumber(l.DocEntry);
+    if(!t||!e)return;
+    (byType[t]=byType[t]||new Set()).add(e);
+  });
+  const map={};
+  for(const [type,set] of Object.entries(byType)){
+    const table=PAYMENT_INV_TABLE[type];
+    if(!table)continue;
+    const ids=[...set];
+    try{
+      const rows=await hanaQuery(
+        'SELECT "DocEntry","DocNum","DocDate","DocTotal" FROM '+DB(co)+'."'+table+'" WHERE "DocEntry" IN ('+ids.join(',')+')'
+      );
+      rows.forEach(r=>{map[type+'-'+asNumber(firstValue(r,['DocEntry','DOCENTRY']))]={
+        docNum:asNumber(firstValue(r,['DocNum','DOCNUM'])),
+        docDate:dateOnly(firstValue(r,['DocDate','DOCDATE'])),
+        docTotal:asNumber(firstValue(r,['DocTotal','DOCTOTAL'])),
+      };});
+    }catch(e){console.warn('[SAP-PDRAFT] invoice number lookup skipped ('+table+'):',e.message);}
+  }
+  return map;
+}
+
+async function fetchPaymentDraft(co, entry){
+  const id=parseInt(entry,10);
+  if(!Number.isFinite(id)||id<=0) return null;
+  const db=DB(co);
+  const headerRows=await hanaQuery(
+    'SELECT "DocEntry","DocNum","DocType","DocDate","DocDueDate","TaxDate","CardCode","CardName","Address","DocCurr","CashAcct","CashSum","CheckAcct","CheckSum","CreditSum","TrsfrAcct","TrsfrSum","TrsfrDate","TrsfrRef","CounterRef","NoDocSum","DocTotal","Ref1","Ref2","Comments","JrnlMemo","WtSum","WtAccount","VatSum","BPLId","BPLName","PrjCode","PayToCode","Series","Status","WddStatus","Submitted","confirmed","Attachment","TransId","U_Pymnt_Mode" FROM '+db+'."OPDF" WHERE "DocEntry" = ?',
+    [id]
+  );
+  if(!headerRows.length) return null;
+  const h=headerRows[0];
+  const gv=(k)=>firstValue(h,[k,k.toUpperCase()]);
+
+  const acctRows=await hanaQuery(
+    'SELECT "LineId","AcctCode","AcctName","Descrip","SumApplied","GrossAmnt","VatGroup","VatPrcnt","OcrCode","OcrCode2","OcrCode3","OcrCode4","OcrCode5","Section","Project","U_Remarks" FROM '+db+'."PDF4" WHERE "DocNum" = ? ORDER BY "LineId" ASC',
+    [id]
+  );
+  const invRows=await hanaQuery(
+    'SELECT "InvoiceId","DocEntry","InvType","SumApplied","AppliedFC","PaidSum","Dcount","DcntSum","InstId","OcrCode" FROM '+db+'."PDF2" WHERE "DocNum" = ? ORDER BY "InvoiceId" ASC',
+    [id]
+  );
+  const checkRows=await hanaQuery(
+    'SELECT "LineID","CheckNum","BankCode","Branch","AcctNum","DueDate","CheckSum","Details" FROM '+db+'."PDF1" WHERE "DocNum" = ? ORDER BY "LineID" ASC',
+    [id]
+  ).catch(()=>[]);
+  const wtRows=await hanaQuery(
+    'SELECT X."WTCode", X."Rate", X."TaxbleAmnt", X."WTSum", X."TdsAmnt", W."WTName" FROM '+db+'."PDF6" X LEFT JOIN '+db+'."OWHT" W ON W."WTCode"=X."WTCode" WHERE X."DocNum" = ? ORDER BY X."Line" ASC',
+    [id]
+  ).catch(()=>[]);
+
+  const invNumMap=await resolvePaymentInvoiceNumbers(co, invRows);
+  const currency=cleanString(gv('DocCurr'))||'INR';
+
+  const PaymentAccounts=acctRows.map(r=>({
+    AccountCode:cleanString(firstValue(r,['AcctCode','ACCTCODE'])),
+    AccountName:cleanString(firstValue(r,['AcctName','ACCTNAME'])),
+    Description:cleanString(firstValue(r,['Descrip','DESCRIP']))||cleanString(firstValue(r,['U_Remarks','U_REMARKS'])),
+    SumPaid:asNumber(firstValue(r,['SumApplied','SUMAPPLIED'])),
+    GrossAmount:asNumber(firstValue(r,['GrossAmnt','GROSSAMNT'])),
+    TaxCode:cleanString(firstValue(r,['VatGroup','VATGROUP'])),
+    ProfitCenter:cleanString(firstValue(r,['OcrCode','OCRCODE'])),
+    ProfitCenter2:cleanString(firstValue(r,['OcrCode2','OCRCODE2'])),
+    ProfitCenter3:cleanString(firstValue(r,['OcrCode3','OCRCODE3'])),
+    ProfitCenter4:cleanString(firstValue(r,['OcrCode4','OCRCODE4'])),
+    ProfitCenter5:cleanString(firstValue(r,['OcrCode5','OCRCODE5'])),
+    Section:cleanString(firstValue(r,['Section','SECTION'])),
+  }));
+  const PaymentInvoices=invRows.map(r=>{
+    const type=cleanString(firstValue(r,['InvType','INVTYPE']));
+    const docEntry=asNumber(firstValue(r,['DocEntry','DOCENTRY']));
+    const resolved=invNumMap[type+'-'+docEntry]||{};
+    return {
+      DocEntry:docEntry,
+      DocNum:resolved.docNum||docEntry,
+      DocDate:resolved.docDate||null,
+      InvoiceType:OBJ_TYPE_MAP[type]||('Type '+type),
+      SumApplied:asNumber(firstValue(r,['SumApplied','SUMAPPLIED'])),
+      AppliedSum:asNumber(firstValue(r,['SumApplied','SUMAPPLIED'])),
+      DiscountPercent:asNumber(firstValue(r,['Dcount','DCOUNT'])),
+      TotalDiscount:asNumber(firstValue(r,['DcntSum','DCNTSUM'])),
+      DocTotal:resolved.docTotal||null,
+    };
+  });
+  const PaymentChecks=checkRows.map(r=>({
+    CheckNumber:cleanString(firstValue(r,['CheckNum','CHECKNUM'])),
+    BankCode:cleanString(firstValue(r,['BankCode','BANKCODE'])),
+    BankName:cleanString(firstValue(r,['BankCode','BANKCODE'])),
+    DueDate:dateOnly(firstValue(r,['DueDate','DUEDATE'])),
+    CheckSum:asNumber(firstValue(r,['CheckSum','CHECKSUM'])),
+  }));
+  const wtAmount=wtRows.reduce((s,r)=>s+Number(asNumber(firstValue(r,['WTSum','WTSUM']))||0),0)||asNumber(gv('WtSum'));
+  const wtRate=wtRows.length?asNumber(firstValue(wtRows[0],['Rate','RATE'])):null;
+  const TDSDetails=wtRows.map(r=>{
+    const name=cleanString(firstValue(r,['WTName','WTNAME']));
+    return {
+      code:cleanString(firstValue(r,['WTCode','WTCODE'])),
+      name, section:extractTdsSection(name),
+      rate:asNumber(firstValue(r,['Rate','RATE'])),
+      amount:asNumber(firstValue(r,['WTSum','WTSUM']))||asNumber(firstValue(r,['TdsAmnt','TDSAMNT'])),
+      taxable:asNumber(firstValue(r,['TaxbleAmnt','TAXBLEAMNT'])),
+    };
+  }).filter(d=>d.code||d.amount);
+  const TDSSection=[...new Set(TDSDetails.map(d=>d.section).filter(Boolean))].join(', ');
+
+  const doc={
+    DocEntry:asNumber(gv('DocEntry')),
+    DocNum:asNumber(gv('DocNum')),
+    DocDate:dateOnly(gv('DocDate')),
+    DocDueDate:dateOnly(gv('DocDueDate')),
+    DueDate:dateOnly(gv('DocDueDate')),
+    TaxDate:dateOnly(gv('TaxDate')),
+    CardCode:cleanString(gv('CardCode')),
+    CardName:cleanString(gv('CardName')),
+    Address:cleanString(gv('Address')),
+    DocCurrency:currency,
+    CashSum:asNumber(gv('CashSum')),
+    CheckSum:asNumber(gv('CheckSum')),
+    CreditSum:asNumber(gv('CreditSum')),
+    TransferSum:asNumber(gv('TrsfrSum')),
+    TransferAccount:cleanString(gv('TrsfrAcct')),
+    TransferReference:cleanString(gv('TrsfrRef')),
+    TransferDate:dateOnly(gv('TrsfrDate')),
+    CounterReference:cleanString(gv('CounterRef')),
+    NoDocSum:asNumber(gv('NoDocSum')),
+    DocTotal:asNumber(gv('DocTotal')),
+    WTAmount:wtAmount,
+    WTRate:wtRate,
+    WTaxAmount:wtAmount,
+    TDSDetails,
+    TDSSection,
+    Remarks:cleanString(gv('Comments')),
+    JournalRemarks:cleanString(gv('JrnlMemo')),
+    BPLID:asNumber(gv('BPLId')),
+    BPLName:cleanString(gv('BPLName')),
+    ProjectCode:cleanString(gv('PrjCode')),
+    PayToCode:cleanString(gv('PayToCode')),
+    Series:asNumber(gv('Series')),
+    AuthorizationStatus:PAYMENT_DRAFT_STATUS[cleanString(gv('WddStatus'))]||PAYMENT_DRAFT_STATUS[cleanString(gv('Status'))]||cleanString(gv('Status')),
+    DocumentStatus:cleanString(gv('Status'))==='Y'?'bost_Close':'bost_Open',
+    U_Pymnt_Mode:cleanString(gv('U_Pymnt_Mode')),
+    AttachmentEntry:asNumber(gv('Attachment')),
+    TransId:asNumber(gv('TransId')),
+    PaymentAccounts,
+    PaymentInvoices,
+    PaymentChecks,
+    _sapEndpoint:'PaymentDrafts',
+    IsDraft:true,
+  };
+  // Attach the journal entry: real one if already posted, otherwise a preview
+  try{
+    if(doc.TransId) doc.LinkedJournalEntry=await fetchJournalEntryByTransId(co, doc.TransId);
+    if(!doc.LinkedJournalEntry) doc.LinkedJournalEntry=await buildPaymentDraftJournalEntry(co, doc, {
+      transfer:cleanString(gv('TrsfrAcct')), cash:cleanString(gv('CashAcct')),
+      check:cleanString(gv('CheckAcct')), wt:cleanString(gv('WtAccount')),
+    });
+  }catch(e){ console.warn('[SAP-PDRAFT] JE attach skipped:',e.message); }
+  return doc;
+}
+
+// Fill missing account_name on JE lines from the chart of accounts (OACT)
+async function enrichJeAccountNames(co, lines){
+  const codes=[...new Set(lines.filter(l=>!l.account_name).map(l=>cleanString(l.account)).filter(Boolean))];
+  if(!codes.length) return;
+  try{
+    const quoted=codes.map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
+    const rows=await hanaQuery('SELECT "AcctCode","AcctName" FROM '+DB(co)+'."OACT" WHERE "AcctCode" IN ('+quoted+')');
+    const names=new Map(rows.map(r=>[cleanString(r.AcctCode),cleanString(r.AcctName)]));
+    lines.forEach(l=>{ if(!l.account_name&&names.has(cleanString(l.account))) l.account_name=names.get(cleanString(l.account)); });
+  }catch(e){ console.warn('[SAP-PDRAFT] JE name enrichment skipped:',e.message); }
+}
+
+// Build an outgoing-payment journal preview.
+// Identity: Dr (G/L expenses) + Dr (BP control for the remainder) = Cr (bank/cash/cheque) + Cr (TDS withheld)
+async function buildPaymentDraftJournalEntry(co, doc, raw){
+  const blank={cost_center:'',cost_center_2:'',cost_center_3:'',cost_center_4:'',cost_center_5:''};
+  const lines=[];
+  let li=1;
+  // Debit: direct G/L lines (with cost centers)
+  let glTotal=0;
+  (doc.PaymentAccounts||[]).forEach(a=>{
+    const amt=Number(a.SumPaid||a.GrossAmount||0);
+    if(!amt) return;
+    glTotal+=amt;
+    lines.push({line_id:li++,account:a.AccountCode||'',account_name:a.AccountName||'',short_name:'',debit:amt,credit:0,line_memo:a.Description||'G/L payment',cost_center:a.ProfitCenter||'',cost_center_2:a.ProfitCenter2||'',cost_center_3:a.ProfitCenter3||'',cost_center_4:a.ProfitCenter4||'',cost_center_5:a.ProfitCenter5||''});
+  });
+  // Credit: payment means (money actually paid out)
+  const means=[[raw.transfer,Number(doc.TransferSum||0),'Bank transfer'],[raw.cash,Number(doc.CashSum||0),'Cash'],[raw.check,Number(doc.CheckSum||0),'Cheque'],[raw.credit,Number(doc.CreditSum||0),'Credit card']];
+  let bankTotal=0;
+  means.forEach(([acct,amt,memo])=>{ if(amt>0){ bankTotal+=amt; lines.push({line_id:li++,account:cleanString(acct)||memo,account_name:'',short_name:'',debit:0,credit:amt,line_memo:memo,...blank}); } });
+  // Credit: TDS / withholding tax payable
+  const wt=Number(doc.WTAmount||0);
+  if(wt>0) lines.push({line_id:li++,account:cleanString(raw.wt)||'TDS Payable',account_name:cleanString(raw.wt)?'':'TDS / Withholding Tax Payable',short_name:'',debit:0,credit:wt,line_memo:'TDS / withholding tax withheld',...blank});
+  // Debit: BP control account for whatever is not a direct G/L expense (settled invoices + on-account)
+  const bpDebit=Number((bankTotal+wt-glTotal).toFixed(2));
+  if(bpDebit>0.005){
+    const settled=(doc.PaymentInvoices||[]).length;
+    lines.splice(glTotal>0?(doc.PaymentAccounts||[]).filter(a=>Number(a.SumPaid||a.GrossAmount||0)).length:0,0,{
+      line_id:0,account:doc.CardCode||'BP',account_name:doc.CardName||'Business Partner / Control',short_name:cleanString(doc.CardCode),
+      debit:bpDebit,credit:0,line_memo:settled?('Settlement of '+settled+' document(s)'):'Payment on account',...blank,
+    });
+    lines.forEach((l,i)=>l.line_id=i+1);
+  }
+
+  if(!lines.length) return null;
+  await enrichJeAccountNames(co, lines);
+  return {
+    trans_id:'Draft', number:'Preview',
+    ref_date:doc.DocDate, due_date:doc.DocDueDate, tax_date:doc.TaxDate,
+    memo:'Outgoing payment journal preview — the final SAP journal entry is generated after approval.',
+    base_ref:String(doc.DocNum||''), trans_type:'46',
+    total_debit:lines.reduce((s,l)=>s+Number(l.debit||0),0),
+    total_credit:lines.reduce((s,l)=>s+Number(l.credit||0),0),
+    lines,
+  };
+}
+
+// Full draft outgoing-payment detail (assembled from HANA OPDF tables)
+router.get('/payment-drafts/:entry', verifyToken, async(req,res)=>{
+  const co=cq(req);
+  try{
+    const doc=await fetchPaymentDraft(co, req.params.entry);
+    if(!doc) return res.status(404).json({success:false,message:'Payment draft not found'});
+    res.json({success:true,data:doc});
+  }catch(e){
+    console.error('[SAP-PDRAFT]',e.message);
+    res.status(500).json({success:false,message:e.message});
+  }
 });
 
 // Get attachment by entry
@@ -1317,7 +2222,7 @@ router.get('/attachments/:entry/download/:lineId', verifyToken, async(req,res)=>
 // ════════════════════════════════════════════════════════════════
 //  SAP APPROVAL REQUESTS
 // ════════════════════════════════════════════════════════════════
-const OBJ_TYPE_MAP={'112':'Draft','13':'AR Invoice','14':'AR Credit Memo','18':'AP Invoice','19':'AP Credit Note','22':'Purchase Order','20':'Goods Receipt PO','21':'Goods Return','59':'Goods Issue','60':'Goods Receipt','46':'Blanket Agreement','17':'Order','15':'Delivery','16':'Return','1470000113':'Inventory Transfer'};
+const OBJ_TYPE_MAP={'112':'Draft','13':'AR Invoice','14':'AR Credit Memo','18':'AP Invoice','19':'AP Credit Note','22':'Purchase Order','20':'Goods Receipt PO','21':'Goods Return','59':'Goods Issue','60':'Goods Receipt','46':'Outgoing Payment','17':'Order','15':'Delivery','16':'Return','1470000113':'Inventory Transfer'};
 
 function normalizeSapUserId(v){
   const n=parseInt(v,10);
@@ -1332,6 +2237,29 @@ function splitUserToken(value){
   const num = normalizeSapUserId(raw);
   if (num !== null) values.add(String(num));
   return [...values];
+}
+
+function parseDraftEntrySet(value){
+  if (value === null || value === undefined) return null;
+  const values = new Set();
+  String(value)
+    .split(',')
+    .map(v => String(v).trim())
+    .filter(Boolean)
+    .forEach(v => {
+      const n = Number.parseInt(v, 10);
+      if (Number.isFinite(n) && n > 0) values.add(n);
+    });
+  return values.size ? values : null;
+}
+
+function buildSapStatusFilter(status){
+  if(status==='Pending') return "Status eq 'arsPending'";
+  if(status==='Approved') return "Status eq 'arsApproved' or Status eq 'arsGenerated' or Status eq 'arsGeneratedByAuthorizer'";
+  if(status==='Rejected') return "Status eq 'arsNotApproved' or Status eq 'arsRejected'";
+  if(status==='Generated') return "Status eq 'arsGenerated' or Status eq 'arsGeneratedByAuthorizer'";
+  if(status==='Cancelled') return "Status eq 'arsCancelled'";
+  return '';
 }
 
 function approvalLineUserTokens(line){
@@ -1436,12 +2364,46 @@ async function fetchApprovalRequestPage(co,filters,top,skip){
   return result?.value||[];
 }
 
+// Resolve the set of draft DocEntry values whose lines contain a given part name
+// (item code or description). Approval requests are drafts, so this lets the
+// approvals page be filtered by the part inside the pending document.
+async function findDraftEntriesByPartName(co, partName){
+  const like='%'+String(partName).toUpperCase()+'%';
+  try{
+    const rows=await hanaQuery(
+      'SELECT DISTINCT TOP 1000 "DocEntry" FROM '+DB(co)+'."DRF1" WHERE UPPER("ItemCode") LIKE ? OR UPPER("Dscription") LIKE ?',
+      [like,like]
+    );
+    return new Set(rows.map(r=>Number(firstValue(r,['DocEntry','DOCENTRY']))).filter(n=>Number.isFinite(n)));
+  }catch(e){
+    console.warn('[SAP-APPROVAL] Part name search skipped:',e.message);
+    return new Set();
+  }
+}
+
+// Resolve the set of draft DocEntry values whose business partner (card code or
+// name) matches — lets the approvals page be filtered by the party on the document.
+async function findDraftEntriesByPartyName(co, partyName){
+  const like='%'+String(partyName).toUpperCase()+'%';
+  try{
+    const rows=await hanaQuery(
+      'SELECT DISTINCT TOP 1000 "DocEntry" FROM '+DB(co)+'."ODRF" WHERE UPPER("CardCode") LIKE ? OR UPPER("CardName") LIKE ?',
+      [like,like]
+    );
+    return new Set(rows.map(r=>Number(firstValue(r,['DocEntry','DOCENTRY']))).filter(n=>Number.isFinite(n)));
+  }catch(e){
+    console.warn('[SAP-APPROVAL] Party name search skipped:',e.message);
+    return new Set();
+  }
+}
+
 async function listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,requestedStatus){
   const visible=[];
-  const pageTop=Math.max(50,top);
+  const sapPageTop=Math.min(Math.max(Number(process.env.SAP_APPROVAL_PAGE_SIZE)||20,1),100);
+  const maxPages=Math.min(Math.max(Number(process.env.SAP_APPROVAL_MAX_PAGES)||300,1),1000);
   let sapSkip=0;
-  for(let page=0;page<40&&visible.length<skip+top;page++){
-    const rows=await fetchApprovalRequestPage(co,filters,pageTop,sapSkip);
+  for(let page=0;page<maxPages&&visible.length<skip+top;page++){
+    const rows=await fetchApprovalRequestPage(co,filters,sapPageTop,sapSkip);
     if(!rows.length) break;
     const hydrated=await Promise.all(rows.map(r=>withApprovalRequestLines(r,co).catch(e=>{
       console.warn('[SAP-APPROVAL] Detail load skipped for Code',r?.Code,e.message);
@@ -1451,7 +2413,6 @@ async function listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,req
       if(isApprovalVisibleToSapUser(r,sapUserTokens,requestedStatus)) visible.push(r);
     });
     sapSkip+=rows.length;
-    if(rows.length<pageTop) break;
   }
   return visible.slice(skip,skip+top);
 }
@@ -1500,6 +2461,8 @@ router.get('/mapped-user', verifyToken, async(req,res)=>{
 router.get('/approval-requests', verifyToken, async(req,res)=>{
   const co=cq(req);
   const {status,objectType,originatorId,dateFrom,dateTo,bpCode,code}=req.query;
+  const partName=cleanString(req.query.partName||req.query.part||req.query.itemName);
+  const partyName=cleanString(req.query.partyName||req.query.party||req.query.bpName||req.query.cardName);
   const top=Number(req.query.top)||30;
   const skip=Number(req.query.skip)||0;
   try{
@@ -1507,11 +2470,26 @@ router.get('/approval-requests', verifyToken, async(req,res)=>{
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
     const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
     const filters=[];
-    if(status==='Pending')filters.push(`Status eq 'arsPending'`);
-    else if(status==='Approved')filters.push(`Status eq 'arsApproved'`);
-    else if(status==='Rejected')filters.push(`Status eq 'arsNotApproved'`);
-    else if(status==='Generated')filters.push(`Status eq 'arsGenerated'`);
-    else if(status==='Cancelled')filters.push(`Status eq 'arsCancelled'`);
+    const statusFilter=buildSapStatusFilter(status);
+    if(statusFilter) filters.push(statusFilter.includes(' or ')?`(${statusFilter})`:statusFilter);
+    let draftKeyFilter = parseDraftEntrySet(req.query.draftKeys || req.query.draftEntries || req.query.draftKey || req.query.draft);
+    // Each text search narrows the set of draft entries; combine them (and any
+    // explicit draft-key filter) by intersection so all supplied criteria must match.
+    const narrowByDraftEntries = async (resolver, term) => {
+      const matched = await resolver(co, term);
+      draftKeyFilter = (draftKeyFilter && draftKeyFilter.size)
+        ? new Set([...draftKeyFilter].filter(v => matched.has(Number(v))))
+        : matched;
+    };
+    if (partName)  await narrowByDraftEntries(findDraftEntriesByPartName, partName);
+    if (partyName) await narrowByDraftEntries(findDraftEntriesByPartyName, partyName);
+    if ((partName || partyName) && (!draftKeyFilter || !draftKeyFilter.size)) {
+      return res.json({success:true,data:[]});
+    }
+    if (draftKeyFilter && draftKeyFilter.size) {
+      const draftConditions = [...draftKeyFilter].map(v => `DraftEntry eq ${Number(v)}`).join(' or ');
+      filters.push(`(${draftConditions})`);
+    }
     if(objectType)filters.push(`ObjectType eq '${objectType}'`);
     if(originatorId)filters.push(`OriginatorID eq ${parseInt(originatorId)}`);
     if(dateFrom)filters.push(`CreationDate ge '${dateFrom}'`);
@@ -1699,5 +2677,9 @@ router.get('/reports/download/:filename', verifyToken, async(req,res)=>{
     fs.createReadStream(filePath).pipe(res);
   }catch(e){res.status(500).json({success:false,message:e.message});}
 });
+
+router.buildSapStatusFilter = buildSapStatusFilter;
+router.isApprovalVisibleToSapUser = isApprovalVisibleToSapUser;
+router.buildDraftJournalEntryFromHana = buildDraftJournalEntryFromHana;
 
 module.exports = router;

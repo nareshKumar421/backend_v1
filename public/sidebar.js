@@ -18,6 +18,7 @@
     {href:'/vendor-register',icon:'&#127981;',label:'Vendors',module:'vendors'},
     {href:'/budget',icon:'&#128176;',label:'Budget',module:'budget'},
     {href:'/journal-entries',icon:'&#128209;',label:'Journal Entries',module:'journal-entries'},
+    {href:'/gl',icon:'&#128202;',label:'General Ledger',module:'journal-entries'},
     {href:'/documents',icon:'&#128196;',label:'Documents',module:'documents'},
     {href:'/sap-approvals',icon:'&#9989;',label:'SAP Approvals',module:'sap-approvals'},
     {href:'/reports',icon:'&#128202;',label:'Reports',module:'reports'},
