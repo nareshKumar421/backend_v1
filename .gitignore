@@ -1,6 +1,52 @@
-/.env
-/.env.backup.2026-05-20-115524
-/SAP_APPROVAL_SYSTEM_ANALYSIS.md
-/app-5001.log
+# ── Dependencies ────────────────────────────────────────────────
 /node_modules
-/promot.md
+/jspm_packages
+
+# ── Environment & secrets ───────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Logs ────────────────────────────────────────────────────────
+logs
+*.log
+app-*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Runtime / process data ──────────────────────────────────────
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ── Caches & coverage ───────────────────────────────────────────
+.npm
+.eslintcache
+coverage
+*.lcov
+.nyc_output
+
+# ── Build / temp output ─────────────────────────────────────────
+dist
+build
+tmp
+temp
+
+# ── Local scratch notes & analysis (not part of the app) ────────
+promot.md
+*_ANALYSIS.md
+SAP_APPROVAL_SYSTEM_ANALYSIS.md
+
+# ── Editor / OS ─────────────────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+.DS_Store
+Thumbs.db
