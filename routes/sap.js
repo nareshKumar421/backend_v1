@@ -1419,6 +1419,11 @@ async function enrichDocumentLineFields(co, type, doc){
       setLineValue(line,['CostingCode4','OcrCode4'],rowValue(row,['OcrCode4','CostingCode4']));
       setLineValue(line,['CostingCode5','OcrCode5'],rowValue(row,['OcrCode5','CostingCode5']));
       setLineValue(line,'Project',rowValue(row,['Project']));
+      // Base-document linkage (original PO/GRPO/invoice) — Service Layer returns
+      // BaseType/BaseEntry but not the base doc number; fill it from the line table
+      // so the UI (e.g. credit-note "Og Reference No") can show the source doc.
+      setLineValue(line,['BaseRef'],rowValue(row,['BaseRef']));
+      setLineValue(line,['BaseDocNum'],rowValue(row,['BaseRef','BaseDocNum']));
       setLineValue(line,['U_UNE_LTS','U_Litres','U_Litre'],rowValueLike(row,['U_UNE_LTS','U_Litres','U_Litre','U_LitreS'],[['u','lts'],['litre'],['liter']]));
       setLineValue(line,['U_BilltyNumber','U_BiltyNumber'],rowValueLike(row,['U_BilltyNumber','U_BiltyNumber','U_BilltyNo','U_BiltyNo'],[['billty'],['bilty']]));
       setLineValue(line,'U_ARNO',rowValueLike(row,['U_ARNO','U_Arno'],[['arno']]));
@@ -1470,8 +1475,10 @@ async function enrichDocumentGlNames(doc, co){
   return doc;
 }
 
-// Per-document withholding-tax (TDS) line table by endpoint
-const TDS_WT_TABLE={Invoices:'INV5',CreditNotes:'RIN5',PurchaseInvoices:'PCH5',PurchaseCreditNotes:'RPC5'};
+// Per-document withholding-tax (TDS) line table by endpoint. Drafts (pending
+// approvals) keep their WTax rows in DRF5 — without this entry the TDS section,
+// rate and amount come back blank for every document awaiting approval.
+const TDS_WT_TABLE={Invoices:'INV5',CreditNotes:'RIN5',PurchaseInvoices:'PCH5',PurchaseCreditNotes:'RPC5',Drafts:'DRF5'};
 function extractTdsSection(name){
   const m=String(name||'').match(/\b(19[0-9][A-Z]{0,2}|20[0-9][A-Z]{0,2}|206C[A-Z]?)\b/);
   return m?m[1].toUpperCase():'';
@@ -1483,15 +1490,18 @@ async function enrichDocumentTds(co, type, doc){
   if(!table||!entry) return doc;
   try{
     const rows=await hanaQuery(
-      'SELECT X."WTCode" AS "code", X."Rate" AS "rate", X."WTAmnt" AS "amount", X."TaxbleAmnt" AS "taxable", W."WTName" AS "name" FROM '+DB(co)+'."'+table+'" X LEFT JOIN '+DB(co)+'."OWHT" W ON W."WTCode"=X."WTCode" WHERE X."AbsEntry"=?',
+      'SELECT X."WTCode" AS "code", X."Rate" AS "rate", X."WTAmnt" AS "amount", X."TaxbleAmnt" AS "taxable", W."WTName" AS "name", W."OffclCode" AS "offcl" FROM '+DB(co)+'."'+table+'" X LEFT JOIN '+DB(co)+'."OWHT" W ON W."WTCode"=X."WTCode" WHERE X."AbsEntry"=? AND X."WTCode" IS NOT NULL AND X."WTCode" <> \'\'',
       [entry]
     );
     if(!rows.length) return doc;
     doc.TDSDetails=rows.map(r=>{
       const name=cleanString(firstValue(r,['name','NAME','WTName']));
+      // SAP's authoritative statutory section is OWHT.OffclCode (what Form 26Q /
+      // TDS reports show); fall back to parsing it out of the tax name.
+      const offcl=cleanString(firstValue(r,['offcl','OFFCL','OffclCode']));
       return {
         code:cleanString(firstValue(r,['code','CODE','WTCode'])),
-        name, section:extractTdsSection(name),
+        name, section:offcl||extractTdsSection(name),
         rate:asNumber(firstValue(r,['rate','RATE'])),
         amount:asNumber(firstValue(r,['amount','AMOUNT','WTAmnt'])),
         taxable:asNumber(firstValue(r,['taxable','TAXABLE','TaxbleAmnt'])),

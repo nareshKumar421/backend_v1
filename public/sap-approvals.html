@@ -622,16 +622,28 @@ function renderGlSection(doc,journalHtml,inTransitHtml,company){
   if(!inner)return'<div class="detail-section"><div class="detail-title">GL / Ledger</div><div class="empty-msg">No GL / journal entry available for this document.</div></div>';
   return inner;
 }
-// Original (Og) reference for credit notes — number & date the CN was issued against
+// Original (Og) reference for credit notes — shows BOTH the vendor reference
+// (NumAtCard) and the source document the CN was raised against (line base
+// link → original AP invoice / goods return number), e.g. "17 / AP Invoice 626063113".
 function ogReferenceNumber(doc){
-  const direct=val(doc,['U_OgRefNo','U_OGRefNo','U_OgRef','OriginalRef','NumAtCard','SequenceCode']);
-  if(!isMissing(direct))return String(direct);
-  const lines=doc?.DocumentLines||[];
-  const refs=[...new Set(lines.map(l=>val(l,['BaseRef','BaseDocNum'])).filter(v=>!isMissing(v)))];
-  return refs.length?refs.join(', '):'-';
+  const parts=[];
+  const vendorRef=val(doc,['U_OgRefNo','U_OGRefNo','U_OgRef','OriginalRef','NumAtCard','SequenceCode']);
+  const vr=isMissing(vendorRef)?'':String(vendorRef);
+  if(vr)parts.push(vr);
+  const seen=new Set();
+  collectBaseDocs(doc).forEach(b=>{
+    if(isMissing(b.ref))return;
+    const ref=String(b.ref);
+    if(ref===vr||seen.has(ref))return;
+    seen.add(ref);
+    parts.push((OBJ_MAP[b.type]||'Doc')+' '+ref);
+  });
+  return parts.length?parts.join(' / '):'-';
 }
+// Date is the credit note's own Document Date (TaxDate) — present on standalone
+// CNs too, unlike a base-invoice lookup.
 function ogReferenceDate(doc){
-  return dateVal(doc,['U_OgRefDate','U_OGRefDate','OriginalRefDate','U_OgDate']);
+  return dateVal(doc,['TaxDate','DocumentDate','U_OgRefDate','U_OGRefDate','OriginalRefDate','U_OgDate']);
 }
 // Collect distinct base documents (PO=22, GRPO=20, Invoice=13, etc.) referenced by the lines
 function collectBaseDocs(doc){
