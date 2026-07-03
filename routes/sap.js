@@ -1521,13 +1521,17 @@ async function shipFromFromVendor(co, doc){
   const cardName=cleanString(firstValue(doc||{},['CardName','CARDNAME']));
   const addrCode=cleanString(firstValue(doc||{},['ShipFrom','ShipToCode','PayToCode']));
   let gstin='',state='',address='';
-  const where=addrCode?'"CardCode"=? AND "Address"=?':'"CardCode"=?';
-  const params=addrCode?[cardCode,addrCode]:[cardCode];
   try{
-    // BP address master: GSTIN is CRD1."GSTRegnNo", state is CRD1."State"
+    // BP address master: GSTIN is CRD1."GSTRegnNo", state is CRD1."State".
+    // Prefer an address that actually carries a GSTIN, then the document's own
+    // ship-from / pay-to address code, so the party's GST number is shown whenever
+    // any of their addresses has one.
     const rows=await hanaQuery(
       'SELECT TOP 1 "GSTRegnNo","State","Street","Block","City","ZipCode","Country" '+
-      'FROM '+DB(co)+'."CRD1" WHERE '+where,params);
+      'FROM '+DB(co)+'."CRD1" WHERE "CardCode"=? '+
+      "ORDER BY (CASE WHEN \"GSTRegnNo\" IS NOT NULL AND \"GSTRegnNo\" <> '' THEN 0 ELSE 1 END), "+
+      '(CASE WHEN "Address"=? THEN 0 ELSE 1 END)',
+      [cardCode, addrCode||'']);
     const r=rows[0]||{};
     gstin=cleanString(firstValue(r,['GSTRegnNo','GSTREGNNO']));
     state=cleanString(firstValue(r,['State','STATE']));
@@ -1543,40 +1547,60 @@ async function shipFromFromVendor(co, doc){
   // code shows as the heading; leave branch blank so the frontend doesn't repeat it
   return {code:cardName||cardCode,name:'',gstin,branch:'',state,address};
 }
-// Resolve the full ship-from list (warehouse, GSTIN, branch, state, address) from the document lines
+// True when the document's counterparty is a vendor/supplier (OCRD.CardType='S').
+// For such purchase documents the ship-from party is the vendor, so we show the
+// vendor's GSTIN rather than our own receiving-warehouse branch GSTIN.
+async function isVendorCounterparty(co, doc){
+  const cardCode=cleanString(firstValue(doc||{},['CardCode','CARDCODE']));
+  if(!cardCode) return false;
+  try{
+    const rows=await hanaQuery('SELECT TOP 1 "CardType" FROM '+DB(co)+'."OCRD" WHERE "CardCode"=?',[cardCode]);
+    return cleanString(firstValue(rows[0]||{},['CardType','CARDTYPE']))==='S';
+  }catch(e){ console.warn('[SAP-DOC] CardType lookup skipped:',e.message); return false; }
+}
+// Resolve the ship-from (GSTIN, branch, state, address) and per-line warehouse
+// names. Purchase / vendor documents ship FROM the vendor, so their ship-from
+// shows the vendor's GSTIN (CRD1) — never our own branch GSTIN (OBPL). Sales /
+// transfer / customer documents ship from our warehouse and keep the
+// warehouse-derived ship-from.
 async function enrichWarehouseNames(co, doc){
   const lines=documentLines(doc);
   const codes=[...new Set(lines.map(l=>cleanString(l.WarehouseCode||l.Warehouse||l.WhsCode)).filter(Boolean))];
-  if(!codes.length){
-    // Service / GL-only documents carry no source warehouse, so derive the
-    // ship-from (GSTIN, state, address) from the vendor / counterparty instead.
-    const vendorShip=await shipFromFromVendor(co,doc);
-    if(vendorShip) doc.ShipFromList=[vendorShip];
-    return doc;
-  }
   const info=new Map();
-  try{
-    const quoted=codes.map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
-    const rows=await hanaQuery(
-      'SELECT W."WhsCode", W."WhsName", W."Street", W."StreetNo", W."Block", W."City", W."State", W."ZipCode", W."Country", B."BPLName", B."TaxIdNum" AS "gstin", B."State" AS "bpl_state" '+
-      'FROM '+DB(co)+'."OWHS" W LEFT JOIN '+DB(co)+'."OBPL" B ON B."BPLId"=W."BPLid" WHERE W."WhsCode" IN ('+quoted+')'
-    );
-    rows.forEach(r=>{
-      const code=cleanString(firstValue(r,['WhsCode','WHSCODE']));
-      const addr=[firstValue(r,['StreetNo','STREETNO']),firstValue(r,['Street','STREET']),firstValue(r,['Block','BLOCK']),firstValue(r,['City','CITY']),firstValue(r,['State','STATE']),firstValue(r,['ZipCode','ZIPCODE']),firstValue(r,['Country','COUNTRY'])]
-        .map(cleanString).filter(Boolean).join(', ');
-      info.set(code,{
-        code,
-        name:cleanString(firstValue(r,['WhsName','WHSNAME'])),
-        gstin:cleanString(firstValue(r,['gstin','GSTIN','TaxIdNum'])),
-        branch:cleanString(firstValue(r,['BPLName','BPLNAME'])),
-        state:cleanString(firstValue(r,['State','STATE','bpl_state'])),
-        address:addr,
+  if(codes.length){
+    try{
+      const quoted=codes.map(c=>"'"+c.replace(/'/g,"''")+"'").join(',');
+      const rows=await hanaQuery(
+        'SELECT W."WhsCode", W."WhsName", W."Street", W."StreetNo", W."Block", W."City", W."State", W."ZipCode", W."Country", B."BPLName", B."TaxIdNum" AS "gstin", B."State" AS "bpl_state" '+
+        'FROM '+DB(co)+'."OWHS" W LEFT JOIN '+DB(co)+'."OBPL" B ON B."BPLId"=W."BPLid" WHERE W."WhsCode" IN ('+quoted+')'
+      );
+      rows.forEach(r=>{
+        const code=cleanString(firstValue(r,['WhsCode','WHSCODE']));
+        const addr=[firstValue(r,['StreetNo','STREETNO']),firstValue(r,['Street','STREET']),firstValue(r,['Block','BLOCK']),firstValue(r,['City','CITY']),firstValue(r,['State','STATE']),firstValue(r,['ZipCode','ZIPCODE']),firstValue(r,['Country','COUNTRY'])]
+          .map(cleanString).filter(Boolean).join(', ');
+        info.set(code,{
+          code,
+          name:cleanString(firstValue(r,['WhsName','WHSNAME'])),
+          gstin:cleanString(firstValue(r,['gstin','GSTIN','TaxIdNum'])),
+          branch:cleanString(firstValue(r,['BPLName','BPLNAME'])),
+          state:cleanString(firstValue(r,['State','STATE','bpl_state'])),
+          address:addr,
+        });
       });
-    });
-    lines.forEach(l=>{const c=cleanString(l.WarehouseCode||l.Warehouse||l.WhsCode); if(c&&info.has(c)&&!l.WarehouseName) l.WarehouseName=info.get(c).name;});
-  }catch(e){ console.warn('[SAP-DOC] Warehouse/ship-from enrichment skipped:',e.message); }
-  doc.ShipFromList=codes.map(c=>info.get(c)||{code:c,name:'',gstin:'',branch:'',state:'',address:''});
+      lines.forEach(l=>{const c=cleanString(l.WarehouseCode||l.Warehouse||l.WhsCode); if(c&&info.has(c)&&!l.WarehouseName) l.WarehouseName=info.get(c).name;});
+    }catch(e){ console.warn('[SAP-DOC] Warehouse/ship-from enrichment skipped:',e.message); }
+  }
+  // Ship-from party: vendor for purchase docs, our warehouse otherwise.
+  const vendorShip=(await isVendorCounterparty(co,doc))?await shipFromFromVendor(co,doc):null;
+  if(vendorShip){
+    doc.ShipFromList=[vendorShip];
+  }else if(codes.length){
+    doc.ShipFromList=codes.map(c=>info.get(c)||{code:c,name:'',gstin:'',branch:'',state:'',address:''});
+  }else{
+    // No warehouse and not a vendor doc — last resort: counterparty address text.
+    const fallback=await shipFromFromVendor(co,doc);
+    if(fallback) doc.ShipFromList=[fallback];
+  }
   return doc;
 }
 
@@ -2266,7 +2290,7 @@ function parseDraftEntrySet(value){
 function buildSapStatusFilter(status){
   if(status==='Pending') return "Status eq 'arsPending'";
   if(status==='Approved') return "Status eq 'arsApproved' or Status eq 'arsGenerated' or Status eq 'arsGeneratedByAuthorizer'";
-  if(status==='Rejected') return "Status eq 'arsNotApproved' or Status eq 'arsRejected'";
+  if(status==='Rejected') return "Status eq 'arsNotApproved'";
   if(status==='Generated') return "Status eq 'arsGenerated' or Status eq 'arsGeneratedByAuthorizer'";
   if(status==='Cancelled') return "Status eq 'arsCancelled'";
   return '';
@@ -2427,6 +2451,60 @@ async function listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,req
   return visible.slice(skip,skip+top);
 }
 
+// ── Fast path: read approval requests straight from HANA ──────────────
+// The Service-Layer ApprovalRequests entity is backed by OWDD (request header)
+// and WDD1 (per-stage decision lines), but paging it is slow (~3-7s/page over
+// 50k+ rows) and the SL scan above caps how deep it can look, so old approvals
+// drop off the list. Reading OWDD/WDD1 directly with the approver baked into the
+// WHERE clause is ~20-50x faster and has no depth cap. Status codes:
+// W=Pending Y=Approved N=NotApproved P=Generated A=GeneratedByAuthorizer C=Cancelled.
+const OWDD_STATUS_TO_SL={W:'arsPending',Y:'arsApproved',N:'arsNotApproved',P:'arsGenerated',A:'arsGeneratedByAuthorizer',C:'arsCancelled'};
+const PORTAL_STATUS_TO_OWDD={Pending:['W'],Approved:['Y','P','A'],Rejected:['N'],Generated:['P','A'],Cancelled:['C']};
+
+async function listVisibleApprovalRequestsHana(co,{status,objectType,originatorId,dateFrom,dateTo,code,draftKeys,sapUserId,top,skip}){
+  const db=DB(co);
+  const where=[];
+  const params=[];
+  const statusCodes=PORTAL_STATUS_TO_OWDD[status];
+  if(statusCodes&&statusCodes.length){
+    where.push(`h."Status" IN (${statusCodes.map(()=>'?').join(',')})`);
+    statusCodes.forEach(c=>params.push(c));
+  }
+  // Visibility: the mapped SAP user must sit on a decision line. A pending
+  // request additionally requires that line to be undecided AND at the request's
+  // current stage — mirrors canSapUserApproveRequest; otherwise any line the user
+  // is on counts (hasApprovalLineForSapUser).
+  where.push(`EXISTS (SELECT 1 FROM ${db}."WDD1" l WHERE l."WddCode"=h."WddCode" AND l."UserID"=? AND ( h."Status" <> 'W' OR (l."Status"='W' AND l."StepCode"=h."CurrStep") ))`);
+  params.push(Number(sapUserId));
+  if(objectType){ where.push('h."ObjType"=?'); params.push(String(objectType)); }
+  if(originatorId){ where.push('h."OwnerID"=?'); params.push(parseInt(originatorId,10)); }
+  if(dateFrom){ where.push(`h."CreateDate">=TO_DATE(?,'YYYY-MM-DD')`); params.push(String(dateFrom).slice(0,10)); }
+  if(dateTo){ where.push(`h."CreateDate"<TO_DATE(?,'YYYY-MM-DD')+1`); params.push(String(dateTo).slice(0,10)); }
+  if(code){ where.push('h."WddCode"=?'); params.push(parseInt(code,10)); }
+  if(draftKeys&&draftKeys.size){
+    where.push(`h."DraftEntry" IN (${[...draftKeys].map(()=>'?').join(',')})`);
+    [...draftKeys].forEach(v=>params.push(Number(v)));
+  }
+  const sql=`SELECT h."WddCode" AS "Code", h."ObjType" AS "ObjectType", h."DraftEntry" AS "DraftEntry",
+       h."OwnerID" AS "OriginatorID", h."CurrStep" AS "CurrentStage",
+       TO_VARCHAR(h."CreateDate",'YYYY-MM-DD') AS "CreationDate", h."Status" AS "OwddStatus"
+     FROM ${db}."OWDD" h
+     WHERE ${where.join(' AND ')}
+     ORDER BY h."WddCode" DESC
+     LIMIT ? OFFSET ?`;
+  params.push(Number(top)||30, Number(skip)||0);
+  const rows=await hanaQuery(sql,params);
+  return rows.map(r=>({
+    Code:r.Code,
+    Status:OWDD_STATUS_TO_SL[r.OwddStatus]||r.OwddStatus,
+    ObjectType:r.ObjectType,
+    DraftEntry:r.DraftEntry,
+    OriginatorID:r.OriginatorID,
+    CurrentStage:r.CurrentStage,
+    CreationDate:r.CreationDate,
+  }));
+}
+
 router.get('/mapped-user', verifyToken, async(req,res)=>{
   const co=cq(req);
   try{
@@ -2478,13 +2556,9 @@ router.get('/approval-requests', verifyToken, async(req,res)=>{
   try{
     const sapUserId=await getMappedSapUserId(req);
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
-    const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
-    const filters=[];
-    const statusFilter=buildSapStatusFilter(status);
-    if(statusFilter) filters.push(statusFilter.includes(' or ')?`(${statusFilter})`:statusFilter);
-    let draftKeyFilter = parseDraftEntrySet(req.query.draftKeys || req.query.draftEntries || req.query.draftKey || req.query.draft);
     // Each text search narrows the set of draft entries; combine them (and any
     // explicit draft-key filter) by intersection so all supplied criteria must match.
+    let draftKeyFilter = parseDraftEntrySet(req.query.draftKeys || req.query.draftEntries || req.query.draftKey || req.query.draft);
     const narrowByDraftEntries = async (resolver, term) => {
       const matched = await resolver(co, term);
       draftKeyFilter = (draftKeyFilter && draftKeyFilter.size)
@@ -2496,17 +2570,29 @@ router.get('/approval-requests', verifyToken, async(req,res)=>{
     if ((partName || partyName) && (!draftKeyFilter || !draftKeyFilter.size)) {
       return res.json({success:true,data:[]});
     }
-    if (draftKeyFilter && draftKeyFilter.size) {
-      const draftConditions = [...draftKeyFilter].map(v => `DraftEntry eq ${Number(v)}`).join(' or ');
-      filters.push(`(${draftConditions})`);
+    try{
+      // Fast path: read OWDD/WDD1 directly (indexed, no depth cap).
+      const data=await listVisibleApprovalRequestsHana(co,{status,objectType,originatorId,dateFrom,dateTo,code,draftKeys:draftKeyFilter,sapUserId,top,skip});
+      return res.json({success:true,data});
+    }catch(hanaErr){
+      // Fall back to the (slow) Service-Layer scan if the direct HANA read fails.
+      console.warn('[SAP-APPROVAL] HANA list failed, falling back to Service Layer:',hanaErr.message);
+      const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
+      const filters=[];
+      const statusFilter=buildSapStatusFilter(status);
+      if(statusFilter) filters.push(statusFilter.includes(' or ')?`(${statusFilter})`:statusFilter);
+      if (draftKeyFilter && draftKeyFilter.size) {
+        const draftConditions = [...draftKeyFilter].map(v => `DraftEntry eq ${Number(v)}`).join(' or ');
+        filters.push(`(${draftConditions})`);
+      }
+      if(objectType)filters.push(`ObjectType eq '${objectType}'`);
+      if(originatorId)filters.push(`OriginatorID eq ${parseInt(originatorId)}`);
+      if(dateFrom)filters.push(`CreationDate ge '${dateFrom}'`);
+      if(dateTo)filters.push(`CreationDate le '${dateTo}'`);
+      if(code)filters.push(`Code eq ${parseInt(code)}`);
+      const data=await listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,status);
+      return res.json({success:true,data});
     }
-    if(objectType)filters.push(`ObjectType eq '${objectType}'`);
-    if(originatorId)filters.push(`OriginatorID eq ${parseInt(originatorId)}`);
-    if(dateFrom)filters.push(`CreationDate ge '${dateFrom}'`);
-    if(dateTo)filters.push(`CreationDate le '${dateTo}'`);
-    if(code)filters.push(`Code eq ${parseInt(code)}`);
-    const data=await listVisibleApprovalRequests(co,filters,top,skip,sapUserTokens,status);
-    res.json({success:true,data});
   }catch(e){
     const code=e.statusCode||500;
     res.status(code).json({success:false,data:[],message:e.message});

@@ -818,6 +818,7 @@ function renderDocDetail(doc,objType,company=null,opts={}){
     ['G/L Account Name',l=>textVal(l,['GLName','G/L Name','GLAccountName','AccountName','AcctName'])],
     ['Tax Code',l=>textVal(l,['TaxCode','VatGroup'])],
     ['WTax Liable',l=>yesNo(val(l,['WTLiable','WtLiable','U_WTLiable']))],
+    ['Received Qty',l=>numVal(l,['Quantity','Qty','ReceivedQuantity','PlannedQuantity'])],
     ['Unit Price',l=>moneyVal(l,['UnitPrice','Price'],currency)],
     ['Total (LC)',l=>moneyVal(l,['LineTotal','LineTotalLC','Amount','GrossTotal'],currency)],
     ['Loc.',l=>lineLocationVal(l,doc)],

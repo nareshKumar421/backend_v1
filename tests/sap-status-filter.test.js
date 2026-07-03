@@ -30,7 +30,7 @@ test('buildSapStatusFilter covers Pending, Approved, Rejected, Generated and Can
 
   assert.equal(
     sapRoutes.buildSapStatusFilter('Rejected'),
-    "Status eq 'arsNotApproved' or Status eq 'arsRejected'"
+    "Status eq 'arsNotApproved'"
   );
 
   assert.equal(
