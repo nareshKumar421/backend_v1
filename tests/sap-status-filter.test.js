@@ -85,3 +85,19 @@ test('isApprovalVisibleToSapUser does not rely on a hard-coded draft-key allowli
     true
   );
 });
+
+test('isApprovalVisibleToSapUser shows the originator their own request even without a decision line', () => {
+  const own = {
+    Status: 'arsPending',
+    CurrentStage: 13,
+    OriginatorID: 12,
+    // The only decision line belongs to a different approver (99), not user 12.
+    ApprovalRequestLines: [{ UserID: '99', Status: 'arsPending', StageID: 13 }],
+  };
+
+  // User 12 raised it, so it is visible to them even though they cannot approve it.
+  assert.equal(sapRoutes.isApprovalVisibleToSapUser(own, '12', 'Pending'), true);
+
+  // An unrelated user (neither originator nor on a line) still sees nothing.
+  assert.equal(sapRoutes.isApprovalVisibleToSapUser(own, '77', 'Pending'), false);
+});

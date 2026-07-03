@@ -2377,7 +2377,18 @@ function canSapUserApproveRequest(r,sapUserId){
   });
 }
 
+// True when the mapped SAP user raised the request (OWDD.OwnerID / SL
+// OriginatorID). Originators may not sit on any decision line, so this is what
+// lets them see — and withdraw — their own pending requests.
+function isOriginatorOfRequest(r,sapUserId){
+  const owner=r?.OriginatorID??r?.OwnerID;
+  if(owner===null||owner===undefined||owner==='') return false;
+  const tokens = sapUserId instanceof Set ? sapUserId : buildSapUserMatchTokens({}, sapUserId);
+  return tokens.has(String(owner));
+}
+
 function isApprovalVisibleToSapUser(r,sapUserId,requestedStatus){
+  if(isOriginatorOfRequest(r,sapUserId)) return true; // your own request is always visible
   if(requestedStatus==='Pending'||isRequestPending(r)) return canSapUserApproveRequest(r,sapUserId);
   return hasApprovalLineForSapUser(r,sapUserId);
 }
@@ -2470,11 +2481,13 @@ async function listVisibleApprovalRequestsHana(co,{status,objectType,originatorI
     where.push(`h."Status" IN (${statusCodes.map(()=>'?').join(',')})`);
     statusCodes.forEach(c=>params.push(c));
   }
-  // Visibility: the mapped SAP user must sit on a decision line. A pending
-  // request additionally requires that line to be undecided AND at the request's
-  // current stage — mirrors canSapUserApproveRequest; otherwise any line the user
-  // is on counts (hasApprovalLineForSapUser).
-  where.push(`EXISTS (SELECT 1 FROM ${db}."WDD1" l WHERE l."WddCode"=h."WddCode" AND l."UserID"=? AND ( h."Status" <> 'W' OR (l."Status"='W' AND l."StepCode"=h."CurrStep") ))`);
+  // Visibility: the user owns the request (OwnerID — so originators see and can
+  // withdraw their own requests) OR sits on a decision line. A pending request
+  // additionally requires that line to be undecided AND at the request's current
+  // stage — mirrors canSapUserApproveRequest; otherwise any line the user is on
+  // counts (hasApprovalLineForSapUser).
+  where.push(`( h."OwnerID"=? OR EXISTS (SELECT 1 FROM ${db}."WDD1" l WHERE l."WddCode"=h."WddCode" AND l."UserID"=? AND ( h."Status" <> 'W' OR (l."Status"='W' AND l."StepCode"=h."CurrStep") )) )`);
+  params.push(Number(sapUserId));
   params.push(Number(sapUserId));
   if(objectType){ where.push('h."ObjType"=?'); params.push(String(objectType)); }
   if(originatorId){ where.push('h."OwnerID"=?'); params.push(parseInt(originatorId,10)); }
@@ -2644,6 +2657,31 @@ router.patch('/approval-requests/:id', verifyToken, async(req,res)=>{
     const result=await getSap().sapRequestAs(userCode,sapPassword,co,'PATCH',`ApprovalRequests(${id})`,payload);
     res.json({success:true,data:result});
   }catch(e){res.status(400).json({success:false,message:e.message});}
+});
+
+// Originator withdraws (cancels) their own still-pending approval request.
+// SAP lets the request owner cancel while it is pending (Status='W'/arsPending);
+// once any stage is decided or the document is generated it can no longer be
+// withdrawn. The cancel is a Service-Layer PATCH of Status→arsCancelled, sent AS
+// the originator so SAP records it against the right user.
+router.post('/approval-requests/:id/cancel', verifyToken, async(req,res)=>{
+  const co=cq(req);
+  const id=parseInt(req.params.id);
+  const sapPassword=(req.body||{}).sapPassword;
+  try{
+    const sapUserId=await getMappedSapUserId(req);
+    if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
+    const approvalRequest=await fetchApprovalRequestDetail(id,co);
+    if(!isRequestPending(approvalRequest)) return res.status(409).json({success:false,message:'Only a pending request can be withdrawn. This one has already been decided.'});
+    if(!isOriginatorOfRequest(approvalRequest,buildSapUserMatchTokens(req,sapUserId))) return res.status(403).json({success:false,message:'Only the originator can withdraw this approval request.'});
+    if(!sapPassword) return res.status(400).json({success:false,message:'SAP password required'});
+    const u=await getSap().sapRequest('GET',`Users(${parseInt(sapUserId)})?$select=UserCode`,null,co);
+    const userCode=u?.UserCode;
+    if(!userCode) throw new Error('UserCode not found for sapUserId '+sapUserId);
+    console.log('[SAP-APPROVAL] CANCEL',id,'as sapUserId',sapUserId);
+    const result=await getSap().sapRequestAs(userCode,sapPassword,co,'PATCH',`ApprovalRequests(${id})`,{Status:'arsCancelled'});
+    res.json({success:true,data:result});
+  }catch(e){res.status(e.statusCode||400).json({success:false,message:e.message});}
 });
 
 // ════════════════════════════════════════════════════════════════

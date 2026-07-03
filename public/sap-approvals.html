@@ -1124,6 +1124,8 @@ async function openDetail(code,company=null){
     const {st,cls:stCls}=statusInfo(d.Status);
     const objType=OBJ_MAP[String(d.ObjectType)]||'Doc '+d.ObjectType;
     const isPending=d.Status==='arsPending';
+    // Only the request's originator may withdraw it, and only while pending.
+    const isOriginator=!!(_mappedUser?.sapUser&&String(_mappedUser.sapUser.id)===String(d.OriginatorID));
     const lines=d.ApprovalRequestLines||[];
     const decisions=d.ApprovalRequestDecisions||[];
 
@@ -1244,6 +1246,7 @@ async function openDetail(code,company=null){
         <div class="btn-bar">
           <button class="btn b-approve" id="btn-ap">Approve</button>
           <button class="btn b-reject" id="btn-rj">Reject</button>
+          ${isOriginator?`<button class="btn b-cancel" id="btn-wd">Withdraw</button>`:''}
         </div>
       </div>`:''}
     </div>`;
@@ -1305,6 +1308,18 @@ async function openDetail(code,company=null){
           await loadRequests();
           await openDetail(code,detailCompany);
         }catch(e){toast(e.message,'err');this.disabled=false;this.textContent='Reject';}
+      });
+      q('#btn-wd')&&(q('#btn-wd').onclick=async function(){
+        const sapPassword=(q('#ar-pwd')?.value||'');
+        if(!sapPassword){toast('Enter your SAP password','err');return;}
+        if(!confirm('Withdraw this approval request? It will be cancelled in SAP and cannot be undone.'))return;
+        this.disabled=true;this.textContent='...';
+        try{
+          await api('POST',`/sap/approval-requests/${code}/cancel?company=${encodeURIComponent(company)}`,{sapPassword});
+          toast('Request withdrawn');
+          await loadRequests();
+          await openDetail(code,detailCompany);
+        }catch(e){toast(e.message,'err');this.disabled=false;this.textContent='Withdraw';}
       });
     }
   }catch(e){inner.innerHTML=`<div style="padding:30px;text-align:center;color:var(--red)">${esc(e.message)}</div>`;}
