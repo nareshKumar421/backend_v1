@@ -419,6 +419,9 @@ const LINE_KEYS={
   subAccount:['U_Sub_Account','U_SubAccount','U_SubAcct','U_SubAcc','U_Sub_Acc','U_Sub_Accnt','U_Sub_Acco','U_SUB_ACCOUNT','U_SUBACCOUNT','U_SUBACCT','U_SUBACC','U_SUB_ACC','U_SUB_ACCNT','U_SUB_ACCO','SubAccount','SubAcct','SubAcc','Sub_Account','Sub_Acc','Sub Account','Sub Acc'],
   customerCode:['U_CardCode','U_CustomerCode','CustomerCode','Customer Code','CardCode'],
   purpose:['U_Purpose','Purpose'],
+  // Freight/service lines keep the received/dispatched qty in UDFs; the standard Quantity is 0 on these lines.
+  receivedQty:['U_Recvd_Qty','U_ReceivedQty','U_Received_Qty','U_RECVD_QTY','ReceivedQuantity'],
+  dispatchQty:['U_Disp_Qty','U_DispatchQty','U_Dispatch_Qty','U_DISP_QTY'],
 };
 function plainVal(obj,keys){const v=val(obj,keys);return isMissing(v)?'':String(v);}
 function lineLocationVal(line,doc=null){
@@ -818,7 +821,7 @@ function renderDocDetail(doc,objType,company=null,opts={}){
     ['G/L Account Name',l=>textVal(l,['GLName','G/L Name','GLAccountName','AccountName','AcctName'])],
     ['Tax Code',l=>textVal(l,['TaxCode','VatGroup'])],
     ['WTax Liable',l=>yesNo(val(l,['WTLiable','WtLiable','U_WTLiable']))],
-    ['Received Qty',l=>numVal(l,['Quantity','Qty','ReceivedQuantity','PlannedQuantity'])],
+    ['Received Qty',l=>numVal(l,[...LINE_KEYS.receivedQty,'Quantity','Qty','PlannedQuantity'])],
     ['Unit Price',l=>moneyVal(l,['UnitPrice','Price'],currency)],
     ['Total (LC)',l=>moneyVal(l,['LineTotal','LineTotalLC','Amount','GrossTotal'],currency)],
     ['Loc.',l=>lineLocationVal(l,doc)],

@@ -1438,6 +1438,10 @@ async function enrichDocumentLineFields(co, type, doc){
       if(!lineValueMissing(subAccount)) line.SubAccount=subAccount;
       setLineValue(line,'U_CardCode',rowValueLike(row,['U_CardCode','U_CustomerCode','CardCode','CustomerCode'],[['card','code'],['customer','code']]));
       setLineValue(line,'U_Purpose',rowValueLike(row,['U_Purpose','Purpose'],[['purpose']]));
+      // Freight/service lines carry the received & dispatched quantity in UDFs
+      // (the standard Quantity is 0 on these lines), so backfill them from the row.
+      setLineValue(line,['U_Recvd_Qty','U_ReceivedQty'],rowValueLike(row,['U_Recvd_Qty','U_ReceivedQty','U_Received_Qty'],[['recvd','qty'],['received','qty']]));
+      setLineValue(line,['U_Disp_Qty','U_DispatchQty'],rowValueLike(row,['U_Disp_Qty','U_DispatchQty','U_Dispatch_Qty'],[['disp','qty'],['dispatch','qty']]));
       setLineValue(line,['U_Remarks','Remarks','FreeText'],rowValue(row,['U_Remarks','FreeTxt','FreeText','Remarks']));
     });
   }catch(e){
