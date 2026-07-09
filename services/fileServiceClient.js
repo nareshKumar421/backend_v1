@@ -87,7 +87,28 @@ async function requestFileService(fileName, companyId) {
     return { response, url };
   } catch (err) {
     const status = err.response?.status;
-    const e = new Error(status ? `File service returned HTTP ${status}` : `File service request failed: ${err.message}`);
+    // The file service returns a JSON body like {"detail":"..."} describing the
+    // real failure; surface it instead of the opaque HTTP code.
+    let detail = '';
+    try {
+      const raw = err.response?.data;
+      const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : (typeof raw === 'string' ? raw : JSON.stringify(raw || ''));
+      detail = JSON.parse(text)?.detail || '';
+    } catch (_) { /* body not JSON — ignore */ }
+
+    // The file server encodes the download filename as latin-1; names with
+    // characters outside that range (em-dash "—", curly quotes, …) make it 500.
+    // The file exists but cannot be served until the file server is patched.
+    if (/latin-1|codec can't encode|not in range\(256\)/i.test(detail)) {
+      const e = new Error(`This attachment can't be opened: its filename contains a character the file server cannot handle (${detail.replace(/^Error processing file:\s*/i, '')}). Rename the attachment in SAP without special characters, or patch the file server.`);
+      e.status = status;
+      e.unencodableName = true;
+      throw e;
+    }
+
+    const e = new Error(status
+      ? `File service returned HTTP ${status}${detail ? ': ' + detail : ''}`
+      : `File service request failed: ${err.message}`);
     e.status = status;
     throw e;
   }

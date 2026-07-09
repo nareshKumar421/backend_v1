@@ -476,6 +476,96 @@ async function uploadAttachmentsToSAP(attachments, cardName, companyDB = null) {
 }
 
 // ════════════════════════════════════════════════════════════════
+//  ATTACHMENT DOWNLOAD — direct SMB/UNC read
+//  The HTTP file service (files.jivo.in) builds a Content-Disposition
+//  header by latin-1 encoding the download filename and 500s on any name
+//  outside that range (em-dash "—", curly quotes, …). Reading the file
+//  straight off the share sidesteps that: SAP's Attachments2 line already
+//  records the exact folder (SourcePath) + FileName + FileExtension on disk,
+//  and the caller serves it back with its own (correct) encoding.
+// ════════════════════════════════════════════════════════════════
+
+const _ATTACH_MIME = {
+  pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+  gif: 'image/gif', tif: 'image/tiff', tiff: 'image/tiff', bmp: 'image/bmp',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  txt: 'text/plain', csv: 'text/csv',
+};
+
+function attachmentDiskName(line) {
+  const stem = String(line?.FileName || '').trim();
+  const ext  = String(line?.FileExtension || '').trim().replace(/^\./, '');
+  if (!stem) return '';
+  if (!ext || stem.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) return stem;
+  return `${stem}.${ext}`;
+}
+
+function joinSharePath(dir, name) {
+  const sep = String(dir).includes('\\') ? '\\' : '/';
+  return `${String(dir).replace(/[\\/]+$/, '')}${sep}${name}`;
+}
+
+// Candidate on-disk locations for an attachment line, most-specific first.
+function attachmentPathCandidates(line) {
+  const name = attachmentDiskName(line);
+  if (!name) return [];
+
+  const nodeRoot = (process.env.SAP_ATTACHMENT_PATH || '').trim();
+  const svrRoot  = (process.env.SAP_ATTACHMENT_SERVER_PATH || nodeRoot).trim();
+  const src      = String(line?.SourcePath || '').trim().replace(/[\\/]+$/, '');
+  const paths    = [];
+
+  if (src) {
+    // SAP stores the server-side SourcePath, which may not be how this Node
+    // host addresses the share — translate the server root to the Node root.
+    if (svrRoot && nodeRoot && svrRoot.toLowerCase() !== nodeRoot.toLowerCase() &&
+        src.toLowerCase().startsWith(svrRoot.toLowerCase())) {
+      paths.push(joinSharePath(nodeRoot + src.slice(svrRoot.length), name));
+    }
+    paths.push(joinSharePath(src, name));
+    // Same leaf folder rehomed under the Node root (covers a moved/renamed share).
+    const leaf = src.split(/[\\/]/).pop();
+    if (nodeRoot && leaf) paths.push(joinSharePath(joinSharePath(nodeRoot, leaf), name));
+  }
+  if (nodeRoot) paths.push(joinSharePath(nodeRoot, name));
+
+  return [...new Set(paths)];
+}
+
+async function readAttachmentFromShare(line) {
+  const name = attachmentDiskName(line);
+  if (!name) throw new Error('Attachment filename is missing on the SAP line');
+
+  const candidates = attachmentPathCandidates(line);
+  if (!candidates.length) throw new Error('Could not resolve attachment path from the SAP line');
+
+  // Authenticate the UNC share once (Windows `net use`) before reading.
+  const first = candidates[0];
+  if (first.startsWith('\\\\') || first.startsWith('//')) {
+    const parts     = first.replace(/\//g, '\\').split('\\').filter(Boolean);
+    const shareRoot = `\\\\${parts[0]}\\${parts[1]}`;
+    if (!mountShare(shareRoot)) throw new Error(`Cannot reach attachment share ${shareRoot}`);
+  }
+
+  let lastErr;
+  for (const p of candidates) {
+    try {
+      const data = fs.readFileSync(p);
+      const ext  = name.split('.').pop().toLowerCase();
+      console.log(`[ATTACH-DL] ✅ Read ${(data.length / 1024).toFixed(1)} KB from share: ${p}`);
+      return { data, fileName: name, contentType: _ATTACH_MIME[ext] || 'application/octet-stream', sourcePath: p };
+    } catch (e) {
+      lastErr = e;
+      if (e.code !== 'ENOENT') console.warn(`[ATTACH-DL] share read failed at ${p}: ${e.message}`);
+    }
+  }
+  throw new Error(`Attachment "${name}" not found on share (${lastErr?.message || 'no readable candidate path'})`);
+}
+
+// ════════════════════════════════════════════════════════════════
 //  CREATE CUSTOMER
 // ════════════════════════════════════════════════════════════════
 
@@ -815,5 +905,6 @@ module.exports = {
   createCustomer,
   createVendor,
   uploadAttachmentsToSAP,
+  readAttachmentFromShare,
   sanitizeFolderName,
 };

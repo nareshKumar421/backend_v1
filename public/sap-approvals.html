@@ -1343,6 +1343,11 @@ window.viewBaseDoc=async function(endpoint,entry,company,label){
 };
 
 window.viewAtt=function(entry,lineId,company){
+  // Open the tab NOW, inside the click gesture, so the browser does not treat it
+  // as a pop-up. The fetch is async — a window.open() after it resolves gets
+  // silently blocked, which looks like "the attachment won't open".
+  const w=window.open('','_blank');
+  if(w){try{w.document.write('<title>Loading attachment…</title><p style="font:16px sans-serif;padding:24px">Loading attachment…</p>');}catch(_){}}
   fetch(BE+`/sap/attachments/${entry}/download/${lineId}?company=${encodeURIComponent(company||_co)}`,{headers:{'Authorization':'Bearer '+_tok}})
     .then(async r=>{
       if(!r.ok){
@@ -1350,10 +1355,30 @@ window.viewAtt=function(entry,lineId,company){
         try{const j=await r.json();if(j&&j.message)msg=j.message;}catch(_){}
         throw new Error(msg);
       }
-      return r.blob();
+      // Grab the server-supplied filename so a forced download keeps its name.
+      let name='';
+      const cd=r.headers.get('content-disposition')||'';
+      const m=/filename="?([^"]+)"?/i.exec(cd);
+      if(m)name=m[1];
+      return r.blob().then(blob=>({blob,name}));
     })
-    .then(blob=>{window.open(URL.createObjectURL(blob),'_blank');})
-    .catch(e=>{toast('Cannot open: '+e.message,'err');});
+    .then(({blob,name})=>{
+      const url=URL.createObjectURL(blob);
+      // Browsers can only preview PDFs, images and text in a tab. Excel/Word/zip
+      // and anything else must be downloaded, otherwise the opened tab just hangs
+      // blank and looks broken. Decide from the blob's MIME type.
+      const viewable=/^(application\/pdf|image\/|text\/)/i.test(blob.type||'');
+      if(viewable&&w){
+        w.location=url;
+      }else{
+        if(w){try{w.close();}catch(_){}}
+        // Force a download — browsers never block a programmatic anchor click.
+        const a=document.createElement('a');
+        a.href=url;a.download=name||'attachment';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+      }
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+    })
+    .catch(e=>{if(w){try{w.close();}catch(_){}}toast('Cannot open: '+e.message,'err');});
 };
 
 loadRequests();

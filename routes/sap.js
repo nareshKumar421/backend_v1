@@ -1419,6 +1419,8 @@ async function enrichDocumentLineFields(co, type, doc){
       setLineValue(line,['CostingCode4','OcrCode4'],rowValue(row,['OcrCode4','CostingCode4']));
       setLineValue(line,['CostingCode5','OcrCode5'],rowValue(row,['OcrCode5','CostingCode5']));
       setLineValue(line,'Project',rowValue(row,['Project']));
+      // GST SAC key (OSAC.AbsEntry); resolved to the readable code by enrichDocumentSacCodes.
+      setLineValue(line,['SACEntry','SacEntry'],rowValueLike(row,['SACEntry','SacEntry'],[['sac','entry']]));
       // Base-document linkage (original PO/GRPO/invoice) — Service Layer returns
       // BaseType/BaseEntry but not the base doc number; fill it from the line table
       // so the UI (e.g. credit-note "Og Reference No") can show the source doc.
@@ -1471,6 +1473,37 @@ async function enrichDocumentGlNames(doc, co){
     });
   }catch(e){
     console.warn('[SAP-DOC] GL name enrichment skipped:',e.message);
+  }
+  return doc;
+}
+
+// Service/GST lines carry only SACEntry (= OSAC.AbsEntry, an internal key), never
+// the human-readable SAC code. SAP's own UI joins that back to OSAC.ServCode for
+// display; approval/draft reads don't, so the number shown never matches SAP.
+// Resolve SACEntry -> OSAC.ServCode here so the UI shows the real SAC code.
+function lineSacEntry(line){
+  const v=firstValue(line,['SACEntry','SacEntry','ServiceAccountingCodeEntry']);
+  return lineValueMissing(v)?'':cleanString(v);
+}
+async function enrichDocumentSacCodes(doc, co){
+  const lines=documentLines(doc);
+  // OSAC.AbsEntry can be negative (imported/user-defined SAC master rows), so allow a leading minus.
+  const entries=[...new Set(lines.map(lineSacEntry).filter(v=>v&&/^-?\d+$/.test(v)))];
+  if(!entries.length) return doc;
+  try{
+    const quoted=entries.join(',');
+    const rows=await hanaQuery(
+      'SELECT "AbsEntry","ServCode","ServName" FROM ' + DB(co) + '."OSAC" WHERE "AbsEntry" IN (' + quoted + ')'
+    );
+    const codes=new Map(rows.map(r=>[cleanString(r.AbsEntry),{code:cleanString(r.ServCode),name:cleanString(r.ServName)}]));
+    lines.forEach(line=>{
+      const hit=codes.get(lineSacEntry(line));
+      if(!hit) return;
+      if(!lineValueMissing(hit.code)){ line.SACCode=hit.code; line.SAC=hit.code; }
+      if(!lineValueMissing(hit.name)&&lineValueMissing(line.SACName)) line.SACName=hit.name;
+    });
+  }catch(e){
+    console.warn('[SAP-DOC] SAC code enrichment skipped:',e.message);
   }
   return doc;
 }
@@ -1955,6 +1988,7 @@ router.get('/documents/:type/:id', verifyToken, async(req,res)=>{
     const result=await getSap().sapRequest('GET',`${type}(${key})`,null,co);
     await enrichDocumentLineFields(co,type,result);
     await enrichDocumentGlNames(result,co);
+    await enrichDocumentSacCodes(result,co);
     await enrichDocumentTds(co,type,result);
     await enrichDocumentBranchName(co,result);
     await enrichWarehouseNames(co,result);
@@ -2239,13 +2273,37 @@ router.get('/attachments/:entry/download/:lineId', verifyToken, async(req,res)=>
     const line=lines.find(l=>l.LineNum===parseInt(req.params.lineId))||lines[parseInt(req.params.lineId)];
     if(!line) return res.status(404).json({success:false,message:'Attachment line not found'});
     const fileName=attachmentFileName(line);
-    const file=await fetchFileFromArchive(fileName,companyDB);
-    console.log(`[ATTACH-DL] Served ${file.fileName} via file service company=${file.companyId}`);
 
+    let file, servedVia;
+    try{
+      file=await fetchFileFromArchive(fileName,companyDB);
+      servedVia=`file service company=${file.companyId}`;
+    }catch(httpErr){
+      // The HTTP file service (files.jivo.in) 500s on filenames it can't latin-1
+      // encode (em-dash, curly quotes, …). Read the file straight off the SMB
+      // share instead — the SAP line already carries the exact folder + name on
+      // disk, and we serve it back below with our own (correct) encoding.
+      console.warn(`[ATTACH-DL] file service failed (${httpErr.message}) — falling back to SMB share`);
+      try{
+        file=await getSap().readAttachmentFromShare(line);
+        servedVia=`SMB share ${file.sourcePath}`;
+      }catch(smbErr){
+        console.error(`[ATTACH-DL] SMB fallback failed: ${smbErr.message}`);
+        // Prefer the actionable "rename in SAP" message when that was the cause.
+        throw httpErr.unencodableName ? httpErr : smbErr;
+      }
+    }
+
+    console.log(`[ATTACH-DL] Served ${file.fileName} via ${servedVia}`);
+    // Browsers can preview PDFs, images and plain text inline; everything else
+    // (xlsx, docx, zip, …) must be forced to download or the viewer tab just
+    // hangs on a blank page and looks broken.
+    const viewable=/^(application\/pdf|image\/|text\/)/i.test(file.contentType)||
+      /\.(pdf|png|jpe?g|gif|webp|bmp|svg|txt|csv)$/i.test(file.fileName);
     res.setHeader('Content-Type',file.contentType);
     res.setHeader('Content-Length',file.data.length);
-    res.setHeader('Content-Disposition',`inline; filename="${contentDispositionFilename(file.fileName)}"`);
-    res.setHeader('X-File-Service-Company',file.companyId);
+    res.setHeader('Content-Disposition',`${viewable?'inline':'attachment'}; filename="${contentDispositionFilename(file.fileName)}"`);
+    if(file.companyId) res.setHeader('X-File-Service-Company',file.companyId);
     res.send(file.data);
   }catch(e){
     console.error('[ATTACH-DL] Error:',e.message);
