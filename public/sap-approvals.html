@@ -628,25 +628,17 @@ function renderGlSection(doc,journalHtml,inTransitHtml,company){
 // Original (Og) reference for credit notes — shows BOTH the vendor reference
 // (NumAtCard) and the source document the CN was raised against (line base
 // link → original AP invoice / goods return number), e.g. "17 / AP Invoice 626063113".
+// SAP's own "Original Ref. No." field (India GST localization) — exactly what the
+// credit-note form and GST reports show. Fall back to the manual original-ref UDFs /
+// vendor ref only when SAP's field is empty.
 function ogReferenceNumber(doc){
-  const parts=[];
-  const vendorRef=val(doc,['U_OgRefNo','U_OGRefNo','U_OgRef','OriginalRef','NumAtCard','SequenceCode']);
-  const vr=isMissing(vendorRef)?'':String(vendorRef);
-  if(vr)parts.push(vr);
-  const seen=new Set();
-  collectBaseDocs(doc).forEach(b=>{
-    if(isMissing(b.ref))return;
-    const ref=String(b.ref);
-    if(ref===vr||seen.has(ref))return;
-    seen.add(ref);
-    parts.push((OBJ_MAP[b.type]||'Doc')+' '+ref);
-  });
-  return parts.length?parts.join(' / '):'-';
+  const v=val(doc,['OriginalRefNo','U_OgRefNo','U_OGRefNo','U_OgRef','OriginalRef','NumAtCard']);
+  return isMissing(v)?'-':String(v);
 }
-// Date is the credit note's own Document Date (TaxDate) — present on standalone
-// CNs too, unlike a base-invoice lookup.
+// The original invoice's date (SAP "Original Ref. Date"); fall back to the CN's own
+// document date for standalone CNs that carry no original-ref date.
 function ogReferenceDate(doc){
-  return dateVal(doc,['TaxDate','DocumentDate','U_OgRefDate','U_OGRefDate','OriginalRefDate','U_OgDate']);
+  return dateVal(doc,['OriginalRefDate','U_OgRefDate','U_OGRefDate','U_OgDate','TaxDate','DocumentDate']);
 }
 // Collect distinct base documents (PO=22, GRPO=20, Invoice=13, etc.) referenced by the lines
 function collectBaseDocs(doc){
