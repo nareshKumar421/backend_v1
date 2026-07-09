@@ -1857,10 +1857,13 @@ function gstAccountKind(staCode){
 }
 // GST G/L accounts follow a naming convention ("INPUT IGST @ 18 %", "OUTPUT CGST @ 2.5 %").
 // OSTA/OSTT carry no account here, so the chart of accounts is the determination source.
-async function resolveGstAccount(co,direction,kind,rate){
+async function resolveGstAccount(co,direction,kind,rate,rcm){
   const rateStr=String(Number(rate));  // "18.000000" → "18", "2.500000" → "2.5"
+  // Reverse-charge GST posts to the dedicated "... RCM" accounts; a normal tax line
+  // must exclude them so an RCM account is never picked for regular (forward) GST.
+  const rcmClause=rcm?'AND UPPER("AcctName") LIKE \'%RCM%\'':'AND UPPER("AcctName") NOT LIKE \'%RCM%\'';
   const rows=await hanaQuery(
-    'SELECT "AcctCode","AcctName" FROM '+DB(co)+'."OACT" WHERE UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? AND UPPER("AcctName") NOT LIKE \'%RCM%\' ORDER BY LENGTH("AcctName") ASC',
+    'SELECT "AcctCode","AcctName" FROM '+DB(co)+'."OACT" WHERE UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? AND UPPER("AcctName") LIKE ? '+rcmClause+' ORDER BY LENGTH("AcctName") ASC',
     ['%'+direction+'%','%'+kind+'%','%'+rateStr+'%']
   );
   return rows[0]||null;
@@ -1893,15 +1896,30 @@ async function buildDraftJournalEntryFromHana(co,draftEntry){
     return (nameCache[c]=cleanString(r[0]?.AcctName));
   }
   const add=(acct,name,amt,side)=>{ const v=r2(amt); if(!v) return; lines.push({account:cleanString(acct),account_name:cleanString(name),short_name:'',debit:side==='D'?v:0,credit:side==='C'?v:0,line_memo:'',cost_center:'',cost_center_2:'',cost_center_3:'',cost_center_4:'',cost_center_5:''}); };
+  const rcmCache={};
+  async function isRcmTax(taxCode){
+    const c=cleanString(taxCode); if(!c) return false;
+    if(rcmCache[c]!==undefined) return rcmCache[c];
+    const r=await hanaQuery('SELECT TOP 1 "Name" FROM '+db+'."OSTC" WHERE "Code"=?',[c]).catch(()=>[]);
+    return (rcmCache[c]=/RCM|REVERSE\s*CHARGE/i.test(cleanString(r[0]?.Name)));
+  }
   async function addTax(taxCode,lineVat){
     if(!asNumber(lineVat)) return;
+    const rcm=await isRcmTax(taxCode);
     const comps=await hanaQuery('SELECT "STACode","EfctivRate" FROM '+db+'."STC1" WHERE "STCCode"=? ORDER BY "Line_ID"',[cleanString(taxCode)]).catch(()=>[]);
     const total=comps.reduce((s,c)=>s+asNumber(c.EfctivRate),0)||1;
     for(const c of comps){
       const kind=gstAccountKind(c.STACode); if(!kind) continue;
       const amt=r2(asNumber(lineVat)*asNumber(c.EfctivRate)/total);
-      const acc=await resolveGstAccount(co,dir,kind,c.EfctivRate);
-      add(acc?.AcctCode||(dir+' '+kind),acc?.AcctName||(dir+' '+kind+' @ '+Number(c.EfctivRate)+'%'),amt,taxSide);
+      const acc=await resolveGstAccount(co,dir,kind,c.EfctivRate,rcm);
+      add(acc?.AcctCode||(dir+' '+kind),acc?.AcctName||(dir+' '+kind+' @ '+Number(c.EfctivRate)+'%'+(rcm?' RCM':'')),amt,taxSide);
+      // Reverse charge: the same GST is also a liability we owe, so it posts to the
+      // OUTPUT ... RCM account on the opposite side. Input & output net to zero effect
+      // on the vendor — without this leg the amount falls into Short & Excess.
+      if(rcm){
+        const out=await resolveGstAccount(co,'OUTPUT',kind,c.EfctivRate,true);
+        add(out?.AcctCode||('OUTPUT '+kind+' RCM'),out?.AcctName||('OUTPUT '+kind+' @ '+Number(c.EfctivRate)+'% RCM'),amt,taxSide==='D'?'C':'D');
+      }
     }
   }
   for(const l of lineRows){ add(l.AcctCode,await acctName(l.AcctCode),l.LineTotal,expenseSide); }
@@ -1919,6 +1937,15 @@ async function buildDraftJournalEntryFromHana(co,draftEntry){
     await addTax(e.TaxCode,e.LineVat);
   }
   add(ctlAcct||cleanString(h.CardCode),cleanString(h.CardName),h.DocTotal,bpSide);
+  // TDS/WTax deducted on the invoice reduces the vendor payment (DocTotal already
+  // reflects it) and is a liability we owe the government. SAP posts it to
+  // OWHT.ApTdsAcc (AR: ArTdsAcc); without this leg the TDS lands in Short & Excess.
+  const tdsRows=await hanaQuery('SELECT X."WTCode",X."WTAmnt",W."ApTdsAcc",W."ArTdsAcc",W."WTName" FROM '+db+'."DRF5" X LEFT JOIN '+db+'."OWHT" W ON W."WTCode"=X."WTCode" WHERE X."AbsEntry"=? AND X."WTCode" IS NOT NULL AND X."WTCode" <> \'\'',[id]).catch(()=>[]);
+  for(const t of tdsRows){
+    if(!asNumber(t.WTAmnt)) continue;
+    const acct=cleanString(isAP?t.ApTdsAcc:t.ArTdsAcc);
+    add(acct||'TDS Payable',(acct?await acctName(acct):'')||cleanString(t.WTName)||'TDS Payable',t.WTAmnt,bpSide);
+  }
   const dr=lines.reduce((s,x)=>s+x.debit,0), cr=lines.reduce((s,x)=>s+x.credit,0);
   const diff=r2(cr-dr);
   if(Math.abs(diff)>=0.0001){
