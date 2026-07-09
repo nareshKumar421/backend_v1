@@ -1847,6 +1847,7 @@ async function fetchJournalEntryByTransId(co, transId){
 // additional expenses come from DRF3, and any residual lands on the rounding
 // (Short & Excess) account so the preview always balances — mirroring SAP exactly.
 const AP_JOURNAL_TYPES=new Set(['18','19','20','22']);  // AP invoice/credit, GRPO, PO → BP credited
+const CREDIT_NOTE_TYPES=new Set(['14','19']);  // AR credit note, AP credit note — every leg reverses its invoice
 function gstAccountKind(staCode){
   const c=String(staCode||'').toUpperCase();
   if(c.includes('IGST')||c.startsWith('IG'))return 'IGST';
@@ -1877,10 +1878,14 @@ async function buildDraftJournalEntryFromHana(co,draftEntry){
   const h=hRows[0];
   const objType=cleanString(firstValue(h,['ObjType']));
   const isAP=AP_JOURNAL_TYPES.has(objType);
-  const dir=isAP?'INPUT':'OUTPUT';
-  const expenseSide=isAP?'D':'C';   // GRNI/expense (AP debit, AR credit)
-  const taxSide=isAP?'D':'C';       // input tax debit / output tax credit
-  const bpSide=isAP?'C':'D';        // vendor credit / customer debit
+  const dir=isAP?'INPUT':'OUTPUT';  // GST account family stays INPUT/OUTPUT; only the side reverses for a CN
+  const isCreditNote=CREDIT_NOTE_TYPES.has(objType);
+  const flip=s=>s==='D'?'C':'D';
+  let expenseSide=isAP?'D':'C';   // GRNI/expense (AP debit, AR credit)
+  let taxSide=isAP?'D':'C';       // input tax debit / output tax credit
+  let bpSide=isAP?'C':'D';        // vendor credit / customer debit
+  // A credit note reverses its invoice — expense, tax, BP and (below) RCM/TDS all flip sides.
+  if(isCreditNote){ expenseSide=flip(expenseSide); taxSide=flip(taxSide); bpSide=flip(bpSide); }
   const ctlRows=await hanaQuery('SELECT TOP 1 "DebPayAcct" FROM '+db+'."OCRD" WHERE "CardCode"=?',[cleanString(h.CardCode)]);
   const ctlAcct=cleanString(ctlRows[0]?.DebPayAcct);
   const lineRows=await hanaQuery('SELECT "LineNum","AcctCode","LineTotal","LineVat","TaxCode" FROM '+db+'."DRF1" WHERE "DocEntry"=? ORDER BY "LineNum"',[id]);
