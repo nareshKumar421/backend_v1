@@ -2740,7 +2740,12 @@ router.patch('/approval-requests/:id', verifyToken, async(req,res)=>{
     if(!sapUserId) return res.status(403).json({success:false,message:'No SAP user is linked to your portal account. Ask an admin to set SAP User ID for this user.'});
     const sapUserTokens = buildSapUserMatchTokens(req, sapUserId);
     const approvalRequest=await fetchApprovalRequestDetail(id,co);
-    if(!canSapUserApproveRequest(approvalRequest,sapUserTokens)) {
+    // Pending requests: strict current-stage check. Already-decided requests: allow the
+    // change if the user is an approver on the request — SAP itself enforces whether the
+    // approve<->reject reversal is permitted and returns an error if it is not.
+    const canAct = canSapUserApproveRequest(approvalRequest,sapUserTokens)
+      || (!isRequestPending(approvalRequest) && hasApprovalLineForSapUser(approvalRequest,sapUserTokens));
+    if(!canAct) {
       return res.status(403).json({success:false,message:'You are not authorized to approve or reject this SAP approval request.'});
     }
     if(!sapPassword) return res.status(400).json({success:false,message:'SAP password required'});

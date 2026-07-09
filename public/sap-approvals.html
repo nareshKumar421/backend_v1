@@ -1119,6 +1119,11 @@ async function openDetail(code,company=null){
     const {st,cls:stCls}=statusInfo(d.Status);
     const objType=OBJ_MAP[String(d.ObjectType)]||'Doc '+d.ObjectType;
     const isPending=d.Status==='arsPending';
+    // SAP lets an approver revise a finalized decision (approve<->reject), so allow the
+    // decision box on already-decided requests too. SAP itself is the final authority:
+    // if it refuses the change, the error surfaces to the user.
+    const isDecided=d.Status==='arsApproved'||d.Status==='arsRejected';
+    const canDecide=isPending||isDecided;
     // Only the request's originator may withdraw it, and only while pending.
     const isOriginator=!!(_mappedUser?.sapUser&&String(_mappedUser.sapUser.id)===String(d.OriginatorID));
     const lines=d.ApprovalRequestLines||[];
@@ -1235,13 +1240,14 @@ async function openDetail(code,company=null){
         ${decisionsHtml?`<div class="detail-section"><div class="detail-title">Decisions</div>${decisionsHtml}</div>`:''}
       </div>
 
-      ${isPending?`<div class="approval-action-box">
+      ${canDecide?`<div class="approval-action-box">
+        ${isDecided?`<div class="fl" style="color:var(--amber);margin-bottom:8px">This request is already <b>${d.Status==='arsApproved'?'Approved':'Rejected'}</b>. You can change the decision below &mdash; SAP will apply or reject the change.</div>`:''}
         <div class="fg"><label class="fl">Comment (optional)</label><textarea class="comment-area" id="ar-comment" placeholder="Add approval note..."></textarea></div>
         <div class="fg"><label class="fl">SAP Password</label><input id="ar-pwd" type="password" class="comment-area" style="height:34px" placeholder="Your SAP Business One password" autocomplete="off"/></div>
         <div class="btn-bar">
           <button class="btn b-approve" id="btn-ap">Approve</button>
           <button class="btn b-reject" id="btn-rj">Reject</button>
-          ${isOriginator?`<button class="btn b-cancel" id="btn-wd">Withdraw</button>`:''}
+          ${isPending&&isOriginator?`<button class="btn b-cancel" id="btn-wd">Withdraw</button>`:''}
         </div>
       </div>`:''}
     </div>`;
@@ -1277,7 +1283,7 @@ async function openDetail(code,company=null){
       };
     });
 
-    if(isPending){
+    if(canDecide){
       q('#btn-ap')&&(q('#btn-ap').onclick=async function(){
         const comment=(q('#ar-comment')?.value||'').trim();
         const sapPassword=(q('#ar-pwd')?.value||'');
