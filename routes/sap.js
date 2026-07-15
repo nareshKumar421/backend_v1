@@ -1560,14 +1560,16 @@ async function shipFromFromVendor(co, doc){
   let gstin='',state='',address='';
   try{
     // BP address master: GSTIN is CRD1."GSTRegnNo", state is CRD1."State".
-    // Prefer an address that actually carries a GSTIN, then the document's own
-    // ship-from / pay-to address code, so the party's GST number is shown whenever
-    // any of their addresses has one.
+    // Match the document's own ship-from / pay-to address code FIRST — that address
+    // (and its GSTIN/state) is the authoritative ship-from for this document. Only
+    // fall back to "any address with a GSTIN" when the document names no address code
+    // (or none matches). Ordering GSTIN-presence first would show an unrelated
+    // address' GSTIN/state — e.g. an MP GST number on a Delhi shipment.
     const rows=await hanaQuery(
       'SELECT TOP 1 "GSTRegnNo","State","Street","Block","City","ZipCode","Country" '+
       'FROM '+DB(co)+'."CRD1" WHERE "CardCode"=? '+
-      "ORDER BY (CASE WHEN \"GSTRegnNo\" IS NOT NULL AND \"GSTRegnNo\" <> '' THEN 0 ELSE 1 END), "+
-      '(CASE WHEN "Address"=? THEN 0 ELSE 1 END)',
+      'ORDER BY (CASE WHEN "Address"=? THEN 0 ELSE 1 END), '+
+      "(CASE WHEN \"GSTRegnNo\" IS NOT NULL AND \"GSTRegnNo\" <> '' THEN 0 ELSE 1 END)",
       [cardCode, addrCode||'']);
     const r=rows[0]||{};
     gstin=cleanString(firstValue(r,['GSTRegnNo','GSTREGNNO']));
